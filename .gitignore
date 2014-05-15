@@ -52,3 +52,8 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# Others
+.DS_Store
+.idea
+.sass-cache
+*.pkl

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
+from forms import InvoiceItemForm
 from models import Invoice, InvoiceItem
 
 
@@ -9,23 +10,24 @@ class InvoiceItemInline(admin.TabularInline):
         (
             None,
             {
-                'fields': ('title', 'quantity', 'unit', 'unit_price', 'weight')
+                'fields': ('title', 'quantity', 'unit', 'unit_price', 'tax_rate', 'weight')
             }
         ),
     )
     model = InvoiceItem
     extra = 0
+    form = InvoiceItemForm
 
 
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     list_display = ['pk', 'type', 'code', 'status', 'customer_name', 'customer_country',
-                    'tax_rate', 'total', 'currency', 'date_issue', 'payment_term', 'is_overdue_boolean', 'is_paid']
+                    'subtotal', 'vat', 'total', 'currency', 'date_issue', 'payment_term', 'is_overdue_boolean', 'is_paid']
     list_editable = ['status']
-    list_filter = ['type', 'status', 'payment_method', 'tax_rate',
+    list_filter = ['type', 'status', 'payment_method',
                    #'language', 'currency'
     ]
-    search_fields = ['number', 'subtitle', 'note', 'issuer_name', 'customer_name', 'shipping_name']
+    search_fields = ['number', 'subtitle', 'note', 'supplier_name', 'customer_name', 'shipping_name']
     inlines = (InvoiceItemInline, )
     fieldsets = (
         (_(u'General information'), {
@@ -36,27 +38,28 @@ class InvoiceAdmin(admin.ModelAdmin):
         }),
         (_(u'Contact details'), {
             'fields': (
-                'contact_name', 'contact_email', 'contact_www', 'contact_phone'
+                'issuer_name', 'issuer_email', 'issuer_phone'
             )
         }),
         (_(u'Payment details'), {
             'fields': (
-                'currency', 'tax_rate', 'discount', 'credit', 'already_paid',
-                'payment_method', 'constant_symbol', 'variable_symbol', 'specific_symbol',
+                'currency', 'discount', 'credit',
+                #'already_paid',
+                'payment_method', 'constant_symbol', 'variable_symbol', 'specific_symbol', 'reference',
                 'bank', 'bank_country', 'bank_city', 'bank_street', 'bank_zip', 'bank_iban', 'bank_swift_bic'
             )
         }),
-        (_(u'Issuer details'), {
+        (_(u'Supplier details'), {
             'fields': (
-                'issuer_name', 'issuer_street', 'issuer_zip', 'issuer_city', 'issuer_country',
-                'issuer_vat_id', 'issuer_additional_info',
+                'supplier_name', 'supplier_street', 'supplier_zip', 'supplier_city', 'supplier_country',
+                'supplier_registration_id', 'supplier_tax_id', 'supplier_vat_id', 'supplier_additional_info'
 
             )
         }),
         (_(u'Issuer details'), {
             'fields': (
                 'customer_name', 'customer_street', 'customer_zip', 'customer_city', 'customer_country',
-                'customer_vat_id', 'customer_additional_info',
+                'customer_registration_id', 'customer_tax_id', 'customer_vat_id', 'customer_additional_info',
             )
         }),
         (_(u'Shipping details'), {

@@ -5,7 +5,7 @@ from django_countries.fields import Country
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-from invoicing.taxation import EUTaxationPolicy
+from invoicing.taxation.eu import EUTaxationPolicy
 
 
 class VATValidator(object):

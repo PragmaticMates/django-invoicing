@@ -1,0 +1,115 @@
+[
+    {
+        "pk": 1,
+        "model": "invoicing.invoice",
+        "fields": {
+            "type": "INVOICE",
+            "prefix": "INV",
+            "number": 20140001,
+            "status": "NEW",
+            "subtitle": "This is example invoice",
+            "language": "en",
+            "note": "Thank you for using our services.",
+            "date_issue": "2014-03-25T12:21:37.107Z",
+            "date_tax_point": "2014-03-25T12:21:37.107Z",
+            "date_due": "2014-04-09T12:21:37.107Z",
+            "currency": "EUR",
+            "discount": 5,
+            "credit": 10,
+            "payment_method": "BANK_TRANSFER",
+            "constant_symbol": "0308",
+            "variable_symbol": 20140001,
+            "specific_symbol": 2014,
+            "reference": "Payment for goods",
+            "bank": "Example bank",
+            "bank_street": "Example street",
+            "bank_zip": "Example ZIP code",
+            "bank_city": "Example city",
+            "bank_country": "SK",
+            "bank_iban": "SK0000000000000000000000",
+            "bank_swift_bic": "EXAMPLEBANK",
+            "supplier_name": "Example company",
+            "supplier_street": "Example street",
+            "supplier_zip": "Example ZIP code",
+            "supplier_city": "Example city",
+            "supplier_country": "SK",
+            "supplier_registration_id": "123 456 789",
+            "supplier_tax_id": "111 222 333",
+            "supplier_vat_id": "SK111 222 333",
+            "supplier_additional_info": {
+                "www": "www.example.com"
+            },
+            "issuer_name": "John Doe",
+            "issuer_email": "john.doe@example.com",
+            "issuer_phone": "+420 123 456 789",
+            "customer_name": "Example customer",
+            "customer_street": "Example street",
+            "customer_zip": "Example ZIP code",
+            "customer_city": "Example city",
+            "customer_country": "SK",
+            "customer_registration_id": "987 654 321",
+            "customer_tax_id": "333 222 111",
+            "customer_vat_id": "SK333 222 111",
+            "customer_additional_info": {
+                "first info": "1st information",
+                "second info": "2nd information",
+                "third info": "3rd information"
+            },
+            "shipping_name": "Example shipping",
+            "shipping_street": "Example street",
+            "shipping_zip": "Example ZIP code",
+            "shipping_city": "Example city",
+            "shipping_country": "CZ",
+
+            "delivery_method": "PERSONAL_PICKUP",
+
+            "created": "2014-03-25T12:21:37.107Z",
+            "modified": "2014-03-31T12:22:31.899Z"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "invoicing.invoiceitem",
+        "fields": {
+            "invoice": 1,
+            "title": "first item",
+            "quantity": 3,
+            "unit": "PIECES",
+            "unit_price": 15,
+            "tax_rate": 20,
+            "weight": 0,
+            "created": "2014-03-25T12:21:37.107Z",
+            "modified": "2014-03-31T12:22:31.899Z"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "invoicing.invoiceitem",
+        "fields": {
+            "invoice": 1,
+            "title": "second item",
+            "quantity": 15,
+            "unit": "HOURS",
+            "unit_price": 8,
+            "tax_rate": 10,
+            "weight": 1,
+            "created": "2014-03-25T12:21:37.107Z",
+            "modified": "2014-03-31T12:22:31.899Z"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "invoicing.invoiceitem",
+        "fields": {
+            "invoice": 1,
+            "title": "third item",
+            "quantity": 1,
+            "unit": "EMPTY",
+            "unit_price": 100,
+            "tax_rate": 0,
+            "weight": 2,
+            "created": "2014-03-25T12:21:37.107Z",
+            "modified": "2014-03-31T12:22:31.899Z"
+        }
+    }
+]

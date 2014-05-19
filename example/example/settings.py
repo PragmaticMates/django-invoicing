@@ -161,3 +161,27 @@ LOGGING = {
         },
     }
 }
+
+
+
+# INVOICING
+import json
+INVOICING_TAX_RATE = 0   # If supplier is not a VAT payer, set to 0
+INVOICING_SUPPLIER = {
+    'name': 'Example company',
+    'street': 'Example street',
+    'city': 'Example city',
+    'zip': 'Example ZIP code',
+    'country_code': 'SK',
+    'registration_id': '123 456 789',
+    'tax_id': '111222333',
+    'vat_id': 'SK111222333',
+    'additional_info': json.dumps({"www": "www.example.com"}),
+    'bank': 'Example bank',
+    'bank_street': 'Example street',
+    'bank_zip': 'Example ZIP code',
+    'bank_city': 'Example city',
+    'bank_country_code': 'SK',
+    'bank_iban': 'SK0000000000000000000000',
+    'bank_swift_bic': 'EXAMPLEBANK'
+}

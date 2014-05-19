@@ -28,7 +28,7 @@ class TaxationPolicy(object):
 
         :return: unicode
         """
-        supplier = getattr(settings, 'INVOICING_ISSUER')
+        supplier = getattr(settings, 'INVOICING_SUPPLIER')
         return supplier['country_code']
 
     @classmethod

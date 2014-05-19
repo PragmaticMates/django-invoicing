@@ -241,7 +241,7 @@ class Invoice(models.Model):
         import importlib
         taxation_policy = getattr(settings, 'INVOICING_TAXATION_POLICY', None)
         if taxation_policy is not None:
-            return importlib.import_module(taxation_policy)
+            return taxation_policy  # TODO: FIXME: return importlib.import_module(taxation_policy)
 
         # Check if supplier is from EU
         if self.supplier_country:

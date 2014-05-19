@@ -1,5 +1,6 @@
 # Django settings for example project.
 from django.core.urlresolvers import reverse_lazy
+from invoicing.taxation.eu import EUTaxationPolicy
 
 
 DEBUG = True
@@ -166,7 +167,7 @@ LOGGING = {
 
 # INVOICING
 import json
-INVOICING_TAX_RATE = 0   # If supplier is not a VAT payer, set to 0
+INVOICING_TAX_RATE = 0   # Mandatory. If supplier is not a VAT payer, set to 0
 INVOICING_SUPPLIER = {
     'name': 'Example company',
     'street': 'Example street',

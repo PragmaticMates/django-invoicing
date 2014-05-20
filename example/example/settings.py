@@ -199,14 +199,10 @@ INVOICING_TEMPLATE = 'invoicing.pdf.SimplePDFTemplate'
 # TODO: or put it into models.py (and INVOICING_SUPPLIER setting)?
 INVOICING_SUPPLIER_LOGO_URL = normpath(join(STATIC_URL, 'my_logo.png'))
 
-# TODO: daily/monthly/yearly
 from invoicing.models import Invoice
 INVOICING_COUNTER_PERIOD = Invoice.COUNTER_PERIOD_MONTHLY
 
-# Remember to set INVOICE_NUMBER_FORMAT manually to match preferred way of invoice numbering schema.
-# For example if you choose reset counter on daily basis, you need to use in INVOICE_NUMBER_FORMAT
+# Remember to set INVOICING_NUMBER_FORMAT manually to match preferred way of invoice numbering schema.
+# For example if you choose reset counter on daily basis, you need to use in INVOICING_NUMBER_FORMAT
 # at least {{ invoice.date_issue|date:'d/m/Y' to distinguish invoice's full numbers between days.
-
-# TODO:
 INVOICING_NUMBER_FORMAT = "{{ invoice.date_issue|date:'Y/m' }}/{{ invoice.number }}"
-

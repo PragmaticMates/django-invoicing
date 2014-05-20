@@ -31,7 +31,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         (_(u'General information'), {
             'fields': (
                 'type', 'number', 'full_number', 'status', 'subtitle', 'language', 'note',
-                'date_issue', 'date_tax_point', 'date_due'
+                'date_issue', 'date_tax_point', 'date_due', 'date_sent'
             )
         }),
         (_(u'Contact details'), {

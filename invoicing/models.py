@@ -10,6 +10,8 @@ from django_countries.fields import CountryField
 from django_iban.fields import IBANField, SWIFTBICField
 from djmoney.forms.widgets import CURRENCY_CHOICES
 from jsonfield import JSONField
+from model_utils import Choices
+from model_utils.fields import MonitorField
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -33,51 +35,40 @@ def default_supplier(attribute):
 
 
 class Invoice(models.Model):
-    COUNTER_PERIOD_DAILY = 'daily'
-    COUNTER_PERIOD_MONTHLY = 'monthly'
-    COUNTER_PERIOD_YEARLY = 'yearly'
-
-    TYPE_INVOICE = 'INVOICE'
-    TYPE_ADVANCE = 'ADVANCE'
-    TYPE_PROFORMA = 'PROFORMA'
-    TYPE_VAT_CREDIT_NOTE = 'VAT_CREDIT_NOTE'
-    TYPES = (
-        (TYPE_INVOICE, _(u'Invoice')),
-        (TYPE_ADVANCE, _(u'Advance invoice')),
-        (TYPE_PROFORMA, _(u'Proforma invoice')),
-        (TYPE_VAT_CREDIT_NOTE, _(u'VAT credit note')),
+    COUNTER_PERIOD = Choices(
+        ('DAILY', _('daily')),
+        ('MONTHLY', _('monthly')),
+        ('YEARLY', _('yearly'))
     )
 
-    STATUS_NEW = 'NEW'
-    STATUS_SENT = 'SENT'
-    STATUS_RETURNED = 'RETURNED'
-    STATUS_CANCELED = 'CANCELED'
-    STATUS_PAID = 'PAID'
-    STATUSES = (
-        (STATUS_NEW, _(u'new')),
-        (STATUS_SENT, _(u'sent')),
-        (STATUS_RETURNED, _(u'returned')),
-        (STATUS_CANCELED, _(u'canceled')),
-        (STATUS_PAID, _(u'paid')),
+    TYPE = Choices(
+        ('INVOICE', _(u'Invoice')),
+        ('ADVANCE', _(u'Advance invoice')),
+        ('PROFORMA', _(u'Proforma invoice')),
+        ('VAT_CREDIT_NOTE', _(u'VAT credit note'))
     )
 
-    PAYMENT_METHOD_BANK_TRANSFER = 'BANK_TRANSFER'
-    PAYMENT_METHOD_CASH = 'CASH'
-    PAYMENT_METHOD_CASH_ON_DELIVERY = 'CASH_ON_DELIVERY'
-    PAYMENT_METHOD_PAYMENT_CARD = 'PAYMENT_CARD'
-    PAYMENT_METHODS = (
-        (PAYMENT_METHOD_BANK_TRANSFER, _(u'bank transfer')),
-        (PAYMENT_METHOD_CASH, _(u'cash')),
-        (PAYMENT_METHOD_CASH_ON_DELIVERY, _(u'cash on delivery')),
-        (PAYMENT_METHOD_PAYMENT_CARD, _(u'payment card')),
+    STATUS = Choices(
+        ('NEW', _(u'new')),
+        ('SENT', _(u'sent')),
+        ('RETURNED', _(u'returned')),
+        ('CANCELED', _(u'canceled')),
+        ('PAID', _(u'paid'))
     )
-    DELIVERY_METHOD_PERSONAL_PICKUP = 'PERSONAL_PICKUP'
-    DELIVERY_METHOD_MAILING = 'MAILING'
-    DELIVERY_METHODS = (
-        (DELIVERY_METHOD_PERSONAL_PICKUP, _(u'personal pickup')),
-        (DELIVERY_METHOD_MAILING, _(u'mailing')),
+
+    PAYMENT_METHOD = Choices(
+        ('BANK_TRANSFER', _(u'bank transfer')),
+        ('CASH', _(u'cash')),
+        ('CASH_ON_DELIVERY', _(u'cash on delivery')),
+        ('PAYMENT_CARD', _(u'payment card'))
     )
-    CONSTANT_SYMBOLS = (
+
+    DELIVERY_METHOD = Choices(
+        ('PERSONAL_PICKUP', _(u'personal pickup')),
+        ('MAILING', _(u'mailing'))
+    )
+
+    CONSTANT_SYMBOL = Choices(
         ('0001', _(u'0001 - Payments for goods based on legal and executable decision from legal authority')),
         ('0008', _(u'0008 - Cashless payments for goods')),
         ('0038', _(u'0038 - Cashless funds for wages')),
@@ -107,11 +98,10 @@ class Invoice(models.Model):
     )
 
     # General information
-    type = models.CharField(_(u'type'), max_length=64, choices=TYPES,
-        default=TYPE_INVOICE)
+    type = models.CharField(_(u'type'), max_length=64, choices=TYPE, default=TYPE.INVOICE)
     number = models.IntegerField(_(u'number'), db_index=True, blank=True)
     full_number = models.CharField(max_length=128, blank=True)
-    status = models.CharField(_(u'status'), choices=STATUSES, max_length=64, default=STATUS_NEW)
+    status = models.CharField(_(u'status'), choices=STATUS, max_length=64, default=STATUS.NEW)
     subtitle = models.CharField(_(u'subtitle'), max_length=255,
         blank=True, null=True, default=None)
     language = models.CharField(_(u'language'), max_length=2, choices=settings.LANGUAGES)
@@ -120,6 +110,8 @@ class Invoice(models.Model):
     date_issue = models.DateField(_(u'issue date'))
     date_tax_point = models.DateField(_(u'tax point date'))  # time of supply
     date_due = models.DateField(_(u'due date'))
+    date_sent = MonitorField(monitor='status', when=[STATUS.SENT],
+        blank=True, null=True, default=None)
 
     # Payment details
     currency = models.CharField(_(u'currency'), max_length=10, choices=CURRENCY_CHOICES)
@@ -127,8 +119,8 @@ class Invoice(models.Model):
     credit = models.DecimalField(_(u'credit'), max_digits=10, decimal_places=2, default=0)
     #already_paid = models.DecimalField(_(u'already paid'), max_digits=10, decimal_places=2, default=0)
 
-    payment_method = models.CharField(_(u'payment method'), choices=PAYMENT_METHODS, max_length=64)
-    constant_symbol = models.CharField(_(u'constant symbol'), max_length=64, choices=CONSTANT_SYMBOLS,
+    payment_method = models.CharField(_(u'payment method'), choices=PAYMENT_METHOD, max_length=64)
+    constant_symbol = models.CharField(_(u'constant symbol'), max_length=64, choices=CONSTANT_SYMBOL,
         blank=True, null=True, default=None)
     variable_symbol = models.PositiveIntegerField(_(u'variable symbol'), max_length=10,
         blank=True, null=True, default=None)
@@ -213,8 +205,8 @@ class Invoice(models.Model):
         blank=True, null=True, default=None)
 
     # Delivery details
-    delivery_method = models.CharField(_(u'delivery method'), choices=DELIVERY_METHODS, max_length=64,
-        default=DELIVERY_METHOD_PERSONAL_PICKUP)
+    delivery_method = models.CharField(_(u'delivery method'), choices=DELIVERY_METHOD, max_length=64,
+        default=DELIVERY_METHOD.PERSONAL_PICKUP)
 
     # Other
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
@@ -253,19 +245,19 @@ class Invoice(models.Model):
 
         :return: string (generated next number)
         """
-        invoice_counter_reset = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD_YEARLY)
+        invoice_counter_reset = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD.YEARLY)
 
-        if invoice_counter_reset == Invoice.COUNTER_PERIOD_DAILY:
+        if invoice_counter_reset == Invoice.COUNTER_PERIOD.DAILY:
             relative_invoices = Invoice.objects.filter(date_issue=self.date_issue, type=self.type)
 
-        elif invoice_counter_reset == Invoice.COUNTER_PERIOD_YEARLY:
+        elif invoice_counter_reset == Invoice.COUNTER_PERIOD.YEARLY:
             relative_invoices = Invoice.objects.filter(date_issue__year=self.date_issue.year, type=self.type)
 
-        elif invoice_counter_reset == Invoice.COUNTER_PERIOD_MONTHLY:
+        elif invoice_counter_reset == Invoice.COUNTER_PERIOD.MONTHLY:
             relative_invoices = Invoice.objects.filter(date_issue__year=self.date_issue.year, date_issue__month=self.date_issue.month, type=self.type)
 
         else:
-            raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: daily, monthly, yearly.")
+            raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: DAILY, MONTHLY, YEARLY.")
 
         last_number = relative_invoices.aggregate(Max('number'))['number__max'] or 0
 

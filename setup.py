@@ -16,7 +16,9 @@ setup(
         'invoicing',
     ],
     include_package_data=True,
-    install_requires=('django', 'django-countries', 'django-iban', 'django-jsonfield', 'django-money', 'vatnumber'),
+    install_requires=(
+        'django', 'django-countries', 'django-iban', 'django-jsonfield', 'django-model-utils', 'django-money', 'vatnumber'
+    ),
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.5',
@@ -30,5 +32,5 @@ setup(
         'Development Status :: 3 - Alpha'
     ],
     license='GPL License',
-    keywords = "django invoice invoicing billing issuer buyer commerce products taxes pdf",
+    keywords = "django invoice invoicing billing supplier issuer purchaser buyer commerce products taxes vat pdf",
 )

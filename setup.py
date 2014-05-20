@@ -16,7 +16,7 @@ setup(
         'invoicing',
     ],
     include_package_data=True,
-    install_requires=('django',),
+    install_requires=('django', 'django-countries', 'django-iban', 'django-jsonfield', 'django-money', 'vatnumber'),
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.5',

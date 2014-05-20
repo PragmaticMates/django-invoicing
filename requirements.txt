@@ -3,7 +3,6 @@ django-countries==2.1.2
 django-iban==0.2.7
 git+https://github.com/bradjasper/django-jsonfield.git
 django-money==0.4.1
-git+https://github.com/strange/django-vat.git
 psycopg2==2.5.2
 py-moneyed==0.5.0
 six==1.6.1

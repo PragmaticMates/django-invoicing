@@ -26,7 +26,7 @@
             "bank_zip": "Example ZIP code",
             "bank_city": "Example city",
             "bank_country": "SK",
-            "bank_iban": "SK0000000000000000000000",
+            "bank_iban": "SK0000000000000000000028",
             "bank_swift_bic": "EXAMPLEBANK",
             "supplier_name": "Example company",
             "supplier_street": "Example street",
@@ -35,7 +35,7 @@
             "supplier_country": "SK",
             "supplier_registration_id": "123 456 789",
             "supplier_tax_id": "111 222 333",
-            "supplier_vat_id": "SK111 222 333",
+            "supplier_vat_id": "SK 1000 000 000",
             "supplier_additional_info": {
                 "www": "www.example.com"
             },
@@ -49,7 +49,7 @@
             "customer_country": "SK",
             "customer_registration_id": "987 654 321",
             "customer_tax_id": "333 222 111",
-            "customer_vat_id": "SK333 222 111",
+            "customer_vat_id": "SK 2000 000 000",
             "customer_additional_info": {
                 "first info": "1st information",
                 "second info": "2nd information",
@@ -105,9 +105,24 @@
             "title": "third item",
             "quantity": 1,
             "unit": "EMPTY",
-            "unit_price": 100,
+            "unit_price": 50,
             "tax_rate": 0,
             "weight": 2,
+            "created": "2014-03-25T12:21:37.107Z",
+            "modified": "2014-03-31T12:22:31.899Z"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "invoicing.invoiceitem",
+        "fields": {
+            "invoice": 1,
+            "title": "fourth item",
+            "quantity": 1,
+            "unit": "EMPTY",
+            "unit_price": 100,
+            "tax_rate": null,
+            "weight": 3,
             "created": "2014-03-25T12:21:37.107Z",
             "modified": "2014-03-31T12:22:31.899Z"
         }

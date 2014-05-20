@@ -19,7 +19,7 @@ class TaxationPolicy(object):
 
         :return: Decimal()
         """
-        return getattr(settings, 'INVOICING_TAX_RATE')
+        return getattr(settings, 'INVOICING_TAX_RATE', None)
 
     @classmethod
     def get_supplier_country_code(cls):

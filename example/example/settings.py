@@ -167,7 +167,7 @@ LOGGING = {
 
 # INVOICING
 import json
-INVOICING_TAX_RATE = 0   # Mandatory. If supplier is not a VAT payer, set to 0
+INVOICING_TAX_RATE = 20   # Note: the value None means "TAX not applicable" (supplier is not a VAT payer), rather than value Decimal(0) which means 0% TAX.
 INVOICING_SUPPLIER = {
     'name': 'Example company',
     'street': 'Example street',
@@ -183,6 +183,6 @@ INVOICING_SUPPLIER = {
     'bank_zip': 'Example ZIP code',
     'bank_city': 'Example city',
     'bank_country_code': 'SK',
-    'bank_iban': 'SK0000000000000000000000',
+    'bank_iban': 'SK0000000000000000000028',
     'bank_swift_bic': 'EXAMPLEBANK'
 }

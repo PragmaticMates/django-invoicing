@@ -352,7 +352,8 @@ class InvoiceItem(models.Model):
     quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1)
     unit = models.CharField(_(u'unit'), choices=UNITS, max_length=64, default=UNIT_PIECES)
     unit_price = models.DecimalField(_(u'unit price'), max_digits=10, decimal_places=2)
-    tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1)
+    tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1,
+        blank=True, null=True, default=None)
     weight = models.IntegerField(_(u'weight'), choices=WEIGHT, blank=True, null=True, default=0)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)
@@ -372,17 +373,18 @@ class InvoiceItem(models.Model):
 
     @property
     def vat(self):
-        return self.price * self.tax_rate / 100
+        return self.price * self.tax_rate / 100 if self.tax_rate else 0
 
     @property
     def subtotal(self):
         return self.price + self.vat
 
     def save(self, **kwargs):
-        if self.tax_rate is None:
-            if self.invoice.taxation_policy and self.invoice.customer_country:
+        if self.tax_rate in EMPTY_VALUES and self.pk is None:
+            if self.invoice.taxation_policy:
                 # There is taxation policy -> get tax rate
-                self.tax_rate = self.invoice.taxation_policy.get_tax_rate(self.invoice.customer_vat_id, self.invoice.customer_country.code)
+                customer_country_code = self.invoice.customer_country.code if self.invoice.customer_country else None
+                self.tax_rate = self.invoice.taxation_policy.get_tax_rate(self.invoice.customer_vat_id, customer_country_code)
             else:
                 # If there is not any special taxation policy, set default tax rate
                 self.tax_rate = TaxationPolicy.get_default_tax()

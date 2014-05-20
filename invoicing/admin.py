@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from forms import InvoiceItemForm
 from models import Invoice, InvoiceItem
 
 
@@ -16,7 +15,6 @@ class InvoiceItemInline(admin.TabularInline):
     )
     model = InvoiceItem
     extra = 0
-    form = InvoiceItemForm
 
 
 class InvoiceAdmin(admin.ModelAdmin):

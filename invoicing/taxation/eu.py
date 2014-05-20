@@ -9,11 +9,11 @@ class EUTaxationPolicy(TaxationPolicy):
     """
     This taxation policy should be correct for all EU countries. It uses following rules:
         * if supplier country is not in EU - assert error,
-        * return **default tax** in cases:
+        * return 'default tax' in cases:
             * if supplier country and customer country are the same,
             * if supplier country and customer country are not the same, but customer is private person from EU,
             * if supplier country and customer country are not the same, customer is company from EUR, but his VAT ID is not valid according VIES system.
-        * return tax not applicable (0) in cases:
+        * return tax not applicable (None) in cases:
             * if supplier country and customer country are not the same, customer is company from EU and his tax id is valid according VIES system.
             * if supplier country and customer country are not the same and customer is private person not from EU,
             * if supplier country and customer country are not the same and customer is company not from EU.
@@ -78,7 +78,7 @@ class EUTaxationPolicy(TaxationPolicy):
             else:
                 # Customer (private person) is not from EU
                 # charge back
-                return 0
+                return None
         else:
             # Customer is company, we now country and VAT ID
 
@@ -93,7 +93,7 @@ class EUTaxationPolicy(TaxationPolicy):
                     if vat_id and vatnumber.check_vies(vat_id):
                     # Company is registered in VIES
                     # Charge back
-                        return 0
+                        return None
                     else:
                         return cls.get_default_tax()
                 except Exception:
@@ -102,4 +102,4 @@ class EUTaxationPolicy(TaxationPolicy):
             else:
                 # Company is not from EU
                 # Charge back
-                return 0
+                return None

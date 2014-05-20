@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='django-invoicing',
-    version='0.1.2',
+    version='0.1.3',
     description='Django app for invoicing.',
     long_description=open('README.rst').read(),
     author='Pragmatic Mates',

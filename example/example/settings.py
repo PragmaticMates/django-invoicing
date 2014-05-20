@@ -2,6 +2,7 @@
 from os.path import normpath, join
 from django.core.urlresolvers import reverse_lazy
 
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -199,11 +200,13 @@ INVOICING_TEMPLATE = 'invoicing.pdf.SimplePDFTemplate'
 INVOICING_SUPPLIER_LOGO_URL = normpath(join(STATIC_URL, 'my_logo.png'))
 
 # TODO: daily/monthly/yearly
-INVOICING_COUNTER_RESET = 'yearly'
+from invoicing.models import Invoice
+INVOICING_COUNTER_PERIOD = Invoice.COUNTER_PERIOD_MONTHLY
 
 # Remember to set INVOICE_NUMBER_FORMAT manually to match preferred way of invoice numbering schema.
 # For example if you choose reset counter on daily basis, you need to use in INVOICE_NUMBER_FORMAT
 # at least {{ invoice.date_issue|date:'d/m/Y' to distinguish invoice's full numbers between days.
 
 # TODO:
-INVOICING_NUMBER_FORMAT = "{{ invoice.number }}/{{ invoice.date_issue|date='m/Y' }}"
+INVOICING_NUMBER_FORMAT = "{{ invoice.date_issue|date:'Y/m' }}/{{ invoice.number }}"
+

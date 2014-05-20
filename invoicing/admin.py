@@ -19,7 +19,7 @@ class InvoiceItemInline(admin.TabularInline):
 
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
-    list_display = ['pk', 'type', 'code', 'status', 'customer_name', 'customer_country',
+    list_display = ['pk', 'type', 'full_number', 'status', 'customer_name', 'customer_country',
                     'subtotal', 'vat', 'total', 'currency', 'date_issue', 'payment_term', 'is_overdue_boolean', 'is_paid']
     list_editable = ['status']
     list_filter = ['type', 'status', 'payment_method',
@@ -30,7 +30,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     fieldsets = (
         (_(u'General information'), {
             'fields': (
-                'type', 'prefix', 'number', 'status', 'subtitle', 'language', 'note',
+                'type', 'number', 'full_number', 'status', 'subtitle', 'language', 'note',
                 'date_issue', 'date_tax_point', 'date_due'
             )
         }),

@@ -1,32 +1,30 @@
 from __future__ import division
 
-import collections
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 from decimal import Decimal
+from django_countries.fields import CountryField
 from django_iban.fields import IBANField, SWIFTBICField
 from djmoney.forms.widgets import CURRENCY_CHOICES
 from jsonfield import JSONField
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.core.validators import EMPTY_VALUES
 from django.db import models
+from django.db.models import Max
+from django.template import Template, Context
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-from django_countries.fields import CountryField
 
 from fields import VATField
 from utils import import_name
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
-
-
-def next_number():
-    try:
-        last_invoice = Invoice.objects.all().order_by('-number')[0]
-        return last_invoice.number + 1
-    except IndexError:
-        return getattr(settings, 'INVOICING_START_FROM', 1)
 
 
 def default_supplier(attribute):
@@ -35,6 +33,10 @@ def default_supplier(attribute):
 
 
 class Invoice(models.Model):
+    COUNTER_PERIOD_DAILY = 'daily'
+    COUNTER_PERIOD_MONTHLY = 'monthly'
+    COUNTER_PERIOD_YEARLY = 'yearly'
+
     TYPE_INVOICE = 'INVOICE'
     TYPE_ADVANCE = 'ADVANCE'
     TYPE_PROFORMA = 'PROFORMA'
@@ -107,17 +109,17 @@ class Invoice(models.Model):
     # General information
     type = models.CharField(_(u'type'), max_length=64, choices=TYPES,
         default=TYPE_INVOICE)
-    prefix = models.CharField(_(u'number prefix'), max_length=255)
-    number = models.IntegerField(_(u'number'), unique=True, default=next_number)
+    number = models.IntegerField(_(u'number'), db_index=True, blank=True)
+    full_number = models.CharField(max_length=128, blank=True)
     status = models.CharField(_(u'status'), choices=STATUSES, max_length=64, default=STATUS_NEW)
     subtitle = models.CharField(_(u'subtitle'), max_length=255,
         blank=True, null=True, default=None)
     language = models.CharField(_(u'language'), max_length=2, choices=settings.LANGUAGES)
     note = models.CharField(_(u'note'), max_length=255,
         blank=True, null=True, default=_(u'Thank you for using our services.'))
-    date_issue = models.DateTimeField(_(u'issue date'))
-    date_tax_point = models.DateTimeField(_(u'tax point date'))  # time of supply
-    date_due = models.DateTimeField(_(u'due date'))
+    date_issue = models.DateField(_(u'issue date'))
+    date_tax_point = models.DateField(_(u'tax point date'))  # time of supply
+    date_due = models.DateField(_(u'due date'))
 
     # Payment details
     currency = models.CharField(_(u'currency'), max_length=10, choices=CURRENCY_CHOICES)
@@ -164,7 +166,7 @@ class Invoice(models.Model):
     supplier_vat_id = VATField(_(u'supplier VAT No.'),
         blank=True, null=True, default=lambda: default_supplier('vat_id'))
     supplier_additional_info = JSONField(_(u'supplier additional information'),
-        load_kwargs={'object_pairs_hook': collections.OrderedDict},
+        load_kwargs={'object_pairs_hook': OrderedDict},
         blank=True, null=True, default=lambda: default_supplier('additional_info'))  # for example www or legal matters
     # TODO:
     #supplier_logo
@@ -195,7 +197,7 @@ class Invoice(models.Model):
     customer_vat_id = VATField(_(u'customer VAT ID'),
         blank=True, null=True, default=None)
     customer_additional_info = JSONField(_(u'customer additional information'),
-        load_kwargs={'object_pairs_hook': collections.OrderedDict},
+        load_kwargs={'object_pairs_hook': OrderedDict},
         blank=True, null=True, default=None)
 
     # Shipping details
@@ -225,13 +227,65 @@ class Invoice(models.Model):
         ordering = ('date_issue', 'number')
 
     def __unicode__(self):
-        return self.code
+        return self.full_number
 
-    @property
-    def code(self):
-        if self.prefix not in EMPTY_VALUES:
-            return u'%s%s' % (self.prefix, self.number)
-        return unicode(self.number)
+    def save(self, **kwargs):
+        if self.number in EMPTY_VALUES:
+            self.number = self._get_next_number()
+
+        if self.full_number in EMPTY_VALUES:
+            self.full_number = self._get_full_number()
+
+        return super(Invoice, self).save(**kwargs)
+
+    def _get_next_number(self):
+        """
+        Returnes next invoice number based on ``settings.INVOICING_COUNTER_PERIOD``.
+
+        .. warning::
+
+            This is only used to prepopulate ``number`` field on saving new invoice.
+            To get invoice number always use ``number`` field.
+
+        .. note::
+
+            To get invoice full number use ``full_number`` field.
+
+        :return: string (generated next number)
+        """
+        invoice_counter_reset = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD_YEARLY)
+
+        if invoice_counter_reset == Invoice.COUNTER_PERIOD_DAILY:
+            relative_invoices = Invoice.objects.filter(date_issue=self.date_issue, type=self.type)
+
+        elif invoice_counter_reset == Invoice.COUNTER_PERIOD_YEARLY:
+            relative_invoices = Invoice.objects.filter(date_issue__year=self.date_issue.year, type=self.type)
+
+        elif invoice_counter_reset == Invoice.COUNTER_PERIOD_MONTHLY:
+            relative_invoices = Invoice.objects.filter(date_issue__year=self.date_issue.year, date_issue__month=self.date_issue.month, type=self.type)
+
+        else:
+            raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: daily, monthly, yearly.")
+
+        last_number = relative_invoices.aggregate(Max('number'))['number__max'] or 0
+
+        return last_number + 1
+
+    def _get_full_number(self):
+        """
+        Generates on the fly invoice full number from template provided by ``settings.INVOICING_NUMBER_FORMAT``.
+        ``Invoice`` object is provided as ``invoice`` variable to the template, therefore all object fields
+        can be used to generate full number format.
+
+        .. warning::
+
+            This is only used to prepopulate ``full_number`` field on saving new invoice.
+            To get invoice full number always use ``full_number`` field.
+
+        :return: string (generated full number)
+        """
+        number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_issue|date:'Y' }}/{{ invoice.number }}")
+        return Template(number_format).render(Context({'invoice': self}))
 
     def get_absolute_url(self):
         return reverse('invoice_detail', args=(self.pk,))
@@ -251,7 +305,7 @@ class Invoice(models.Model):
 
     @property
     def is_overdue(self):
-        return self.date_due < now() and self.status != self.STATUS_PAID
+        return self.date_due < now().date() and self.status != self.STATUS_PAID
 
     @property
     def payment_term(self):
@@ -387,6 +441,5 @@ class InvoiceItem(models.Model):
             else:
                 # If there is not any special taxation policy, set default tax rate
                 self.tax_rate = TaxationPolicy.get_default_tax()
-                #self.tax_rate = getattr(settings, 'INVOICING_TAX_RATE')
 
         return super(InvoiceItem, self).save(**kwargs)

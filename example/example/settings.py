@@ -1,7 +1,6 @@
 # Django settings for example project.
+from os.path import normpath, join
 from django.core.urlresolvers import reverse_lazy
-from invoicing.taxation.eu import EUTaxationPolicy
-
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -166,8 +165,13 @@ LOGGING = {
 
 
 # INVOICING
+
+# Note: the value None means "TAX not applicable" (supplier is not a VAT payer),
+# rather than value Decimal(0) which means 0% TAX.
+from decimal import Decimal
+INVOICING_TAX_RATE = Decimal(20)
+
 import json
-INVOICING_TAX_RATE = 20   # Note: the value None means "TAX not applicable" (supplier is not a VAT payer), rather than value Decimal(0) which means 0% TAX.
 INVOICING_SUPPLIER = {
     'name': 'Example company',
     'street': 'Example street',
@@ -186,3 +190,20 @@ INVOICING_SUPPLIER = {
     'bank_iban': 'SK0000000000000000000028',
     'bank_swift_bic': 'EXAMPLEBANK'
 }
+# TODO: this setting is not ready yet
+# Invoices are generated on the fly from database records.
+# Therefore changing this value will affect all previously created invoices.
+INVOICING_TEMPLATE = 'invoicing.pdf.SimplePDFTemplate'
+
+# TODO: or put it into models.py (and INVOICING_SUPPLIER setting)?
+INVOICING_SUPPLIER_LOGO_URL = normpath(join(STATIC_URL, 'my_logo.png'))
+
+# TODO: daily/monthly/yearly
+INVOICING_COUNTER_RESET = 'yearly'
+
+# Remember to set INVOICE_NUMBER_FORMAT manually to match preferred way of invoice numbering schema.
+# For example if you choose reset counter on daily basis, you need to use in INVOICE_NUMBER_FORMAT
+# at least {{ invoice.date_issue|date:'d/m/Y' to distinguish invoice's full numbers between days.
+
+# TODO:
+INVOICING_NUMBER_FORMAT = "{{ invoice.number }}/{{ invoice.date_issue|date='m/Y' }}"

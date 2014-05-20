@@ -8,7 +8,6 @@ from djmoney.forms.widgets import CURRENCY_CHOICES
 from jsonfield import JSONField
 
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.core.validators import EMPTY_VALUES
 from django.db import models
@@ -17,6 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_countries.fields import CountryField
 
 from fields import VATField
+from utils import import_name
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
 
@@ -238,10 +238,9 @@ class Invoice(models.Model):
 
     @property
     def taxation_policy(self):
-        import importlib
         taxation_policy = getattr(settings, 'INVOICING_TAXATION_POLICY', None)
         if taxation_policy is not None:
-            return taxation_policy  # TODO: FIXME: return importlib.import_module(taxation_policy)
+            return import_name(taxation_policy)
 
         # Check if supplier is from EU
         if self.supplier_country:

@@ -22,7 +22,7 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from fields import VATField
-from utils import import_name
+from utils import import_name, round_to_two_places
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
 
@@ -366,14 +366,14 @@ class Invoice(models.Model):
         sum = 0
         for item in self.invoiceitem_set.all():
             sum += item.quantity * item.unit_price  # item subtotal
-        return sum
+        return round_to_two_places(sum)
 
     @property
     def vat(self):
         vat = 0
         for item in self.invoiceitem_set.all():
             vat += item.vat
-        return vat
+        return round_to_two_places(vat)
 
     @property
     def total(self):
@@ -381,12 +381,7 @@ class Invoice(models.Model):
         total *= ((100 - Decimal(self.discount)) / 100)  # subtract discount amount
         total -= self.credit  # subtract credit
         #total -= self.already_paid  # subtract already paid
-
-        # round to two decimal places
-        TWOPLACES = Decimal(10) ** -2
-        total = round(total, 2)
-        total = Decimal(total).quantize(TWOPLACES)
-        return total if total >= 0 else 0
+        return round_to_two_places(total)
 
 
 class InvoiceItem(models.Model):
@@ -422,15 +417,15 @@ class InvoiceItem(models.Model):
 
     @property
     def price(self):
-        return self.unit_price * self.quantity
+        return round_to_two_places(self.unit_price * self.quantity)
 
     @property
     def vat(self):
-        return self.price * self.tax_rate / 100 if self.tax_rate else 0
+        return round_to_two_places(self.price * self.tax_rate / 100 if self.tax_rate else 0)
 
     @property
     def subtotal(self):
-        return self.price + self.vat
+        return round_to_two_places(self.price + self.vat)
 
     def save(self, **kwargs):
         if self.tax_rate in EMPTY_VALUES and self.pk is None:

@@ -300,6 +300,10 @@ class Invoice(models.Model):
         return self.date_due < now().date() and self.status != self.STATUS_PAID
 
     @property
+    def overdue_days(self):
+        return (now() - self.date_due).days
+
+    @property
     def payment_term(self):
         return (self.date_due - self.date_issue).days
 

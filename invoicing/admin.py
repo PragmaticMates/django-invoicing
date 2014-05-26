@@ -54,7 +54,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 
             )
         }),
-        (_(u'Issuer details'), {
+        (_(u'Customer details'), {
             'fields': (
                 'customer_name', 'customer_street', 'customer_zip', 'customer_city', 'customer_country',
                 'customer_registration_id', 'customer_tax_id', 'customer_vat_id', 'customer_additional_info',

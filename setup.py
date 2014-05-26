@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 setup(
     name='django-invoicing',
-    version='0.2.2',
+    version='0.2.3',
     description='Django app for invoicing.',
     long_description=open('README.rst').read(),
     author='Pragmatic Mates',
@@ -12,9 +12,7 @@ setup(
     maintainer='Pragmatic Mates',
     maintainer_email='info@pragmaticmates.com',
     url='https://github.com/PragmaticMates/django-invoicing',
-    packages=[
-        'invoicing',
-    ],
+    packages=find_packages(),
     include_package_data=True,
     install_requires=(
         'django', 'django-countries', 'django-iban', 'jsonfield', 'django-model-utils', 'django-money', 'vatnumber'

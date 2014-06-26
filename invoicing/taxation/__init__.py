@@ -15,7 +15,7 @@ class TaxationPolicy(object):
     @classmethod
     def get_default_tax(cls):
         """
-        Gets default tax rate. Simple returns ``settings.TAX``
+        Gets default tax rate.``
 
         :return: Decimal()
         """
@@ -24,7 +24,7 @@ class TaxationPolicy(object):
     @classmethod
     def get_supplier_country_code(cls):
         """
-        Gets suppliers country. Simply returns ``settings.TAX_COUNTRY``
+        Gets suppliers country.``
 
         :return: unicode
         """
@@ -37,7 +37,7 @@ class TaxationPolicy(object):
         Methods
 
         :param vat_id: customer vat id
-        :param country_code:  customer country in ISO 2-letters format
+        :param country_code: customer country in ISO 2-letters format
         :return: Decimal()
         """
         raise NotImplementedError('Method get_tax_rate should be implemented.')

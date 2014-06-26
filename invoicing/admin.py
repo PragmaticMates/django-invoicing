@@ -44,7 +44,7 @@ class InvoiceAdmin(admin.ModelAdmin):
                 'currency', 'discount', 'credit',
                 #'already_paid',
                 'payment_method', 'constant_symbol', 'variable_symbol', 'specific_symbol', 'reference',
-                'bank', 'bank_country', 'bank_city', 'bank_street', 'bank_zip', 'bank_iban', 'bank_swift_bic'
+                'bank_name', 'bank_country', 'bank_city', 'bank_street', 'bank_zip', 'bank_iban', 'bank_swift_bic'
             )
         }),
         (_(u'Supplier details'), {

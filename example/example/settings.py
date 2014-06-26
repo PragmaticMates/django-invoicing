@@ -182,21 +182,25 @@ INVOICING_SUPPLIER = {
     'registration_id': '123 456 789',
     'tax_id': '111222333',
     'vat_id': 'SK111222333',
-    'additional_info': json.dumps({"www": "www.example.com"}),
-    'bank': 'Example bank',
-    'bank_street': 'Example street',
-    'bank_zip': 'Example ZIP code',
-    'bank_city': 'Example city',
-    'bank_country_code': 'SK',
-    'bank_iban': 'SK0000000000000000000028',
-    'bank_swift_bic': 'EXAMPLEBANK'
+    'additional_info': json.dumps({
+        "www": "www.example.com"
+        #... legal matters
+    }),
+    'bank': {
+        'name': 'Example bank',
+        'street': 'Example street',
+        'zip': 'Example ZIP code',
+        'city': 'Example city',
+        'country_code': 'SK',
+        'iban': 'SK0000000000000000000028',
+        'swift_bic': 'EXAMPLEBANK'
+    }
 }
 # TODO: this setting is not ready yet
 # Invoices are generated on the fly from database records.
 # Therefore changing this value will affect all previously created invoices.
-INVOICING_TEMPLATE = 'invoicing.pdf.SimplePDFTemplate'
+INVOICING_FORMATTER = 'invoicing.formatters.html.BootstrapHTMLFormatter'
 
-# TODO: or put it into models.py (and INVOICING_SUPPLIER setting)?
 INVOICING_SUPPLIER_LOGO_URL = normpath(join(STATIC_URL, 'my_logo.png'))
 
 from invoicing.models import Invoice
@@ -204,5 +208,5 @@ INVOICING_COUNTER_PERIOD = Invoice.COUNTER_PERIOD.MONTHLY
 
 # Remember to set INVOICING_NUMBER_FORMAT manually to match preferred way of invoice numbering schema.
 # For example if you choose reset counter on daily basis, you need to use in INVOICING_NUMBER_FORMAT
-# at least {{ invoice.date_issue|date:'d/m/Y' to distinguish invoice's full numbers between days.
+# at least {{ invoice.date_issue|date:'d/m/Y' }} to distinguish invoice's full numbers between days.
 INVOICING_NUMBER_FORMAT = "{{ invoice.date_issue|date:'Y/m' }}/{{ invoice.number }}"

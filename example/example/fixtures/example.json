@@ -22,7 +22,7 @@
             "variable_symbol": 20140001,
             "specific_symbol": 2014,
             "reference": "Payment for goods",
-            "bank": "Example bank",
+            "bank_name": "Example bank",
             "bank_street": "Example street",
             "bank_zip": "Example ZIP code",
             "bank_city": "Example city",

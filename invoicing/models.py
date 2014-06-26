@@ -29,9 +29,17 @@ from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
 
 
-def default_supplier(attribute):
+def default_supplier(attribute_lookup):
     supplier = getattr(settings, 'INVOICING_SUPPLIER', None)
-    return supplier.get(attribute, None) if supplier else None
+
+    if not supplier:
+        return None
+
+    lookup_object = supplier
+    for attribute in attribute_lookup.split('.'):
+        lookup_object = lookup_object.get(attribute, None)
+
+    return lookup_object
 
 
 class Invoice(models.Model):
@@ -109,7 +117,7 @@ class Invoice(models.Model):
         blank=True, null=True, default=_(u'Thank you for using our services.'))
     date_issue = models.DateField(_(u'issue date'))
     date_tax_point = models.DateField(_(u'tax point date'))  # time of supply
-    date_due = models.DateField(_(u'due date'))
+    date_due = models.DateField(_(u'due date'))  # payment till
     date_sent = MonitorField(monitor='status', when=[STATUS.SENT],
         blank=True, null=True, default=None)
 
@@ -129,18 +137,18 @@ class Invoice(models.Model):
     reference = models.CharField(_(u'reference'), max_length=140,
         blank=True, null=True, default=None)
 
-    bank = models.CharField(_(u'bank'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank'))
+    bank_name = models.CharField(_(u'bank name'), max_length=255,
+        blank=True, null=True, default=lambda: default_supplier('bank.name'))
     bank_street = models.CharField(_(u'bank street and number'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank_street'))
+        blank=True, null=True, default=lambda: default_supplier('bank.street'))
     bank_zip = models.CharField(_(u'bank ZIP'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank_zip'))
+        blank=True, null=True, default=lambda: default_supplier('bank.zip'))
     bank_city = models.CharField(_(u'bank city'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank_city'))
+        blank=True, null=True, default=lambda: default_supplier('bank.city'))
     bank_country = CountryField(_(u'bank country'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank_country_code'))
-    bank_iban = IBANField(verbose_name=_(u'Account number (IBAN)'), default=lambda: default_supplier('bank_iban'))
-    bank_swift_bic = SWIFTBICField(verbose_name=_(u'Bank SWIFT / BIC'), default=lambda: default_supplier('bank_swift_bic'))
+        blank=True, null=True, default=lambda: default_supplier('bank.country_code'))
+    bank_iban = IBANField(verbose_name=_(u'Account number (IBAN)'), default=lambda: default_supplier('bank.iban'))
+    bank_swift_bic = SWIFTBICField(verbose_name=_(u'Bank SWIFT / BIC'), default=lambda: default_supplier('bank.swift_bic'))
 
     # Issuer details
     supplier_name = models.CharField(_(u'supplier name'), max_length=255, default=lambda: default_supplier('name'))
@@ -160,12 +168,8 @@ class Invoice(models.Model):
     supplier_additional_info = JSONField(_(u'supplier additional information'),
         load_kwargs={'object_pairs_hook': OrderedDict},
         blank=True, null=True, default=lambda: default_supplier('additional_info'))  # for example www or legal matters
-    # TODO:
-    #supplier_logo
 
     # Contact details
-    supplier_www = models.CharField(_(u'supplier www'), max_length=255,
-        blank=True, null=True, default=None)
     issuer_name = models.CharField(_(u'issuer name'), max_length=255,
         blank=True, null=True, default=None)
     issuer_email = models.EmailField(_(u'issuer email'),
@@ -230,6 +234,9 @@ class Invoice(models.Model):
 
         return super(Invoice, self).save(**kwargs)
 
+    def get_absolute_url(self):
+        return reverse('invoicing:invoice_detail', args=(self.pk,))
+
     def _get_next_number(self):
         """
         Returnes next invoice number based on ``settings.INVOICING_COUNTER_PERIOD``.
@@ -279,9 +286,6 @@ class Invoice(models.Model):
         number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_issue|date:'Y' }}/{{ invoice.number }}")
         return Template(number_format).render(Context({'invoice': self}))
 
-    def get_absolute_url(self):
-        return reverse('invoice_detail', args=(self.pk,))
-
     @property
     def taxation_policy(self):
         taxation_policy = getattr(settings, 'INVOICING_TAXATION_POLICY', None)
@@ -297,11 +301,11 @@ class Invoice(models.Model):
 
     @property
     def is_overdue(self):
-        return self.date_due < now().date() and self.status != self.STATUS_PAID
+        return self.date_due < now().date() and self.status != self.STATUS.PAID
 
     @property
     def overdue_days(self):
-        return (now() - self.date_due).days
+        return (now().date() - self.date_due).days
 
     @property
     def payment_term(self):
@@ -318,13 +322,14 @@ class Invoice(models.Model):
         self.supplier_vat_id = supplier.get('vat_id', None)
         self.supplier_additional_info = supplier.get('additional_info', None)
 
-        self.bank = supplier.get('bank')
-        self.bank_street = supplier.get('bank_street')
-        self.bank_zip = supplier.get('bank_zip')
-        self.bank_city = supplier.get('bank_city')
-        self.bank_country = supplier.get('bank_country_code')
-        self.bank_iban = supplier.get('bank_iban')
-        self.bank_swift_bic = supplier.get('bank_swift_bic')
+        bank = supplier.get('bank')
+        self.bank_name = bank.get('name')
+        self.bank_street = bank.get('street')
+        self.bank_zip = bank.get('zip')
+        self.bank_city = bank.get('city')
+        self.bank_country = bank.get('country_code')
+        self.bank_iban = bank.get('iban')
+        self.bank_swift_bic = bank.get('swift_bic')
 
     def set_customer_data(self, customer):
         self.customer_name = customer.get('name')
@@ -349,11 +354,8 @@ class Invoice(models.Model):
         if self.vat != 0:
             return True
 
-        # VAT is 0, check if customer is from EU and from same country
-        if self.customer_country:
-            is_EU_customer = EUTaxationPolicy.is_in_EU(self.customer_country.code)
-        else:
-            is_EU_customer = False
+        # VAT is 0, check if customer is from EU and from same country as supplier
+        is_EU_customer = EUTaxationPolicy.is_in_EU(self.customer_country.code) if self.customer_country else False
 
         return is_EU_customer and self.supplier_country != self.customer_country
 
@@ -361,7 +363,7 @@ class Invoice(models.Model):
     def subtotal(self):
         sum = 0
         for item in self.invoiceitem_set.all():
-            sum += item.quantity * item.unit_price  # item subtotal
+            sum += item.subtotal
         return round_to_two_places(sum)
 
     @property
@@ -370,6 +372,12 @@ class Invoice(models.Model):
         for item in self.invoiceitem_set.all():
             vat += item.vat
         return round_to_two_places(vat)
+
+    @property
+    def discount_value(self):
+        total = self.subtotal + self.vat  # subtotal with vat
+        discount_value = total * (Decimal(self.discount) / 100)  # subtract discount amount
+        return round_to_two_places(discount_value)
 
     @property
     def total(self):
@@ -412,16 +420,16 @@ class InvoiceItem(models.Model):
         return self.title
 
     @property
-    def price(self):
+    def subtotal(self):
         return round_to_two_places(self.unit_price * self.quantity)
 
     @property
     def vat(self):
-        return round_to_two_places(self.price * self.tax_rate / 100 if self.tax_rate else 0)
+        return round_to_two_places(self.subtotal * self.tax_rate / 100 if self.tax_rate else 0)
 
     @property
-    def subtotal(self):
-        return round_to_two_places(self.price + self.vat)
+    def total(self):
+        return round_to_two_places(self.subtotal + self.vat)
 
     def save(self, **kwargs):
         if self.tax_rate in EMPTY_VALUES and self.pk is None:

@@ -73,7 +73,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     is_overdue_boolean.short_description = _(u'Is overdue')
 
     def is_paid(self, invoice):
-        return invoice.status == Invoice.STATUS_PAID
+        return invoice.status == Invoice.STATUS.PAID
     is_paid.boolean = True
     is_paid.short_description = _(u'Is paid')
 

@@ -26,7 +26,10 @@ class VATField(models.CharField):
 
     def to_python(self, value):
         value = super(VATField, self).to_python(value)
-        return value.replace(' ', '').upper()
+        try:
+            return value.replace(' ', '').upper()
+        except AttributeError:
+            return value
 
 
 # If south is installed, ensure that IBANField will be introspected just
@@ -53,4 +56,7 @@ class VATFormField(forms.CharField):
 
     def to_python(self, value):
         value = super(VATFormField, self).to_python(value)
-        return value.replace(' ', '').upper()
+        try:
+            return value.replace(' ', '').upper()
+        except AttributeError:
+            return value

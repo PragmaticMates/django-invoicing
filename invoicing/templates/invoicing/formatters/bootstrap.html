@@ -73,13 +73,13 @@
                             <strong>{% trans 'SWIFT / BIC' %}:</strong> {{ invoice.bank_swift_bic }}<br>
                             <br>
                             <i>{% trans 'Issuer' %}:</i><br>
-                            <strong>{% trans 'Name' %}:</strong> {{ invoice.issuer_name }}<br>
-                            <strong>{% trans 'Phone' %}:</strong> {{ invoice.issuer_phone }}<br>
-                            <strong>{% trans 'Email' %}:</strong> {{ invoice.issuer_email }}<br>
+                            <strong>{% trans 'Name' %}:</strong> {{ invoice.issuer_name|default:'-' }}<br>
+                            <strong>{% trans 'Phone' %}:</strong> {{ invoice.issuer_phone|default:'-' }}<br>
+                            <strong>{% trans 'Email' %}:</strong> {{ invoice.issuer_email|default:'-' }}<br>
                             <br>
                             <i>{% trans 'Additional data' %}:</i><br>
                             {% for label, value in invoice.supplier_additional_info.items %}
-                                <strong>{{ label }}:</strong> {{ value }}<br>
+                                <strong>{{ label }}:</strong> {{ value|default:'' }}<br>
                             {% endfor %}
                         </div>
                     </div>
@@ -94,9 +94,9 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     {{ invoice.customer_name }}<br>
-                                    {{ invoice.customer_street }}<br>
-                                    {{ invoice.customer_zip }} {{ invoice.customer_city }}<br>
-                                    {{ invoice.get_customer_country_display }}<br>
+                                    {{ invoice.customer_street|default:'' }}<br>
+                                    {{ invoice.customer_zip|default:'' }} {{ invoice.customer_city|default:'' }}<br>
+                                    {{ invoice.get_customer_country_display|default:'' }}<br>
                                 </div>
                                 <div class="col-md-6">
                                     {% if invoice.customer_registration_id %}<strong>{% trans 'Reg. No.' %}:</strong> {{ invoice.customer_registration_id }}<br>{% endif %}
@@ -149,12 +149,12 @@
 
                     <div class="panel panel-warning">
                         <div class="panel-body">
-                            <strong>{% trans 'Delivery method' %}:</strong> {{ invoice.get_delivery_method_display }}<br>
-                            <strong>{% trans 'Payment method' %}:</strong> {{ invoice.get_payment_method_display }}<br>
-                            <strong>{% trans 'Constant symbol' %}:</strong> {{ invoice.constant_symbol }}<br>
-                            <strong>{% trans 'Variable symbol' %}:</strong> {{ invoice.variable_symbol }}<br>
-                            <strong>{% trans 'Specific symbol' %}:</strong> {{ invoice.specific_symbol }}<br>
-                            <strong>{% trans 'Reference' %}:</strong> {{ invoice.reference }}<br>
+                            <strong>{% trans 'Delivery method' %}:</strong> {{ invoice.get_delivery_method_display|default:'' }}<br>
+                            <strong>{% trans 'Payment method' %}:</strong> {{ invoice.get_payment_method_display|default:'' }}<br>
+                            <strong>{% trans 'Constant symbol' %}:</strong> {{ invoice.constant_symbol|default:'' }}<br>
+                            <strong>{% trans 'Variable symbol' %}:</strong> {{ invoice.variable_symbol|default:'' }}<br>
+                            <strong>{% trans 'Specific symbol' %}:</strong> {{ invoice.specific_symbol|default:'' }}<br>
+                            <strong>{% trans 'Reference' %}:</strong> {{ invoice.reference|default:'' }}<br>
                         </div>
                     </div>
                 </div>
@@ -171,9 +171,9 @@
                                 <tr>
                                     <th>{% trans 'ID' %}</th>
                                     <th>{% trans 'Description' %}</th>
-                                    <th class="text-right nowrap">{% trans 'Unit price' %}</th>
                                     <th class="text-right">{% trans 'Quantity' %}<br></th>
                                     <th>{% trans 'Unit' %}<br></th>
+                                    <th class="text-right nowrap">{% trans 'Unit price' %}</th>
                                     <th class="text-right">{% trans 'Subtotal' %}</th>
                                     <th class="text-right">{% trans 'Tax rate' %}</th>
                                     <th class="text-right nowrap">{% trans 'VAT amount' %}</th>
@@ -185,9 +185,9 @@
                                 <tr>
                                     <td class="minimal-width nowrap">{{ forloop.counter}}</td>
                                     <td>{{ item.title }}</td>
-                                    <td class="minimal-width nowrap text-right">{{ item.unit_price }}</td>
-                                    <td class="minimal-width nowrap text-right">{{ item.quantity}}</td>
+                                    <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat:"-3" }}</td>
                                     <td class="minimal-width nowrap">{{ item.get_unit_display }}</td>
+                                    <td class="minimal-width nowrap text-right">{{ item.unit_price }} {{ invoice.currency }}</td>
                                     <td class="minimal-width nowrap text-right">{{ item.subtotal }} {{ invoice.currency }}</td>
                                     <td class="minimal-width nowrap text-right">{% if item.tax_rate or item.tax_rate == 0 %}{{ item.tax_rate }}%{% else %}-{% endif %}</td>
                                     <td class="minimal-width nowrap text-right">{{ item.vat }} {{ invoice.currency }}</td>

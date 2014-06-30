@@ -351,7 +351,7 @@ class Invoice(models.Model):
 
     def is_supplier_vat_id_visible(self):
         # VAT is not 0
-        if self.vat != 0:
+        if self.vat != 0 or self.invoiceitem_set.filter(tax_rate__gt=0).exists():
             return True
 
         # VAT is 0, check if customer is from EU and from same country as supplier

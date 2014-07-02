@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-invoicing',
-    version='0.3.2',
+    version='0.4.0',
     description='Django app for invoicing.',
     long_description=open('README.rst').read(),
     author='Pragmatic Mates',
@@ -15,7 +15,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=(
-        'django', 'django-countries', 'django-iban', 'jsonfield', 'django-model-utils', 'django-money', 'vatnumber'
+        'django', 'south', 'django-countries', 'django-iban', 'jsonfield', 'django-model-utils', 'django-money', 'vatnumber'
     ),
     classifiers=[
         'Programming Language :: Python',

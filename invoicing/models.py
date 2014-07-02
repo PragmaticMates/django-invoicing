@@ -24,9 +24,10 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from fields import VATField
+from managers import InvoiceItemManager
+from taxation import TaxationPolicy
+from taxation.eu import EUTaxationPolicy
 from utils import import_name, round_to_two_places
-from invoicing.taxation import TaxationPolicy
-from invoicing.taxation.eu import EUTaxationPolicy
 
 
 def default_supplier(attribute_lookup):
@@ -406,9 +407,12 @@ class InvoiceItem(models.Model):
     unit_price = models.DecimalField(_(u'unit price'), max_digits=10, decimal_places=2)
     tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1,
         blank=True, null=True, default=None)
+    tag = models.CharField(_(u'tag'), max_length=128,
+        blank=True, null=True, default=None)
     weight = models.IntegerField(_(u'weight'), choices=WEIGHT, blank=True, null=True, default=0)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)
+    objects = InvoiceItemManager()
 
     class Meta:
         db_table = 'invoicing_items'
@@ -426,6 +430,11 @@ class InvoiceItem(models.Model):
     @property
     def vat(self):
         return round_to_two_places(self.subtotal * self.tax_rate / 100 if self.tax_rate else 0)
+
+    @property
+    def unit_price_with_vat(self):
+        tax_rate = self.tax_rate if self.tax_rate else 0
+        return round_to_two_places(Decimal(self.unit_price) * Decimal((100 + tax_rate) / 100))
 
     @property
     def total(self):

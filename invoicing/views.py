@@ -4,6 +4,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView
+
 from invoicing.utils import import_name
 
 from models import Invoice

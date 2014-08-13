@@ -1,4 +1,8 @@
+import datetime
+
 from django.contrib import admin
+from django.db.models import Q
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from models import Invoice, InvoiceItem
@@ -17,12 +21,29 @@ class InvoiceItemInline(admin.TabularInline):
     extra = 0
 
 
+class OverdueFilter(admin.SimpleListFilter):
+    title = _('overdue')
+    parameter_name = 'overdue'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('no', _('no')),
+            ('yes', _('yes')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'no':
+            return queryset.filter(Q(date_due__gt=datetime.datetime.combine(now().date(), datetime.time.max))|Q(status=Invoice.STATUS.PAID))
+        if self.value() == 'yes':
+            return queryset.filter(date_due__lt=datetime.datetime.combine(now().date(), datetime.time.max)).exclude(status=Invoice.STATUS.PAID)
+
+
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     list_display = ['pk', 'type', 'full_number', 'status', 'customer_name', 'customer_country',
                     'subtotal', 'vat', 'total', 'currency', 'date_issue', 'payment_term', 'is_overdue_boolean', 'is_paid']
     list_editable = ['status']
-    list_filter = ['type', 'status', 'payment_method',
+    list_filter = ['type', 'status', 'payment_method', OverdueFilter,
                    #'language', 'currency'
     ]
     search_fields = ['number', 'subtitle', 'note', 'supplier_name', 'customer_name', 'shipping_name']

@@ -12,7 +12,7 @@ class EUTaxationPolicy(TaxationPolicy):
         * return 'default tax' in cases:
             * if supplier country and customer country are the same,
             * if supplier country and customer country are not the same, but customer is private person from EU,
-            * if supplier country and customer country are not the same, customer is company from EUR, but his VAT ID is not valid according VIES system.
+            * if supplier country and customer country are not the same, customer is company from EU, but his VAT ID is not valid according VIES system.
         * return tax not applicable (None) in cases:
             * if supplier country and customer country are not the same, customer is company from EU and his tax id is valid according VIES system.
             * if supplier country and customer country are not the same and customer is private person not from EU,

@@ -27,7 +27,7 @@ from fields import VATField
 from managers import InvoiceItemManager
 from taxation import TaxationPolicy
 from taxation.eu import EUTaxationPolicy
-from utils import import_name, round_to_two_places
+from utils import import_name
 
 
 def default_supplier(attribute_lookup):
@@ -44,6 +44,10 @@ def default_supplier(attribute_lookup):
 
 
 class Invoice(models.Model):
+    """
+    Model representing Invoice itself.
+    It keeps all necessary information described at https://www.gov.uk/vat-record-keeping/vat-invoices
+    """
     COUNTER_PERIOD = Choices(
         ('DAILY', _('daily')),
         ('MONTHLY', _('monthly')),
@@ -117,8 +121,8 @@ class Invoice(models.Model):
     note = models.CharField(_(u'note'), max_length=255,
         blank=True, null=True, default=_(u'Thank you for using our services.'))
     date_issue = models.DateField(_(u'issue date'))
-    date_tax_point = models.DateField(_(u'tax point date'))  # time of supply
-    date_due = models.DateField(_(u'due date'))  # payment till
+    date_tax_point = models.DateField(_(u'tax point date'), help_text=_(u'time of supply'))
+    date_due = models.DateField(_(u'due date'), help_text=_(u'payment till'))
     date_sent = MonitorField(monitor='status', when=[STATUS.SENT],
         blank=True, null=True, default=None)
 
@@ -191,7 +195,7 @@ class Invoice(models.Model):
         blank=True, null=True, default=None)
     customer_tax_id = models.CharField(_(u'customer Tax No.'), max_length=255,
         blank=True, null=True, default=None)
-    customer_vat_id = VATField(_(u'customer VAT ID'),
+    customer_vat_id = VATField(_(u'customer VAT No.'),
         blank=True, null=True, default=None)
     customer_additional_info = JSONField(_(u'customer additional information'),
         load_kwargs={'object_pairs_hook': OrderedDict},
@@ -302,7 +306,7 @@ class Invoice(models.Model):
 
     @property
     def is_overdue(self):
-        return self.date_due < now().date() and self.status != self.STATUS.PAID
+        return self.date_due < now().date() and self.status not in [self.STATUS.PAID, self.STATUS.CANCELED]
 
     @property
     def overdue_days(self):
@@ -351,6 +355,8 @@ class Invoice(models.Model):
         self.shipping_country = shipping.get('country_code', None)
 
     def is_supplier_vat_id_visible(self):
+        # TODO: maybe it is not important
+
         # VAT is not 0
         if self.vat != 0 or self.invoiceitem_set.filter(tax_rate__gt=0).exists():
             return True
@@ -361,32 +367,52 @@ class Invoice(models.Model):
         return is_EU_customer and self.supplier_country != self.customer_country
 
     @property
+    def vat_summary(self):
+        #rates_and_sum = self.invoiceitem_set.all().annotate(base=Sum(F('qty')*F('price_per_unit'))).values('tax_rate', 'base')
+        #rates_and_sum = self.invoiceitem_set.all().values('tax_rate').annotate(Sum('price_per_unit'))
+        #rates_and_sum = self.invoiceitem_set.all().values('tax_rate').annotate(Sum(F('qty')*F('price_per_unit')))
+
+        from django.db import connection
+        cursor = connection.cursor()
+        cursor.execute('select tax_rate as rate, SUM(quantity*unit_price) as base, ROUND(CAST(SUM(quantity*unit_price*(tax_rate/100)) AS numeric), 2) as vat from invoicing_items where invoice_id = %s group by tax_rate;', [self.pk])
+
+        desc = cursor.description
+        return [
+            dict(zip([col[0] for col in desc], row))
+            for row in cursor.fetchall()
+        ]
+
+    @property
     def subtotal(self):
         sum = 0
         for item in self.invoiceitem_set.all():
             sum += item.subtotal
-        return round_to_two_places(sum)
+        return round(sum, 2)
 
     @property
     def vat(self):
         vat = 0
-        for item in self.invoiceitem_set.all():
-            vat += item.vat
-        return round_to_two_places(vat)
+        for vat_rate in self.vat_summary:
+            vat += vat_rate['vat']
+        return vat
 
     @property
     def discount_value(self):
         total = self.subtotal + self.vat  # subtotal with vat
         discount_value = total * (Decimal(self.discount) / 100)  # subtract discount amount
-        return round_to_two_places(discount_value)
+        return round(discount_value, 2)
 
     @property
     def total(self):
-        total = self.subtotal + self.vat  # subtotal with vat
+        #total = self.subtotal + self.vat  # subtotal with vat
+        total = 0
+        for vat_rate in self.vat_summary:
+            total += float(vat_rate['vat']) + float(vat_rate['base'])
+
         total *= ((100 - Decimal(self.discount)) / 100)  # subtract discount amount
         total -= self.credit  # subtract credit
         #total -= self.already_paid  # subtract already paid
-        return round_to_two_places(total)
+        return round(total, 2)
 
 
 class InvoiceItem(models.Model):
@@ -405,11 +431,12 @@ class InvoiceItem(models.Model):
     quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1)
     unit = models.CharField(_(u'unit'), choices=UNITS, max_length=64, default=UNIT_PIECES)
     unit_price = models.DecimalField(_(u'unit price'), max_digits=10, decimal_places=2)
-    tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1,
+    tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1, help_text=_(u'VAT rate'),
         blank=True, null=True, default=None)
     tag = models.CharField(_(u'tag'), max_length=128,
         blank=True, null=True, default=None)
-    weight = models.IntegerField(_(u'weight'), choices=WEIGHT, blank=True, null=True, default=0)
+    weight = models.IntegerField(_(u'weight'), choices=WEIGHT, help_text=_(u'order'),
+        blank=True, null=True, default=0)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)
     objects = InvoiceItemManager()
@@ -425,20 +452,20 @@ class InvoiceItem(models.Model):
 
     @property
     def subtotal(self):
-        return round_to_two_places(self.unit_price * self.quantity)
+        return round(self.unit_price * self.quantity, 2)
 
     @property
     def vat(self):
-        return round_to_two_places(self.subtotal * self.tax_rate / 100 if self.tax_rate else 0)
+        return round(self.subtotal * float(self.tax_rate)/100 if self.tax_rate else 0, 2)
 
     @property
     def unit_price_with_vat(self):
         tax_rate = self.tax_rate if self.tax_rate else 0
-        return round_to_two_places(Decimal(self.unit_price) * Decimal((100 + tax_rate) / 100))
+        return round(Decimal(self.unit_price) * Decimal((100 + tax_rate) / 100), 2)
 
     @property
     def total(self):
-        return round_to_two_places(self.subtotal + self.vat)
+        return round(self.subtotal + self.vat, 2)
 
     def save(self, **kwargs):
         if self.tax_rate in EMPTY_VALUES and self.pk is None:

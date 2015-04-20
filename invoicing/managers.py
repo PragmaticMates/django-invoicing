@@ -8,8 +8,9 @@ class InvoiceItemQuerySet(QuerySet):
 
 
 class InvoiceItemManager(Manager):
+    # TODO: Deprecated
     def get_query_set(self):
-        return self.get_query_set()
+        return InvoiceItemQuerySet(self.model, using=self._db)
 
     def get_queryset(self):
         return InvoiceItemQuerySet(self.model, using=self._db)

@@ -117,7 +117,7 @@ class Invoice(models.Model):
     status = models.CharField(_(u'status'), choices=STATUS, max_length=64, default=STATUS.NEW)
     subtitle = models.CharField(_(u'subtitle'), max_length=255,
         blank=True, null=True, default=None)
-    language = models.CharField(_(u'language'), max_length=2, choices=settings.LANGUAGES)
+    language = models.CharField(_(u'language'), max_length=10, choices=settings.LANGUAGES)
     note = models.CharField(_(u'note'), max_length=255,
         blank=True, null=True, default=_(u'Thank you for using our services.'))
     date_issue = models.DateField(_(u'issue date'))
@@ -259,14 +259,15 @@ class Invoice(models.Model):
         """
         invoice_counter_reset = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD.YEARLY)
 
+        important_date = self.date_tax_point  # self.date_issue
         if invoice_counter_reset == Invoice.COUNTER_PERIOD.DAILY:
-            relative_invoices = Invoice.objects.filter(date_issue=self.date_issue, type=self.type)
+            relative_invoices = Invoice.objects.filter(date_issue=important_date, type=self.type)
 
         elif invoice_counter_reset == Invoice.COUNTER_PERIOD.YEARLY:
-            relative_invoices = Invoice.objects.filter(date_issue__year=self.date_issue.year, type=self.type)
+            relative_invoices = Invoice.objects.filter(date_issue__year=important_date.year, type=self.type)
 
         elif invoice_counter_reset == Invoice.COUNTER_PERIOD.MONTHLY:
-            relative_invoices = Invoice.objects.filter(date_issue__year=self.date_issue.year, date_issue__month=self.date_issue.month, type=self.type)
+            relative_invoices = Invoice.objects.filter(date_issue__year=important_date.year, date_issue__month=important_date.month, type=self.type)
 
         else:
             raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: DAILY, MONTHLY, YEARLY.")

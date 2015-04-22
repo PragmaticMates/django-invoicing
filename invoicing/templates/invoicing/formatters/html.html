@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n invoicing %}
 {% language invoice.language %}
     <div class="row">
         <div class="col-md-8">
@@ -55,7 +55,7 @@
                     <i>{% trans 'Bank' %}:</i><br>
                     <strong>{% trans 'Name' %}:</strong> {{ invoice.bank_name }}<br>
                     <strong>{% trans 'Agency address' %}:</strong> {{ invoice.bank_street }}, {{ invoice.bank_zip }} {{ invoice.bank_city }}, {{ invoice.get_bank_country_display }}<br>
-                    <strong>{% trans 'Bank IBAN code' %}:</strong> {{ invoice.bank_iban }}<br>
+                    <strong>{% trans 'Bank IBAN code' %}:</strong> {{ invoice.bank_iban|nice_iban }}<br>
                     <strong>{% trans 'SWIFT / BIC' %}:</strong> {{ invoice.bank_swift_bic }}<br>
                     <br>
                     <i>{% trans 'Issuer' %}:</i><br>

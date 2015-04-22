@@ -12,3 +12,8 @@ def as_html(invoice):
     formatter = HTMLFormatter(invoice)
     context = Context(formatter.get_data())
     return template.render(context)
+
+
+@register.filter
+def nice_iban(iban):
+    return ' '.join(iban[i:i+4] for i in xrange(0, len(iban), 4))

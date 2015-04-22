@@ -8,14 +8,14 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'InvoiceItem.tag'
+        # Adding field 'Item.tag'
         db.add_column('invoicing_items', 'tag',
                       self.gf('django.db.models.fields.CharField')(default=None, max_length=128, null=True, blank=True),
                       keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting field 'InvoiceItem.tag'
+        # Deleting field 'Item.tag'
         db.delete_column('invoicing_items', 'tag')
 
 
@@ -79,8 +79,8 @@ class Migration(SchemaMigration):
             'type': ('django.db.models.fields.CharField', [], {'default': "'INVOICE'", 'max_length': '64'}),
             'variable_symbol': ('django.db.models.fields.PositiveIntegerField', [], {'default': 'None', 'max_length': '10', 'null': 'True', 'blank': 'True'})
         },
-        'invoicing.invoiceitem': {
-            'Meta': {'ordering': "('-invoice', 'weight', 'created')", 'object_name': 'InvoiceItem', 'db_table': "'invoicing_items'"},
+        'invoicing.item': {
+            'Meta': {'ordering': "('-invoice', 'weight', 'created')", 'object_name': 'Item', 'db_table': "'invoicing_items'"},
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'invoice': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['invoicing.Invoice']"}),

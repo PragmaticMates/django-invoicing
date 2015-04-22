@@ -24,7 +24,7 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from fields import VATField
-from managers import InvoiceItemManager
+from managers import InvoiceManager, ItemManager
 from taxation import TaxationPolicy
 from taxation.eu import EUTaxationPolicy
 from utils import import_name
@@ -220,6 +220,7 @@ class Invoice(models.Model):
     # Other
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)
+    objects = InvoiceManager()
 
     class Meta:
         db_table = 'invoicing_invoices'
@@ -315,7 +316,7 @@ class Invoice(models.Model):
 
     @property
     def payment_term(self):
-        return (self.date_due - self.date_issue).days
+        return (self.date_due - self.date_issue).days if self.total > 0 else 0
 
     def set_supplier_data(self, supplier):
         self.supplier_name = supplier.get('name')
@@ -359,7 +360,7 @@ class Invoice(models.Model):
         # TODO: maybe it is not important
 
         # VAT is not 0
-        if self.vat != 0 or self.invoiceitem_set.filter(tax_rate__gt=0).exists():
+        if self.vat != 0 or self.item_set.filter(tax_rate__gt=0).exists():
             return True
 
         # VAT is 0, check if customer is from EU and from same country as supplier
@@ -369,9 +370,9 @@ class Invoice(models.Model):
 
     @property
     def vat_summary(self):
-        #rates_and_sum = self.invoiceitem_set.all().annotate(base=Sum(F('qty')*F('price_per_unit'))).values('tax_rate', 'base')
-        #rates_and_sum = self.invoiceitem_set.all().values('tax_rate').annotate(Sum('price_per_unit'))
-        #rates_and_sum = self.invoiceitem_set.all().values('tax_rate').annotate(Sum(F('qty')*F('price_per_unit')))
+        #rates_and_sum = self.item_set.all().annotate(base=Sum(F('qty')*F('price_per_unit'))).values('tax_rate', 'base')
+        #rates_and_sum = self.item_set.all().values('tax_rate').annotate(Sum('price_per_unit'))
+        #rates_and_sum = self.item_set.all().values('tax_rate').annotate(Sum(F('qty')*F('price_per_unit')))
 
         from django.db import connection
         cursor = connection.cursor()
@@ -386,7 +387,7 @@ class Invoice(models.Model):
     @property
     def subtotal(self):
         sum = 0
-        for item in self.invoiceitem_set.all():
+        for item in self.item_set.all():
             sum += item.subtotal
         return round(sum, 2)
 
@@ -410,13 +411,13 @@ class Invoice(models.Model):
         for vat_rate in self.vat_summary:
             total += float(vat_rate['vat']) + float(vat_rate['base'])
 
-        total *= ((100 - Decimal(self.discount)) / 100)  # subtract discount amount
-        total -= self.credit  # subtract credit
+        total *= float((100 - float(self.discount)) / 100)  # subtract discount amount
+        total -= float(self.credit)  # subtract credit
         #total -= self.already_paid  # subtract already paid
         return round(total, 2)
 
 
-class InvoiceItem(models.Model):
+class Item(models.Model):
     WEIGHT = [(i, i) for i in range(0, 20)]
     UNIT_EMPTY = 'EMPTY'
     UNIT_PIECES = 'PIECES'
@@ -440,7 +441,7 @@ class InvoiceItem(models.Model):
         blank=True, null=True, default=0)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)
-    objects = InvoiceItemManager()
+    objects = ItemManager()
 
     class Meta:
         db_table = 'invoicing_items'
@@ -478,4 +479,4 @@ class InvoiceItem(models.Model):
                 # If there is not any special taxation policy, set default tax rate
                 self.tax_rate = TaxationPolicy.get_default_tax()
 
-        return super(InvoiceItem, self).save(**kwargs)
+        return super(Item, self).save(**kwargs)

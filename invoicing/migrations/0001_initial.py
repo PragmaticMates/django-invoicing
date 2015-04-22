@@ -69,7 +69,7 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal('invoicing', ['Invoice'])
 
-        # Adding model 'InvoiceItem'
+        # Adding model 'Item'
         db.create_table('invoicing_items', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('invoice', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['invoicing.Invoice'])),
@@ -82,14 +82,14 @@ class Migration(SchemaMigration):
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
         ))
-        db.send_create_signal('invoicing', ['InvoiceItem'])
+        db.send_create_signal('invoicing', ['Item'])
 
 
     def backwards(self, orm):
         # Deleting model 'Invoice'
         db.delete_table('invoicing_invoices')
 
-        # Deleting model 'InvoiceItem'
+        # Deleting model 'Item'
         db.delete_table('invoicing_items')
 
 
@@ -153,8 +153,8 @@ class Migration(SchemaMigration):
             'type': ('django.db.models.fields.CharField', [], {'default': "'INVOICE'", 'max_length': '64'}),
             'variable_symbol': ('django.db.models.fields.PositiveIntegerField', [], {'default': 'None', 'max_length': '10', 'null': 'True', 'blank': 'True'})
         },
-        'invoicing.invoiceitem': {
-            'Meta': {'ordering': "('-invoice', 'weight', 'created')", 'object_name': 'InvoiceItem', 'db_table': "'invoicing_items'"},
+        'invoicing.item': {
+            'Meta': {'ordering': "('-invoice', 'weight', 'created')", 'object_name': 'Item', 'db_table': "'invoicing_items'"},
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'invoice': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['invoicing.Invoice']"}),

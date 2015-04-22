@@ -1,14 +1,11 @@
-import datetime
-
 from django.contrib import admin
-from django.db.models import Q
-from django.utils.timezone import now
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from models import Invoice, InvoiceItem
+from models import Invoice, Item
 
 
-class InvoiceItemInline(admin.TabularInline):
+class ItemInline(admin.TabularInline):
     fieldsets = (
         (
             None,
@@ -17,7 +14,7 @@ class InvoiceItemInline(admin.TabularInline):
             }
         ),
     )
-    model = InvoiceItem
+    model = Item
     extra = 0
 
 
@@ -33,21 +30,21 @@ class OverdueFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'no':
-            return queryset.filter(Q(date_due__gt=datetime.datetime.combine(now().date(), datetime.time.max))|Q(status=Invoice.STATUS.PAID))
+            return queryset.not_overdue()
         if self.value() == 'yes':
-            return queryset.filter(date_due__lt=datetime.datetime.combine(now().date(), datetime.time.max)).exclude(status=Invoice.STATUS.PAID)
+            return queryset.overdue()
 
 
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
-    list_display = ['pk', 'type', 'full_number', 'status', 'customer_name', 'customer_country',
-                    'subtotal', 'vat', 'total', 'currency', 'date_issue', 'payment_term', 'is_overdue_boolean', 'is_paid']
+    list_display = ['pk', 'type', 'full_number', 'status', 'supplier', 'customer',
+                    'subtotal', 'vat', 'total', 'currency', 'date_issue', 'payment_term_days', 'is_overdue_boolean', 'is_paid']
     list_editable = ['status']
     list_filter = ['type', 'status', 'payment_method', OverdueFilter,
                    #'language', 'currency'
     ]
     search_fields = ['number', 'subtitle', 'note', 'supplier_name', 'customer_name', 'shipping_name']
-    inlines = (InvoiceItemInline, )
+    inlines = (ItemInline, )
     fieldsets = (
         (_(u'General information'), {
             'fields': (
@@ -88,14 +85,26 @@ class InvoiceAdmin(admin.ModelAdmin):
         })
     )
 
+    def supplier(self, invoice):
+        return mark_safe(u'%s<br>%s' % (invoice.supplier_name, invoice.supplier_country.name))
+    supplier.short_description = _(u'supplier')
+
+    def customer(self, invoice):
+        return mark_safe(u'%s<br>%s' % (invoice.customer_name, invoice.customer_country.name))
+    customer.short_description = _(u'customer')
+
+    def payment_term_days(self, invoice):
+        return u'%s days' % invoice.payment_term
+    payment_term_days.short_description = _(u'payment term')
+
     def is_overdue_boolean(self, invoice):
         return invoice.is_overdue
     is_overdue_boolean.boolean = True
-    is_overdue_boolean.short_description = _(u'Is overdue')
+    is_overdue_boolean.short_description = _(u'is overdue')
 
     def is_paid(self, invoice):
         return invoice.status == Invoice.STATUS.PAID
     is_paid.boolean = True
-    is_paid.short_description = _(u'Is paid')
+    is_paid.short_description = _(u'is paid')
 
 admin.site.register(Invoice, InvoiceAdmin)

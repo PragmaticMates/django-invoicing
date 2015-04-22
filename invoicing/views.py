@@ -20,6 +20,7 @@ class InvoiceDetailView(DetailView):
 
         invoice = get_object_or_404(self.model, pk=kwargs.get('pk', None))
 
-        formatter_class = import_name(getattr(settings, 'INVOICING_FORMATTER'))
+        invoicing_formatter = getattr(settings, 'INVOICING_FORMATTER', 'invoicing.formatters.html.BootstrapHTMLFormatter')
+        formatter_class = import_name(invoicing_formatter)
         formatter = formatter_class(invoice)
         return formatter.get_response()

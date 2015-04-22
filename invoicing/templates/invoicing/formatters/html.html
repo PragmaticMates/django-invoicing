@@ -160,7 +160,7 @@
                             <th class="text-right">{% trans 'Quantity' %}<br></th>
                             <th>{% trans 'Unit' %}<br></th>
                             <th class="text-right nowrap">{% trans 'Unit price' %}</th>
-                            <th class="text-right">{% trans 'Subtotal' %}</th>
+                            <th class="text-right">{% trans 'Price' %}</th>
                             <th class="text-right nowrap">{% trans 'Tax rate' %}</th>
                             <th class="text-right nowrap">{% trans 'VAT amount' %}</th>
                             <th class="text-right">{% trans 'Line total' %}<br><small>{% trans 'with taxes' %}</small></th>
@@ -171,7 +171,7 @@
                         <tr>
                             <td class="minimal-width nowrap">{{ forloop.counter}}</td>
                             <td>{{ item.title }}</td>
-                            <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat }}</td>
+                            <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat:"-3" }}</td>
                             <td class="minimal-width nowrap">{{ item.get_unit_display }}</td>
                             <td class="minimal-width nowrap text-right">{{ item.unit_price|floatformat:"2" }} {{ invoice.currency }}</td>
                             <td class="minimal-width nowrap text-right">{{ item.subtotal|floatformat:"2" }} {{ invoice.currency }}</td>

@@ -290,7 +290,7 @@ class Invoice(models.Model):
 
         :return: string (generated full number)
         """
-        number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_issue|date:'Y' }}/{{ invoice.number }}")
+        number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_tax_point|date:'Y' }}/{{ invoice.number }}")
         return Template(number_format).render(Context({'invoice': self}))
 
     @property
@@ -359,6 +359,9 @@ class Invoice(models.Model):
     def is_supplier_vat_id_visible(self):
         # TODO: maybe it is not important
 
+        if self.vat is None:
+            return False
+
         # VAT is not 0
         if self.vat != 0 or self.item_set.filter(tax_rate__gt=0).exists():
             return True
@@ -393,6 +396,9 @@ class Invoice(models.Model):
 
     @property
     def vat(self):
+        if len(self.vat_summary) == 1 and self.vat_summary[0]['vat'] is None:
+            return None
+
         vat = 0
         for vat_rate in self.vat_summary:
             vat += vat_rate['vat'] or 0
@@ -400,7 +406,7 @@ class Invoice(models.Model):
 
     @property
     def discount_value(self):
-        total = self.subtotal + self.vat  # subtotal with vat
+        total = self.subtotal + self.vat or 0  # subtotal with vat
         discount_value = total * (Decimal(self.discount) / 100)  # subtract discount amount
         return round(discount_value, 2)
 

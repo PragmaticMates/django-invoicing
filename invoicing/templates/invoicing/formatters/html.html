@@ -171,13 +171,13 @@
                         <tr>
                             <td class="minimal-width nowrap">{{ forloop.counter}}</td>
                             <td>{{ item.title }}</td>
-                            <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat:"-3" }}</td>
+                            <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat }}</td>
                             <td class="minimal-width nowrap">{{ item.get_unit_display }}</td>
-                            <td class="minimal-width nowrap text-right">{{ item.unit_price }} {{ invoice.currency }}</td>
-                            <td class="minimal-width nowrap text-right">{{ item.subtotal }} {{ invoice.currency }}</td>
-                            <td class="minimal-width nowrap text-right">{% if item.tax_rate or item.tax_rate == 0 %}{{ item.tax_rate }}%{% else %}-{% endif %}</td>
-                            <td class="minimal-width nowrap text-right">{{ item.vat }} {{ invoice.currency }}</td>
-                            <td class="minimal-width nowrap text-right"><strong>{{ item.total }} {{ invoice.currency }}</strong></td>
+                            <td class="minimal-width nowrap text-right">{{ item.unit_price|floatformat:"2" }} {{ invoice.currency }}</td>
+                            <td class="minimal-width nowrap text-right">{{ item.subtotal|floatformat:"2" }} {{ invoice.currency }}</td>
+                            <td class="minimal-width nowrap text-right">{% if item.tax_rate or item.tax_rate == 0 %}{{ item.tax_rate|floatformat }}%{% else %}-{% endif %}</td>
+                            <td class="minimal-width nowrap text-right">{{ item.vat|floatformat:"2" }} {{ invoice.currency }}</td>
+                            <td class="minimal-width nowrap text-right"><strong>{{ item.total|floatformat:"2" }} {{ invoice.currency }}</strong></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -212,7 +212,7 @@
                             <h3 class="panel-title">{% trans 'Base' %}</h3>
                         </div>
                         <div class="panel-body text-right">
-                            {{ invoice.subtotal }} {{ invoice.currency }}
+                            {{ invoice.subtotal|floatformat:"2" }} {{ invoice.currency }}
                         </div>
                     </div>
                 </div>
@@ -223,7 +223,7 @@
                             <h3 class="panel-title">{% trans 'VAT' %}</h3>
                         </div>
                         <div class="panel-body text-right">
-                            {{ invoice.vat }} {{ invoice.currency }}
+                            {{ invoice.vat|floatformat:"2" }} {{ invoice.currency }}
                         </div>
                     </div>
                 </div>
@@ -238,10 +238,10 @@
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <strong>{% trans 'discount' %}:</strong> {{ invoice.discount }}% ({{ invoice.discount_value }} {{ invoice.currency }})
+                                    <strong>{% trans 'discount' %}:</strong> {{ invoice.discount|floatformat }}% {% if invoice.discount != 0 %}({{ invoice.discount_value|floatformat:"2" }} {{ invoice.currency }}){% endif %}
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <strong>{% trans 'credit' %}:</strong> {{ invoice.credit }} {{ invoice.currency }}
+                                    <strong>{% trans 'credit' %}:</strong> {{ invoice.credit|floatformat:"2" }} {{ invoice.currency }}
                                 </div>
                             </div>
                         </div>
@@ -255,7 +255,7 @@
                         </div>
                         <div class="panel-body">
                             <!--{{ invoice.total_in_string }}-->
-                            <h1 class="text-right" style="margin:0px">{{ invoice.total }} {{ invoice.currency }}</h1>
+                            <h1 class="text-right" style="margin:0px">{{ invoice.total|floatformat:"2" }} {{ invoice.currency }}</h1>
                         </div>
                     </div>
                 </div>

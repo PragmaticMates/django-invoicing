@@ -59,19 +59,20 @@ class EUTaxationPolicy(TaxationPolicy):
         return country_code.upper() in cls.EU_COUNTRIES
 
     @classmethod
-    def get_tax_rate(cls, vat_id, country_code):
-        supplier_country = cls.get_supplier_country_code()
+    def get_tax_rate(cls, vat_id, customer_country, supplier_country=None):
+        if not supplier_country:
+            supplier_country = cls.get_supplier_country_code()
         if not cls.is_in_EU(supplier_country):
             raise ImproperlyConfigured("EUTaxationPolicy requires that supplier country is in EU")
 
-        if not vat_id and not country_code:
+        if not vat_id and not customer_country:
             # We don't know VAT ID or country
             return cls.get_default_tax()
 
-        elif not vat_id and country_code:
+        elif not vat_id and customer_country:
             # Customer is not a company, we know his country
 
-            if cls.is_in_EU(country_code):
+            if cls.is_in_EU(customer_country):
                 # Customer (private person) is from a EU
                 # He must pay full VAT of our country
                 return cls.get_default_tax()
@@ -82,12 +83,12 @@ class EUTaxationPolicy(TaxationPolicy):
         else:
             # Customer is company, we now country and VAT ID
 
-            if country_code.upper() == supplier_country.upper():
+            if customer_country.upper() == supplier_country.upper():
                 # Company is from the same country as supplier
                 # Normal tax
                 return cls.get_default_tax()
 
-            if cls.is_in_EU(country_code):
+            if cls.is_in_EU(customer_country):
                 # Company is from other EU country
                 try:
                     if vat_id and vatnumber.check_vies(vat_id):

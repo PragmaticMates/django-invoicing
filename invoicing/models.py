@@ -395,7 +395,7 @@ class Invoice(models.Model):
     def vat(self):
         vat = 0
         for vat_rate in self.vat_summary:
-            vat += vat_rate['vat']
+            vat += vat_rate['vat'] or 0
         return vat
 
     @property
@@ -409,7 +409,7 @@ class Invoice(models.Model):
         #total = self.subtotal + self.vat  # subtotal with vat
         total = 0
         for vat_rate in self.vat_summary:
-            total += float(vat_rate['vat']) + float(vat_rate['base'])
+            total += float(vat_rate['vat'] or 0) + float(vat_rate['base'])
 
         total *= float((100 - float(self.discount)) / 100)  # subtract discount amount
         total -= float(self.credit)  # subtract credit
@@ -474,7 +474,8 @@ class Item(models.Model):
             if self.invoice.taxation_policy:
                 # There is taxation policy -> get tax rate
                 customer_country_code = self.invoice.customer_country.code if self.invoice.customer_country else None
-                self.tax_rate = self.invoice.taxation_policy.get_tax_rate(self.invoice.customer_vat_id, customer_country_code)
+                supplier_country_code = self.invoice.supplier_country.code if self.invoice.supplier_country else None
+                self.tax_rate = self.invoice.taxation_policy.get_tax_rate(self.invoice.customer_vat_id, customer_country_code, supplier_country_code)
             else:
                 # If there is not any special taxation policy, set default tax rate
                 self.tax_rate = TaxationPolicy.get_default_tax()

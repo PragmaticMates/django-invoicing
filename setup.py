@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-invoicing',
-    version='0.6.0',
+    version='0.6.1',
     description='Django app for invoicing.',
     long_description=open('README.rst').read(),
     author='Pragmatic Mates',
@@ -13,6 +13,13 @@ setup(
     maintainer_email='info@pragmaticmates.com',
     url='https://github.com/PragmaticMates/django-invoicing',
     packages=find_packages(),
+    packages=[
+        'invoicing',
+        'invoicing.formatters',
+        'invoicing.migrations',
+        'invoicing.taxation',
+        'invoicing.templatetags',
+    ],
     include_package_data=True,
     install_requires=(
         'django', 'south', 'django-countries', 'django-iban', 'jsonfield', 'django-model-utils', 'django-money', 'vatnumber'

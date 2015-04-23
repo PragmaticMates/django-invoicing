@@ -105,6 +105,7 @@ class Invoice(models.Model):
         ('1748', _(u'1748 - Income tax of physical body and corporate body based on declared tax year')),
         ('3118', _(u'3118 - Insurance and empl. contrib. to insur. co. and the Labor Office')),
         ('3344', _(u'3344 - Penalty from message - prior')),
+        ('3348', _(u'3348 - Penalty from message')),
         ('3354', _(u'3354 - Insurance payments by insurance companies')),
         ('3558', _(u'3558 - Cashless insurance payments by insurance companies')),
         ('8147', _(u'8147 - Payment (posted together with the instruction)'))

@@ -53,7 +53,7 @@
                     </div>
                     <br>
                     <i>{% trans 'Bank' %}:</i><br>
-                    <strong>{% trans 'Name' %}:</strong> {{ invoice.bank_name }}<br>
+                    <strong>{% trans 'Title' %}:</strong> {{ invoice.bank_name }}<br>
                     <strong>{% trans 'Agency address' %}:</strong> {{ invoice.bank_street }}, {{ invoice.bank_zip }} {{ invoice.bank_city }}, {{ invoice.get_bank_country_display }}<br>
                     <strong>{% trans 'Bank IBAN code' %}:</strong> {{ invoice.bank_iban|nice_iban }}<br>
                     <strong>{% trans 'SWIFT / BIC' %}:</strong> {{ invoice.bank_swift_bic }}<br>
@@ -86,8 +86,8 @@
                         </div>
                         <div class="col-md-6">
                             {% if invoice.customer_registration_id %}<strong>{% trans 'Reg. No.' %}:</strong> {{ invoice.customer_registration_id }}<br>{% endif %}
-                            {% if invoice.customer_tax_id %}<strong>{% trans 'Tax. No.' %}:</strong> {{ invoice.customer_tax_id }}<br>{% endif %}
-                            {% if invoice.customer_vat_id %}<strong>{% trans 'VAT. No.' %}:</strong> {{ invoice.customer_vat_id }}<br>{% endif %}
+                            {% if invoice.customer_tax_id %}<strong>{% trans 'Tax No.' %}:</strong> {{ invoice.customer_tax_id }}<br>{% endif %}
+                            {% if invoice.customer_vat_id %}<strong>{% trans 'VAT No.' %}:</strong> {{ invoice.customer_vat_id }}<br>{% endif %}
                         </div>
 
                         {# TODO: invoice.customer_additional_info #}
@@ -110,7 +110,7 @@
                 <div class="col-md-4">
                     <div class="panel panel-info">
                         <div class="panel-heading">
-                            <h3 class="panel-title">{% trans 'Tax point date' %}</h3>
+                            <h3 class="panel-title">{% trans 'Time of supply' %}</h3>
                         </div>
                         <div class="panel-body">
                             {% if invoice.get_type_display != invoice.TYPE.ADVANCE %}
@@ -223,7 +223,11 @@
                             <h3 class="panel-title">{% trans 'VAT' %}</h3>
                         </div>
                         <div class="panel-body text-right">
-                            {{ invoice.vat|floatformat:"2" }} {{ invoice.currency }}
+                            {% if invoice.vat or invoice.vat == 0 %}
+                                {{ invoice.vat|floatformat:"2" }} {{ invoice.currency }}
+                            {% else %}
+                                {% trans 'Not a VAT payer' %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>

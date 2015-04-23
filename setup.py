@@ -13,13 +13,6 @@ setup(
     maintainer_email='info@pragmaticmates.com',
     url='https://github.com/PragmaticMates/django-invoicing',
     packages=find_packages(),
-    packages=[
-        'invoicing',
-        'invoicing.formatters',
-        'invoicing.migrations',
-        'invoicing.taxation',
-        'invoicing.templatetags',
-    ],
     include_package_data=True,
     install_requires=(
         'django', 'south', 'django-countries', 'django-iban', 'jsonfield', 'django-model-utils', 'django-money', 'vatnumber'

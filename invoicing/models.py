@@ -16,7 +16,7 @@ from model_utils.fields import MonitorField
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.core.validators import EMPTY_VALUES
+from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Max
 from django.template import Template, Context
@@ -78,7 +78,8 @@ class Invoice(models.Model):
 
     DELIVERY_METHOD = Choices(
         ('PERSONAL_PICKUP', _(u'personal pickup')),
-        ('MAILING', _(u'mailing'))
+        ('MAILING', _(u'mailing')),
+        ('DIGITAL', _(u'digital')),
     )
 
     CONSTANT_SYMBOL = Choices(
@@ -136,44 +137,46 @@ class Invoice(models.Model):
     payment_method = models.CharField(_(u'payment method'), choices=PAYMENT_METHOD, max_length=64)
     constant_symbol = models.CharField(_(u'constant symbol'), max_length=64, choices=CONSTANT_SYMBOL,
         blank=True, null=True, default=None)
-    variable_symbol = models.PositiveIntegerField(_(u'variable symbol'), max_length=10,
+    variable_symbol = models.PositiveIntegerField(_(u'variable symbol'),
+        validators=[MinValueValidator(0), MaxValueValidator(9999999999)],
         blank=True, null=True, default=None)
-    specific_symbol = models.PositiveIntegerField(_(u'specific symbol'), max_length=10,
+    specific_symbol = models.PositiveIntegerField(_(u'specific symbol'),
+        validators=[MinValueValidator(0), MaxValueValidator(9999999999)],
         blank=True, null=True, default=None)
     reference = models.CharField(_(u'reference'), max_length=140,
         blank=True, null=True, default=None)
 
     bank_name = models.CharField(_(u'bank name'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank.name'))
+        blank=True, null=True, default=None)
     bank_street = models.CharField(_(u'bank street and number'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank.street'))
+        blank=True, null=True, default=None)
     bank_zip = models.CharField(_(u'bank ZIP'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank.zip'))
+        blank=True, null=True, default=None)
     bank_city = models.CharField(_(u'bank city'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank.city'))
+        blank=True, null=True, default=None)
     bank_country = CountryField(_(u'bank country'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('bank.country_code'))
-    bank_iban = IBANField(verbose_name=_(u'Account number (IBAN)'), default=lambda: default_supplier('bank.iban'))
-    bank_swift_bic = SWIFTBICField(verbose_name=_(u'Bank SWIFT / BIC'), default=lambda: default_supplier('bank.swift_bic'))
+        blank=True, null=True, default=None)
+    bank_iban = IBANField(verbose_name=_(u'Account number (IBAN)'), default=None)
+    bank_swift_bic = SWIFTBICField(verbose_name=_(u'Bank SWIFT / BIC'), default=None)
 
     # Issuer details
-    supplier_name = models.CharField(_(u'supplier name'), max_length=255, default=lambda: default_supplier('name'))
+    supplier_name = models.CharField(_(u'supplier name'), max_length=255, default=None)
     supplier_street = models.CharField(_(u'supplier street and number'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('street'))
+        blank=True, null=True, default=None)
     supplier_zip = models.CharField(_(u'supplier ZIP'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('zip'))
+        blank=True, null=True, default=None)
     supplier_city = models.CharField(_(u'supplier city'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('city'))
-    supplier_country = CountryField(_(u'supplier country'), default=lambda: default_supplier('country_code'))
+        blank=True, null=True, default=None)
+    supplier_country = CountryField(_(u'supplier country'), default=None)
     supplier_registration_id = models.CharField(_(u'supplier Reg. No.'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('registration_id'))
+        blank=True, null=True, default=None)
     supplier_tax_id = models.CharField(_(u'supplier Tax No.'), max_length=255,
-        blank=True, null=True, default=lambda: default_supplier('tax_id'))
+        blank=True, null=True, default=None)
     supplier_vat_id = VATField(_(u'supplier VAT No.'),
-        blank=True, null=True, default=lambda: default_supplier('vat_id'))
+        blank=True, null=True, default=None)
     supplier_additional_info = JSONField(_(u'supplier additional information'),
         load_kwargs={'object_pairs_hook': OrderedDict},
-        blank=True, null=True, default=lambda: default_supplier('additional_info'))  # for example www or legal matters
+        blank=True, null=True, default=None)  # for example www or legal matters
 
     # Contact details
     issuer_name = models.CharField(_(u'issuer name'), max_length=255,

@@ -1,5 +1,4 @@
 Django>=1.4.5
-South>=1.0
 django-countries>=2.1.2
 django-iban>=0.2.8
 django-model-utils>=2.0.3

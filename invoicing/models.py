@@ -360,10 +360,9 @@ class Invoice(models.Model):
         self.shipping_city = shipping.get('city', None)
         self.shipping_country = shipping.get('country_code', None)
 
+    # http://www.superfaktura.sk/blog/neplatca-dph-vzor-faktury/
     def is_supplier_vat_id_visible(self):
-        # TODO: maybe it is not important
-
-        if self.vat is None:
+        if self.vat is None and self.supplier_country == self.customer_country:
             return False
 
         # VAT is not 0

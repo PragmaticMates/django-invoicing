@@ -10,7 +10,7 @@ class ItemInline(admin.TabularInline):
         (
             None,
             {
-                'fields': ('title', 'quantity', 'unit', 'unit_price', 'tax_rate', 'weight')
+                'fields': ('title', 'quantity', 'unit', 'unit_price', 'discount', 'tax_rate', 'weight')
             }
         ),
     )
@@ -59,7 +59,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         }),
         (_(u'Payment details'), {
             'fields': (
-                'currency', 'discount', 'credit',
+                'currency', 'credit',
                 #'already_paid',
                 'payment_method', 'constant_symbol', 'variable_symbol', 'specific_symbol', 'reference',
                 'bank_name', 'bank_country', 'bank_city', 'bank_street', 'bank_zip', 'bank_iban', 'bank_swift_bic'

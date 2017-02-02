@@ -130,7 +130,6 @@ class Invoice(models.Model):
 
     # Payment details
     currency = models.CharField(_(u'currency'), max_length=10, choices=CURRENCY_CHOICES)
-    discount = models.DecimalField(_(u'discount (%)'), max_digits=3, decimal_places=1, default=0)
     credit = models.DecimalField(_(u'credit'), max_digits=10, decimal_places=2, default=0)
     #already_paid = models.DecimalField(_(u'already paid'), max_digits=10, decimal_places=2, default=0)
 
@@ -382,7 +381,7 @@ class Invoice(models.Model):
 
         from django.db import connection
         cursor = connection.cursor()
-        cursor.execute('select tax_rate as rate, SUM(quantity*unit_price) as base, ROUND(CAST(SUM(quantity*unit_price*(tax_rate/100)) AS numeric), 2) as vat from invoicing_items where invoice_id = %s group by tax_rate;', [self.pk])
+        cursor.execute('select tax_rate as rate, SUM(quantity*unit_price*(100-discount)/100) as base, ROUND(CAST(SUM(quantity*unit_price*(tax_rate/100)) AS numeric), 2) as vat from invoicing_items where invoice_id = %s group by tax_rate;', [self.pk])
 
         desc = cursor.description
         return [
@@ -408,19 +407,13 @@ class Invoice(models.Model):
         return vat
 
     @property
-    def discount_value(self):
-        total = self.subtotal + self.vat or 0  # subtotal with vat
-        discount_value = total * (Decimal(self.discount) / 100)  # subtract discount amount
-        return round(discount_value, 2)
-
-    @property
     def total(self):
         #total = self.subtotal + self.vat  # subtotal with vat
         total = 0
         for vat_rate in self.vat_summary:
             total += float(vat_rate['vat'] or 0) + float(vat_rate['base'])
 
-        total *= float((100 - float(self.discount)) / 100)  # subtract discount amount
+        #total *= float((100 - float(self.discount)) / 100)  # subtract discount amount
         total -= float(self.credit)  # subtract credit
         #total -= self.already_paid  # subtract already paid
         return round(total, 2)
@@ -442,6 +435,7 @@ class Item(models.Model):
     quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1)
     unit = models.CharField(_(u'unit'), choices=UNITS, max_length=64, default=UNIT_PIECES)
     unit_price = models.DecimalField(_(u'unit price'), max_digits=10, decimal_places=2)
+    discount = models.DecimalField(_(u'discount (%)'), max_digits=4, decimal_places=1, default=0)
     tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1, help_text=_(u'VAT rate'),
         blank=True, null=True, default=None)
     tag = models.CharField(_(u'tag'), max_length=128,
@@ -463,7 +457,8 @@ class Item(models.Model):
 
     @property
     def subtotal(self):
-        return round(self.unit_price * self.quantity, 2)
+        subtotal = round(self.unit_price * self.quantity, 2)
+        return round(Decimal(subtotal) * Decimal((100 - self.discount) / 100), 2)
 
     @property
     def vat(self):

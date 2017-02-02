@@ -160,6 +160,7 @@
                             <th class="text-right">{% trans 'Quantity' %}<br></th>
                             <th>{% trans 'Unit' %}<br></th>
                             <th class="text-right nowrap">{% trans 'Unit price' %}</th>
+                            <th class="text-right nowrap">{% trans 'Discount' %}</th>
                             <th class="text-right">{% trans 'Price' %}</th>
                             <th class="text-right nowrap">{% trans 'Tax rate' %}</th>
                             <th class="text-right nowrap">{% trans 'VAT amount' %}</th>
@@ -174,6 +175,7 @@
                             <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat:"-3" }}</td>
                             <td class="minimal-width nowrap">{{ item.get_unit_display }}</td>
                             <td class="minimal-width nowrap text-right">{{ item.unit_price|floatformat:"2" }} {{ invoice.currency }}</td>
+                            <td class="minimal-width nowrap text-right">{{ item.discount|default:0 }} %</td>
                             <td class="minimal-width nowrap text-right">{{ item.subtotal|floatformat:"2" }} {{ invoice.currency }}</td>
                             <td class="minimal-width nowrap text-right">{% if item.tax_rate or item.tax_rate == 0 %}{{ item.tax_rate|floatformat }}%{% else %}-{% endif %}</td>
                             <td class="minimal-width nowrap text-right">{{ item.vat|floatformat:"2" }} {{ invoice.currency }}</td>
@@ -239,10 +241,7 @@
                         </div>
                         <div class="panel-body">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <strong>{% trans 'discount' %}:</strong> {{ invoice.discount|floatformat }}% {% if invoice.discount != 0 %}({{ invoice.discount_value|floatformat:"2" }} {{ invoice.currency }}){% endif %}
-                                </div>
-                                <div class="col-md-6 text-right">
+                                <div class="col-md-12 text-right">
                                     <strong>{% trans 'credit' %}:</strong> {{ invoice.credit|floatformat:"2" }} {{ invoice.currency }}
                                 </div>
                             </div>

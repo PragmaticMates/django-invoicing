@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from models import Invoice, Item
+from invoicing.models import Invoice, Item
 
 
 class ItemInline(admin.TabularInline):

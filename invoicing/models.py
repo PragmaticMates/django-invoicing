@@ -23,11 +23,11 @@ from django.template import Template, Context
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from fields import VATField
-from managers import InvoiceManager, ItemManager
-from taxation import TaxationPolicy
-from taxation.eu import EUTaxationPolicy
-from utils import import_name
+from invoicing.fields import VATField
+from invoicing.managers import InvoiceManager, ItemManager
+from invoicing.taxation import TaxationPolicy
+from invoicing.taxation.eu import EUTaxationPolicy
+from invoicing.utils import import_name
 
 
 def default_supplier(attribute_lookup):
@@ -296,6 +296,16 @@ class Invoice(models.Model):
         number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_tax_point|date:'Y' }}/{{ invoice.number }}")
         return Template(number_format).render(Context({'invoice': self}))
 
+    def get_tax_rate(self):
+        if self.taxation_policy:
+            # There is taxation policy -> get tax rate
+            customer_country_code = self.customer_country.code if self.customer_country else None
+            supplier_country_code = self.supplier_country.code if self.supplier_country else None
+            return self.taxation_policy.get_tax_rate(self.customer_vat_id, customer_country_code, supplier_country_code)
+        else:
+            # If there is not any special taxation policy, set default tax rate
+            return TaxationPolicy.get_default_tax()
+
     @property
     def taxation_policy(self):
         taxation_policy = getattr(settings, 'INVOICING_TAXATION_POLICY', None)
@@ -474,14 +484,7 @@ class Item(models.Model):
         return round(self.subtotal + self.vat, 2)
 
     def save(self, **kwargs):
+        # If tax rate is not set while creating new invoice item, set it according billing details
         if self.tax_rate in EMPTY_VALUES and self.pk is None:
-            if self.invoice.taxation_policy:
-                # There is taxation policy -> get tax rate
-                customer_country_code = self.invoice.customer_country.code if self.invoice.customer_country else None
-                supplier_country_code = self.invoice.supplier_country.code if self.invoice.supplier_country else None
-                self.tax_rate = self.invoice.taxation_policy.get_tax_rate(self.invoice.customer_vat_id, customer_country_code, supplier_country_code)
-            else:
-                # If there is not any special taxation policy, set default tax rate
-                self.tax_rate = TaxationPolicy.get_default_tax()
-
+            self.tax_rate = self.invoice.get_tax_rate()
         return super(Item, self).save(**kwargs)

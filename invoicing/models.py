@@ -231,6 +231,9 @@ class Invoice(models.Model):
         verbose_name_plural = _(u'invoices')
         ordering = ('date_issue', 'number')
 
+    def __str__(self):
+        return self.full_number
+
     def __unicode__(self):
         return self.full_number
 

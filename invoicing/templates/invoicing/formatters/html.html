@@ -165,10 +165,14 @@
                             <th>{% trans 'Unit' %}<br></th>
                             <th class="text-right nowrap">{% trans 'Unit price' %}</th>
                             <th class="text-right nowrap">{% trans 'Discount' %}</th>
-                            <th class="text-right">{% trans 'Price' %}</th>
-                            <th class="text-right nowrap">{% trans 'Tax rate' %}</th>
-                            <th class="text-right nowrap">{% trans 'VAT amount' %}</th>
-                            <th class="text-right">{% trans 'Line total' %}<br><small>{% trans 'with taxes' %}</small></th>
+                            {% if invoice.vat or invoice.vat == 0 %}
+                                <th class="text-right">{% trans 'Price' %}</th>
+                                <th class="text-right nowrap">{% trans 'Tax rate' %}</th>
+                                <th class="text-right nowrap">{% trans 'VAT amount' %}</th>
+                            {% endif %}
+                            <th class="text-right">{% trans 'Line total' %}
+                                {% if invoice.vat or invoice.vat == 0 %}<br><small>{% trans 'with taxes' %}</small>{% endif %}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -180,9 +184,11 @@
                             <td class="minimal-width nowrap">{{ item.get_unit_display }}</td>
                             <td class="minimal-width nowrap text-right">{{ item.unit_price|floatformat:"2" }} {{ invoice.currency }}</td>
                             <td class="minimal-width nowrap text-right">{{ item.discount|default:0 }} %</td>
-                            <td class="minimal-width nowrap text-right">{{ item.subtotal|floatformat:"2" }} {{ invoice.currency }}</td>
-                            <td class="minimal-width nowrap text-right">{% if item.tax_rate or item.tax_rate == 0 %}{{ item.tax_rate|floatformat }}%{% else %}-{% endif %}</td>
-                            <td class="minimal-width nowrap text-right">{{ item.vat|floatformat:"2" }} {{ invoice.currency }}</td>
+                            {% if invoice.vat or invoice.vat == 0 %}
+                                <td class="minimal-width nowrap text-right">{{ item.subtotal|floatformat:"2" }} {{ invoice.currency }}</td>
+                                <td class="minimal-width nowrap text-right">{% if item.tax_rate or item.tax_rate == 0 %}{{ item.tax_rate|floatformat }}%{% else %}-{% endif %}</td>
+                                <td class="minimal-width nowrap text-right">{{ item.vat|floatformat:"2" }} {{ invoice.currency }}</td>
+                            {% endif %}
                             <td class="minimal-width nowrap text-right"><strong>{{ item.total|floatformat:"2" }} {{ invoice.currency }}</strong></td>
                         </tr>
                         {% endfor %}

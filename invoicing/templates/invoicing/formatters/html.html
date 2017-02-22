@@ -3,7 +3,7 @@
     <div class="row">
         <div class="col-md-8">
             <h3>{{ invoice.get_type_display }} {{ invoice.full_number }}</h3>
-            <h4 class="text-muted">{{ invoice.subtitle }}</h4><br>
+            <h4 class="text-muted">{{ invoice.subtitle|default:'' }}</h4><br>
         </div>
         <div class="col-md-4 text-right">
             <br><br>
@@ -54,12 +54,16 @@
                     <br>
                     <i>{% trans 'Bank' %}:</i><br>
                     <strong>{% trans 'Title' %}:</strong> {{ invoice.bank_name }}<br>
-                    <strong>{% trans 'Agency address' %}:</strong> {{ invoice.bank_street }}, {{ invoice.bank_zip }} {{ invoice.bank_city }}, {{ invoice.get_bank_country_display }}<br>
+                    {% if invoice.bank_street or invoice.bank_zip or invoice.bank_city or invoice.bank_country %}
+                        <strong>{% trans 'Agency address' %}:</strong> {{ invoice.bank_street }}, {{ invoice.bank_zip }} {{ invoice.bank_city }}, {{ invoice.get_bank_country_display }}<br>
+                    {% endif %}
                     <strong>{% trans 'Bank IBAN code' %}:</strong> {{ invoice.bank_iban|nice_iban }}<br>
                     <strong>{% trans 'SWIFT / BIC' %}:</strong> {{ invoice.bank_swift_bic }}<br>
                     <br>
                     <i>{% trans 'Issuer' %}:</i><br>
-                    <strong>{% trans 'Name' %}:</strong> {{ invoice.issuer_name|default:'-' }}<br>
+                    {% if invoice.issuer_name %}
+                        <strong>{% trans 'Name' %}:</strong> {{ invoice.issuer_name|default:'-' }}<br>
+                    {% endif %}
                     <strong>{% trans 'Phone' %}:</strong> {{ invoice.issuer_phone|default:'-' }}<br>
                     <strong>{% trans 'Email' %}:</strong> {{ invoice.issuer_email|default:'-' }}<br>
                     <br>

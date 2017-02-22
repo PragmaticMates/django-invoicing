@@ -251,7 +251,7 @@ class Invoice(models.Model):
 
     def _get_next_number(self):
         """
-        Returnes next invoice number based on ``settings.INVOICING_COUNTER_PERIOD``.
+        Returns next invoice number based on ``settings.INVOICING_COUNTER_PERIOD``.
 
         .. warning::
 

@@ -5,9 +5,8 @@ from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView
 
+from invoicing.models import Invoice
 from invoicing.utils import import_name
-
-from models import Invoice
 
 
 class InvoiceDetailView(DetailView):
@@ -15,7 +14,7 @@ class InvoiceDetailView(DetailView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_active or not request.user.is_superuser:
+        if not request.user.is_active and not request.user.is_superuser:
             return HttpResponseForbidden()
 
         invoice = get_object_or_404(self.model, pk=kwargs.get('pk', None))

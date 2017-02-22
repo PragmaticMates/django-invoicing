@@ -16,4 +16,4 @@ def as_html(invoice):
 
 @register.filter
 def nice_iban(iban):
-    return ' '.join(iban[i:i+4] for i in xrange(0, len(iban), 4))
+    return ' '.join(iban[i:i+4] for i in range(0, len(iban), 4))

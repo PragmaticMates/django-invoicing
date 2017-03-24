@@ -164,7 +164,9 @@
                             <th class="text-right">{% trans 'Quantity' %}<br></th>
                             <th>{% trans 'Unit' %}<br></th>
                             <th class="text-right nowrap">{% trans 'Unit price' %}</th>
-                            <th class="text-right nowrap">{% trans 'Discount' %}</th>
+                            {% if invoice.has_discount %}
+                                <th class="text-right nowrap">{% trans 'Discount' %}</th>
+                            {% endif %}
                             {% if invoice.vat or invoice.vat == 0 %}
                                 <th class="text-right">{% trans 'Price' %}</th>
                                 <th class="text-right nowrap">{% trans 'Tax rate' %}</th>
@@ -183,7 +185,9 @@
                             <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat:"-3" }}</td>
                             <td class="minimal-width nowrap">{{ item.get_unit_display }}</td>
                             <td class="minimal-width nowrap text-right">{{ item.unit_price|floatformat:"2" }} {{ invoice.currency }}</td>
-                            <td class="minimal-width nowrap text-right">{{ item.discount|default:0 }} %</td>
+                            {% if invoice.has_discount %}
+                                <td class="minimal-width nowrap text-right">{{ item.discount|default:0 }} %</td>
+                            {% endif %}
                             {% if invoice.vat or invoice.vat == 0 %}
                                 <td class="minimal-width nowrap text-right">{{ item.subtotal|floatformat:"2" }} {{ invoice.currency }}</td>
                                 <td class="minimal-width nowrap text-right">{% if item.tax_rate or item.tax_rate == 0 %}{{ item.tax_rate|floatformat }}%{% else %}-{% endif %}</td>

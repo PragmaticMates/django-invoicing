@@ -402,6 +402,10 @@ class Invoice(models.Model):
             for row in cursor.fetchall()
         ]
 
+    def has_discount(self):
+        discounts = list(set(self.item_set.values_list('discount', flat=True)))
+        return len(discounts) > 1 or discounts[0] > 0
+
     @property
     def subtotal(self):
         sum = 0

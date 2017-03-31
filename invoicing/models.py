@@ -479,7 +479,7 @@ class Item(models.Model):
 
     @property
     def vat(self):
-        return round(self.subtotal * float(self.tax_rate)/100 if self.tax_rate else 0, 2)
+        return round(self.subtotal * Decimal(self.tax_rate)/100 if self.tax_rate else 0, 2)
 
     @property
     def unit_price_with_vat(self):

@@ -11,6 +11,9 @@ class InvoiceQuerySet(QuerySet):
     def not_overdue(self):
         return self.filter(Q(date_due__gt=datetime.datetime.combine(now().date(), datetime.time.max)) | Q(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED]))
 
+    def valid(self):
+        return self.exclude(status__in=[self.model.STATUS.RETURNED, self.model.STATUS.CANCELED])
+
 
 class InvoiceManager(Manager):
     # TODO: Deprecated
@@ -22,6 +25,9 @@ class InvoiceManager(Manager):
 
     def overdue(self):
         return self.get_queryset().overdue()
+
+    def valid(self):
+        return self.get_queryset().valid()
 
 
 class ItemQuerySet(QuerySet):

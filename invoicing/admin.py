@@ -37,12 +37,12 @@ class OverdueFilter(admin.SimpleListFilter):
 
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
-    list_display = ['pk', 'type', 'full_number', 'status', 'supplier', 'customer',
-                    'subtotal', 'vat', 'total', 'currency', 'date_issue', 'payment_term_days', 'is_overdue_boolean', 'is_paid']
+    list_display = ['pk', 'type', 'full_number', 'status',
+                    'supplier_info', 'customer_info',
+                    'subtotal', 'vat', 'total',  # TODO: annotate values using subqueries to improve performance
+                    'currency', 'date_issue', 'payment_term_days', 'is_overdue_boolean', 'is_paid']
     list_editable = ['status']
-    list_filter = ['type', 'status', 'payment_method', OverdueFilter,
-                   #'language', 'currency'
-    ]
+    list_filter = ['type', 'status', 'payment_method', OverdueFilter, 'language', 'currency']
     search_fields = ['number', 'subtitle', 'note', 'supplier_name', 'customer_name', 'shipping_name']
     inlines = (ItemInline, )
     fieldsets = (
@@ -85,13 +85,13 @@ class InvoiceAdmin(admin.ModelAdmin):
         })
     )
 
-    def supplier(self, invoice):
+    def supplier_info(self, invoice):
         return mark_safe(u'%s<br>%s' % (invoice.supplier_name, invoice.supplier_country.name))
-    supplier.short_description = _(u'supplier')
+    supplier_info.short_description = _(u'supplier')
 
-    def customer(self, invoice):
+    def customer_info(self, invoice):
         return mark_safe(u'%s<br>%s' % (invoice.customer_name, invoice.customer_country.name))
-    customer.short_description = _(u'customer')
+    customer_info.short_description = _(u'customer')
 
     def payment_term_days(self, invoice):
         return u'%s days' % invoice.payment_term

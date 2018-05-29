@@ -17,8 +17,12 @@ class HTMLFormatter(InvoiceFormatter):
         template = loader.get_template(self.template_name)
         data = self.get_data()
         data.update(context)
-        context = Context(data)
-        response_data = template.render(context)
+
+        try:
+            response_data = template.render(Context(data))
+        except TypeError:
+            response_data = template.render(data)
+
         return HttpResponse(response_data)
 
 

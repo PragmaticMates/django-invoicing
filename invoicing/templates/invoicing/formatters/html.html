@@ -180,7 +180,9 @@
                     <tbody>
                         {% for item in invoice.item_set.all %}
                         <tr>
-                            <td class="minimal-width nowrap">{{ forloop.counter}}</td>
+                            <td class="minimal-width nowrap">
+                                <a href="{{ item.get_absolute_url }}">{{ forloop.counter}}</a>
+                            </td>
                             <td>{{ item.title }}</td>
                             <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat:"-3" }}</td>
                             <td class="minimal-width nowrap">{{ item.get_unit_display }}</td>

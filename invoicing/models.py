@@ -254,7 +254,7 @@ class Invoice(models.Model):
 
     def get_absolute_url(self):
         return getattr(settings, 'INVOICING_INVOICE_ABSOLUTE_URL',
-            lambda invoice: reverse('billing:invoice_detail', args=(invoice.pk,))
+            lambda invoice: reverse('invoicing:invoice_detail', args=(invoice.pk,))
         )(self)
 
     def _get_next_number(self):
@@ -403,7 +403,7 @@ class Invoice(models.Model):
 
         from django.db import connection
         cursor = connection.cursor()
-        cursor.execute('select tax_rate as rate, SUM(quantity*unit_price*(100-discount)/100) as base, ROUND(CAST(SUM(quantity*unit_price*(tax_rate/100)) AS numeric), 2) as vat from invoicing_items where invoice_id = %s group by tax_rate;', [self.pk])
+        cursor.execute('select tax_rate as rate, SUM(quantity*unit_price*(100-discount)/100) as base, ROUND(CAST(SUM(quantity*unit_price*((100-discount)/100)*(tax_rate/100)) AS numeric), 2) as vat from invoicing_items where invoice_id = %s group by tax_rate;', [self.pk])
 
         desc = cursor.description
         return [
@@ -482,6 +482,9 @@ class Item(models.Model):
 
     def __unicode__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return getattr(settings, 'INVOICING_INVOICE_ITEM_ABSOLUTE_URL', lambda item: '')(self)
 
     @property
     def subtotal(self):

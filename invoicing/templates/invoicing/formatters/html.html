@@ -5,7 +5,7 @@
             <h3>{{ invoice.get_type_display }} {{ invoice.full_number }}</h3>
             <h4 class="text-muted">{{ invoice.subtitle|default:'' }}</h4><br>
         </div>
-        <div class="col-md-4 text-right">
+        <div class="col-md-4 text-right invoice-status">
             <br><br>
             <strong>{% trans 'status' %}</strong>:
             {% if invoice.get_status_display == invoice.STATUS.NEW %}
@@ -37,7 +37,7 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">{% trans 'Supplier' %}</h3>
                 </div>
-                <div class="panel-body">
+                <div class="panel-body mb-4">
                     <div class="row">
                         <div class="col-md-6">
                             {{ invoice.supplier_name }}<br>
@@ -80,7 +80,7 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">{% trans 'Customer' %}</h3>
                 </div>
-                <div class="panel-body">
+                <div class="panel-body mb-4">
                     <div class="row">
                         <div class="col-md-6">
                             {{ invoice.customer_name }}<br>
@@ -106,7 +106,7 @@
                         <div class="panel-heading">
                             <h3 class="panel-title">{% trans 'Issue date' %}</h3>
                         </div>
-                        <div class="panel-body">
+                        <div class="panel-body mb-4">
                             {{ invoice.date_issue|date:INVOICING_DATE_FORMAT_TAG }}
                         </div>
                     </div>
@@ -116,7 +116,7 @@
                         <div class="panel-heading">
                             <h3 class="panel-title">{% trans 'Time of supply' %}</h3>
                         </div>
-                        <div class="panel-body">
+                        <div class="panel-body mb-4">
                             {% if invoice.get_type_display != invoice.TYPE.ADVANCE %}
                                 {{ invoice.date_tax_point|date:INVOICING_DATE_FORMAT_TAG }}
                             {% else %}
@@ -130,7 +130,7 @@
                         <div class="panel-heading">
                             <h3 class="panel-title">{% trans 'Due date' %}</h3>
                         </div>
-                        <div class="panel-body">
+                        <div class="panel-body mb-4">
                             {{ invoice.date_due|date:INVOICING_DATE_FORMAT_TAG }} <small>({{ invoice.payment_term }} {{ invoice.payment_term|pluralize:_("day,days") }})</small>
                         </div>
                     </div>
@@ -138,7 +138,7 @@
             </div>
 
             <div class="panel panel-warning">
-                <div class="panel-body">
+                <div class="panel-body mb-4">
                     <strong>{% trans 'Delivery method' %}:</strong> {{ invoice.get_delivery_method_display|default:'' }}<br>
                     <strong>{% trans 'Payment method' %}:</strong> {{ invoice.get_payment_method_display|default:'' }}<br>
                     <strong>{% trans 'Constant symbol' %}:</strong> {{ invoice.constant_symbol|default:'' }}<br>
@@ -154,7 +154,7 @@
         <div class="panel-heading">
             <h3 class="panel-title">{% trans 'Invoice items' %}</h3>
         </div>
-        <div class="panel-body">
+        <div class="panel-body mb-4">
             {% if invoice.item_set.exists %}
                 <table class="table">
                     <thead>
@@ -253,7 +253,7 @@
                         <div class="panel-heading">
                             <h3 class="panel-title">{% trans 'Other' %}</h3>
                         </div>
-                        <div class="panel-body">
+                        <div class="panel-body mb-4">
                             <div class="row">
                                 <div class="col-md-12 text-right">
                                     <strong>{% trans 'credit' %}:</strong> {{ invoice.credit|floatformat:"2" }} {{ invoice.currency }}
@@ -268,7 +268,7 @@
                         <div class="panel-heading">
                             <h3 class="panel-title">{% trans 'TOTAL DUE' %}</h3>
                         </div>
-                        <div class="panel-body">
+                        <div class="panel-body mb-4">
                             <!--{{ invoice.total_in_string }}-->
                             <h1 class="text-right" style="margin:0px">{{ invoice.total|floatformat:"2" }} {{ invoice.currency }}</h1>
                         </div>

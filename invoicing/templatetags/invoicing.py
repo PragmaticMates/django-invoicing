@@ -10,8 +10,12 @@ register = template.Library()
 def as_html(invoice):
     template = loader.get_template('invoicing/formatters/html.html')
     formatter = HTMLFormatter(invoice)
-    context = Context(formatter.get_data())
-    return template.render(context)
+    data = formatter.get_data()
+
+    try:
+        return template.render(Context(data))
+    except TypeError:
+        return template.render(data)
 
 
 @register.filter

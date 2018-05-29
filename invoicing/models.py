@@ -15,7 +15,12 @@ from model_utils.fields import MonitorField
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.core.urlresolvers import reverse
+
+try:
+    from django.core.urlresolvers import reverse
+except ImportError:
+    from django.urls import reverse
+
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Max
@@ -230,6 +235,7 @@ class Invoice(models.Model):
         verbose_name = _(u'invoice')
         verbose_name_plural = _(u'invoices')
         ordering = ('date_issue', 'number')
+        default_permissions = ('list', 'view', 'add', 'change', 'delete')
 
     def __str__(self):
         return self.full_number
@@ -247,7 +253,9 @@ class Invoice(models.Model):
         return super(Invoice, self).save(**kwargs)
 
     def get_absolute_url(self):
-        return reverse('invoicing:invoice_detail', args=(self.pk,))
+        return getattr(settings, 'INVOICING_INVOICE_ABSOLUTE_URL',
+            lambda invoice: reverse('billing:invoice_detail', args=(invoice.pk,))
+        )(self)
 
     def _get_next_number(self):
         """
@@ -425,6 +433,8 @@ class Invoice(models.Model):
 
     @property
     def total(self):
+        # TODO: save into model field on post_save signal for InvoiceItem
+
         #total = self.subtotal + self.vat  # subtotal with vat
         total = 0
         for vat_rate in self.vat_summary:
@@ -447,7 +457,7 @@ class Item(models.Model):
         (UNIT_HOURS, _(u'hours'))
     )
 
-    invoice = models.ForeignKey(Invoice, verbose_name=_(u'invoice'))
+    invoice = models.ForeignKey(Invoice, verbose_name=_(u'invoice'), on_delete=models.CASCADE)
     title = models.CharField(_(u'title'), max_length=255)
     quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1)
     unit = models.CharField(_(u'unit'), choices=UNITS, max_length=64, default=UNIT_PIECES)

@@ -225,6 +225,12 @@ class Invoice(models.Model):
     delivery_method = models.CharField(_(u'delivery method'), choices=DELIVERY_METHOD, max_length=64,
         default=DELIVERY_METHOD.PERSONAL_PICKUP)
 
+    # sums (auto calculated fields)
+    total = models.DecimalField(_(u'total'), max_digits=10, decimal_places=2,
+        blank=True, default=0)
+    vat = models.DecimalField(_(u'VAT'), max_digits=10, decimal_places=2,
+        blank=True, default=0)
+
     # Other
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)
@@ -422,8 +428,7 @@ class Invoice(models.Model):
             sum += item.subtotal
         return round(sum, 2)
 
-    @property
-    def vat(self):
+    def calculate_vat(self):
         if len(self.vat_summary) == 1 and self.vat_summary[0]['vat'] is None:
             return None
 
@@ -432,8 +437,7 @@ class Invoice(models.Model):
             vat += vat_rate['vat'] or 0
         return vat
 
-    @property
-    def total(self):
+    def calculate_total(self):
         # TODO: save into model field on post_save signal for InvoiceItem
 
         #total = self.subtotal + self.vat  # subtotal with vat
@@ -509,3 +513,6 @@ class Item(models.Model):
         if self.tax_rate in EMPTY_VALUES and self.pk is None:
             self.tax_rate = self.invoice.get_tax_rate()
         return super(Item, self).save(**kwargs)
+
+
+from .signals import *

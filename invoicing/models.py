@@ -287,7 +287,8 @@ class Invoice(models.Model):
         else:
             raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: DAILY, MONTHLY, YEARLY.")
 
-        last_number = relative_invoices.aggregate(Max('number'))['number__max'] or 0
+        start_from = getattr(settings, 'INVOICING_NUMBER_START_FROM', 1)
+        last_number = relative_invoices.aggregate(Max('number'))['number__max'] or start_from - 1
 
         return last_number + 1
 

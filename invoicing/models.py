@@ -229,7 +229,7 @@ class Invoice(models.Model):
     total = models.DecimalField(_(u'total'), max_digits=10, decimal_places=2,
         blank=True, default=0)
     vat = models.DecimalField(_(u'VAT'), max_digits=10, decimal_places=2,
-        blank=True, default=0)
+        blank=True, null=True, default=0)
 
     # Other
     created = models.DateTimeField(_(u'created'), auto_now_add=True)

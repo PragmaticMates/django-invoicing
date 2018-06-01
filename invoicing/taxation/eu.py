@@ -97,7 +97,9 @@ class EUTaxationPolicy(TaxationPolicy):
                         return None
                     else:
                         return cls.get_default_tax()
-                except Exception:
+                except ImportError as e:
+                    raise e
+                except Exception as e:
                     # If we could not connect to VIES
                     return cls.get_default_tax()
             else:

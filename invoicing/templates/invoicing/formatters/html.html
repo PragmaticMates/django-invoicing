@@ -1,34 +1,9 @@
 {% load i18n invoicing %}
 {% language invoice.language %}
     <div class="row">
-        <div class="col-md-8">
-            <h3>{{ invoice.get_type_display }} {{ invoice.full_number }}</h3>
-            <h4 class="text-muted">{{ invoice.subtitle|default:'' }}</h4><br>
-        </div>
-        <div class="col-md-4 text-right invoice-status">
-            <br><br>
-            <strong>{% trans 'status' %}</strong>:
-            {% if invoice.get_status_display == invoice.STATUS.NEW %}
-                <span class="label label-primary">{{ invoice.get_status_display }}</span>
-            {% elif invoice.get_status_display == invoice.STATUS.SENT %}
-                <span class="label label-info">{{ invoice.get_status_display }}</span>
-            {% elif invoice.get_status_display == invoice.STATUS.RETURNED %}
-                <span class="label label-warning">{{ invoice.get_status_display }}</span>
-            {% elif invoice.get_status_display == invoice.STATUS.CANCELED %}
-                <span class="label label-danger">{{ invoice.get_status_display }}</span>
-            {% elif invoice.get_status_display == invoice.STATUS.PAID %}
-                <span class="label label-success">{{ invoice.get_status_display }}</span>
-            {% else %}
-                <span class="label label-default">{{ invoice.get_status_display }}</span>
-            {% endif %}
-
-            {% if invoice.is_overdue %}
-                <span class="label label-danger">{% trans 'overdue' %}</span> <small>({{ invoice.overdue_days }} {{ invoice.overdue_days|pluralize:_("day,days") }})</small>
-            {% endif %}
-
-            {% if invoice.get_status_display == invoice.STATUS.SENT %}
-                <strong>{% trans 'sent at' %}</strong>: {{ invoice.date_sent|date:INVOICING_DATE_FORMAT_TAG|default:'-' }}
-            {% endif %}
+        <div class="col-md-12 text-right invoice-title">
+            <h1>{{ invoice.get_type_display }} {{ invoice.full_number }}</h1>
+            <h3 class="text-muted invoice-subtitle">{{ invoice.subtitle|default:'' }}</h3><br>
         </div>
     </div>
     <div class="row">
@@ -41,31 +16,31 @@
                     <div class="row">
                         <div class="col-md-6">
                             {{ invoice.supplier_name }}<br>
-                            {{ invoice.supplier_street }}<br>
-                            {{ invoice.supplier_zip }} {{ invoice.supplier_city }}<br>
+                            {{ invoice.supplier_street|default:'' }}<br>
+                            {{ invoice.supplier_zip|default:'' }} {{ invoice.supplier_city|default:'' }}<br>
                             {{ invoice.get_supplier_country_display }}<br>
                         </div>
                         <div class="col-md-6">
-                            <strong>{% trans 'Reg. No.' %}:</strong> {{ invoice.supplier_registration_id }}<br>
-                            <strong>{% trans 'Tax No.' %}:</strong> {{ invoice.supplier_tax_id }}<br>
-                            <strong>{% trans 'VAT No.' %}:</strong> {% if invoice.is_supplier_vat_id_visible %}{{ invoice.supplier_vat_id }}{% endif %}<br>
+                            <strong>{% trans 'Reg. No.' %}:</strong> {{ invoice.supplier_registration_id|default:'' }}<br>
+                            <strong>{% trans 'Tax No.' %}:</strong> {{ invoice.supplier_tax_id|default:'' }}<br>
+                            <strong>{% trans 'VAT No.' %}:</strong> {% if invoice.is_supplier_vat_id_visible %}{{ invoice.supplier_vat_id|default:'' }}{% endif %}<br>
                         </div>
                     </div>
                     <br>
                     <i>{% trans 'Bank' %}:</i><br>
-                    <strong>{% trans 'Title' %}:</strong> {{ invoice.bank_name }}<br>
+                    <strong>{% trans 'Title' %}:</strong> {{ invoice.bank_name|default:'' }}<br>
                     {% if invoice.bank_street or invoice.bank_zip or invoice.bank_city or invoice.bank_country %}
-                        <strong>{% trans 'Agency address' %}:</strong> {{ invoice.bank_street }}, {{ invoice.bank_zip }} {{ invoice.bank_city }}, {{ invoice.get_bank_country_display }}<br>
+                        <strong>{% trans 'Agency address' %}:</strong> {{ invoice.bank_street|default:'' }}, {{ invoice.bank_zip|default:'' }} {{ invoice.bank_city|default:'' }}, {{ invoice.get_bank_country_display|default:'' }}<br>
                     {% endif %}
                     <strong>{% trans 'Bank IBAN code' %}:</strong> {{ invoice.bank_iban|nice_iban }}<br>
                     <strong>{% trans 'SWIFT / BIC' %}:</strong> {{ invoice.bank_swift_bic }}<br>
                     <br>
                     <i>{% trans 'Issuer' %}:</i><br>
                     {% if invoice.issuer_name %}
-                        <strong>{% trans 'Name' %}:</strong> {{ invoice.issuer_name|default:'-' }}<br>
+                        <strong>{% trans 'Name' %}:</strong> {{ invoice.issuer_name|default:'' }}<br>
                     {% endif %}
-                    <strong>{% trans 'Phone' %}:</strong> {{ invoice.issuer_phone|default:'-' }}<br>
-                    <strong>{% trans 'Email' %}:</strong> {{ invoice.issuer_email|default:'-' }}<br>
+                    <strong>{% trans 'Phone' %}:</strong> {{ invoice.issuer_phone|default:'' }}<br>
+                    <strong>{% trans 'Email' %}:</strong> {{ invoice.issuer_email|default:'' }}<br>
                     <br>
                     <i>{% trans 'Additional data' %}:</i><br>
                     {% for label, value in invoice.supplier_additional_info.items %}

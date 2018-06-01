@@ -119,8 +119,8 @@ class Invoice(models.Model):
 
     # General information
     type = models.CharField(_(u'type'), max_length=64, choices=TYPE, default=TYPE.INVOICE)
-    number = models.IntegerField(_(u'number'), db_index=True, blank=True)
-    full_number = models.CharField(max_length=128, blank=True)
+    sequence = models.IntegerField(_(u'sequence'), db_index=True, blank=True)
+    number = models.CharField(_(u'number'), max_length=128, blank=True)
     status = models.CharField(_(u'status'), choices=STATUS, max_length=64, default=STATUS.NEW)
     subtitle = models.CharField(_(u'subtitle'), max_length=255,
         blank=True, null=True, default=None)
@@ -240,21 +240,21 @@ class Invoice(models.Model):
         db_table = 'invoicing_invoices'
         verbose_name = _(u'invoice')
         verbose_name_plural = _(u'invoices')
-        ordering = ('date_issue', 'number')
+        ordering = ('date_issue', 'sequence')
         default_permissions = ('list', 'view', 'add', 'change', 'delete')
 
     def __str__(self):
-        return self.full_number
+        return self.number
 
     def __unicode__(self):
-        return self.full_number
+        return self.number
 
     def save(self, **kwargs):
-        if self.number in EMPTY_VALUES:
-            self.number = self._get_next_number()
+        if self.sequence in EMPTY_VALUES:
+            self.sequence = self._get_next_sequence()
 
-        if self.full_number in EMPTY_VALUES:
-            self.full_number = self._get_full_number()
+        if self.number in EMPTY_VALUES:
+            self.number = self._get_number()
 
         return super(Invoice, self).save(**kwargs)
 
@@ -263,20 +263,20 @@ class Invoice(models.Model):
             lambda invoice: reverse('invoicing:invoice_detail', args=(invoice.pk,))
         )(self)
 
-    def _get_next_number(self):
+    def _get_next_sequence(self):
         """
-        Returns next invoice number based on ``settings.INVOICING_COUNTER_PERIOD``.
+        Returns next invoice sequence based on ``settings.INVOICING_COUNTER_PERIOD``.
 
         .. warning::
 
-            This is only used to prepopulate ``number`` field on saving new invoice.
-            To get invoice number always use ``number`` field.
+            This is only used to prepopulate ``sequence`` field on saving new invoice.
+            To get invoice sequence always use ``sequence`` field.
 
         .. note::
 
-            To get invoice full number use ``full_number`` field.
+            To get invoice number use ``number`` field.
 
-        :return: string (generated next number)
+        :return: string (generated next sequence)
         """
         invoice_counter_reset = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD.YEARLY)
 
@@ -294,24 +294,24 @@ class Invoice(models.Model):
             raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: DAILY, MONTHLY, YEARLY.")
 
         start_from = getattr(settings, 'INVOICING_NUMBER_START_FROM', 1)
-        last_number = relative_invoices.aggregate(Max('number'))['number__max'] or start_from - 1
+        last_sequence = relative_invoices.aggregate(Max('sequence'))['sequence__max'] or start_from - 1
 
-        return last_number + 1
+        return last_sequence + 1
 
-    def _get_full_number(self):
+    def _get_number(self):
         """
-        Generates on the fly invoice full number from template provided by ``settings.INVOICING_NUMBER_FORMAT``.
+        Generates on the fly invoice number from template provided by ``settings.INVOICING_NUMBER_FORMAT``.
         ``Invoice`` object is provided as ``invoice`` variable to the template, therefore all object fields
-        can be used to generate full number format.
+        can be used to generate number format.
 
         .. warning::
 
-            This is only used to prepopulate ``full_number`` field on saving new invoice.
-            To get invoice full number always use ``full_number`` field.
+            This is only used to prepopulate ``number`` field on saving new invoice.
+            To get invoice number always use ``number`` field.
 
-        :return: string (generated full number)
+        :return: string (generated number)
         """
-        number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_tax_point|date:'Y' }}/{{ invoice.number }}")
+        number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_tax_point|date:'Y' }}/{{ invoice.sequence }}")
         return Template(number_format).render(Context({'invoice': self}))
 
     def get_tax_rate(self):

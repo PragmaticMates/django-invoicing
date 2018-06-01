@@ -37,7 +37,7 @@ class OverdueFilter(admin.SimpleListFilter):
 
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
-    list_display = ['pk', 'type', 'full_number', 'status',
+    list_display = ['pk', 'type', 'number', 'status',
                     'supplier_info', 'customer_info',
                     'subtotal', 'vat', 'total',  # TODO: annotate values using subqueries to improve performance
                     'currency', 'date_issue', 'payment_term_days', 'is_overdue_boolean', 'is_paid']
@@ -48,7 +48,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     fieldsets = (
         (_(u'General information'), {
             'fields': (
-                'type', 'number', 'full_number', 'status', 'subtitle', 'language', 'note',
+                'type', 'sequence', 'number', 'status', 'subtitle', 'language', 'note',
                 'date_issue', 'date_tax_point', 'date_due', 'date_sent'
             )
         }),

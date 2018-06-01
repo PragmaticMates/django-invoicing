@@ -2,7 +2,7 @@
 {% language invoice.language %}
     <div class="row">
         <div class="col-md-12 text-right invoice-title">
-            <h1>{{ invoice.get_type_display }} {{ invoice.full_number }}</h1>
+            <h1>{{ invoice.get_type_display }} {{ invoice }}</h1>
             <h3 class="text-muted invoice-subtitle">{{ invoice.subtitle|default:'' }}</h3><br>
         </div>
     </div>

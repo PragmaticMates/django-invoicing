@@ -463,7 +463,7 @@ class Item(models.Model):
     )
 
     invoice = models.ForeignKey(Invoice, verbose_name=_(u'invoice'), on_delete=models.CASCADE)
-    title = models.CharField(_(u'title'), max_length=255)
+    title = models.TextField(_(u'title'))
     quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1)
     unit = models.CharField(_(u'unit'), choices=UNITS, max_length=64, default=UNIT_PIECES)
     unit_price = models.DecimalField(_(u'unit price'), max_digits=10, decimal_places=2)

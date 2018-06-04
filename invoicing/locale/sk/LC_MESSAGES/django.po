@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-01 10:17+0200\n"
-"PO-Revision-Date: 2018-06-01 10:18+0058\n"
+"POT-Creation-Date: 2018-06-01 18:33+0200\n"
+"PO-Revision-Date: 2018-06-01 18:34+0058\n"
 "Last-Translator: b'Erik Telepovsky <erik@pragmaticmates.com>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -274,6 +274,10 @@ msgid "type"
 msgstr "typ"
 
 #: models.py:122
+msgid "sequence"
+msgstr "sekvencia"
+
+#: models.py:123
 msgid "number"
 msgstr "číslo"
 
@@ -318,7 +322,6 @@ msgid "payment till"
 msgstr "uhradiť do"
 
 #: models.py:133
-#| msgid "sent"
 msgid "date sent"
 msgstr "dátum odoslania"
 
@@ -487,7 +490,6 @@ msgid "delivery method"
 msgstr "spôsob doručenia"
 
 #: models.py:229
-#| msgid "Line total"
 msgid "total"
 msgstr "celkom"
 
@@ -695,7 +697,6 @@ msgid "Unit price"
 msgstr "Jednotková cena"
 
 #: templates/invoicing/formatters/html.html:143
-#| msgid "discount"
 msgid "Discount"
 msgstr "Zľava"
 

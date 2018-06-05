@@ -63,7 +63,7 @@ class Invoice(models.Model):
         ('INVOICE', _(u'Invoice')),
         ('ADVANCE', _(u'Advance invoice')),
         ('PROFORMA', _(u'Proforma invoice')),
-        ('VAT_CREDIT_NOTE', _(u'VAT credit note'))
+        ('CREDIT_NOTE', _(u'Credit note'))
     )
 
     STATUS = Choices(

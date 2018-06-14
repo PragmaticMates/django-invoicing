@@ -417,9 +417,20 @@ class Invoice(models.Model):
             for row in cursor.fetchall()
         ]
 
+    @property
     def has_discount(self):
         discounts = list(set(self.item_set.values_list('discount', flat=True)))
         return len(discounts) > 1 or discounts[0] > 0
+
+    @property
+    def has_unit(self):
+        units = list(set(self.item_set.values_list('unit', flat=True)))
+        return len(units) > 1 or units[0] != Item.UNIT_EMPTY
+
+    @property
+    def max_quantity(self):
+        quantity = self.item_set.aggregate(Max('quantity'))
+        return quantity.get('quantity__max', 1) if quantity else 1
 
     @property
     def subtotal(self):

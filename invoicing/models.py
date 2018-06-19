@@ -122,11 +122,9 @@ class Invoice(models.Model):
     sequence = models.IntegerField(_(u'sequence'), db_index=True, blank=True)
     number = models.CharField(_(u'number'), max_length=128, blank=True)
     status = models.CharField(_(u'status'), choices=STATUS, max_length=64, default=STATUS.NEW)
-    subtitle = models.CharField(_(u'subtitle'), max_length=255,
-        blank=True, null=True, default=None)
+    subtitle = models.CharField(_(u'subtitle'), max_length=255, blank=True)
     language = models.CharField(_(u'language'), max_length=10, choices=settings.LANGUAGES)
-    note = models.CharField(_(u'note'), max_length=255,
-        blank=True, null=True, default=_(u'Thank you for using our services.'))
+    note = models.CharField(_(u'note'), max_length=255, blank=True, default=_(u'Thank you for using our services.'))
     date_issue = models.DateField(_(u'issue date'))
     date_tax_point = models.DateField(_(u'tax point date'), help_text=_(u'time of supply'))
     date_due = models.DateField(_(u'due date'), help_text=_(u'payment till'))
@@ -139,87 +137,62 @@ class Invoice(models.Model):
     #already_paid = models.DecimalField(_(u'already paid'), max_digits=10, decimal_places=2, default=0)
 
     payment_method = models.CharField(_(u'payment method'), choices=PAYMENT_METHOD, max_length=64)
-    constant_symbol = models.CharField(_(u'constant symbol'), max_length=64, choices=CONSTANT_SYMBOL,
-        blank=True, null=True, default=None)
+    constant_symbol = models.CharField(_(u'constant symbol'), max_length=64, choices=CONSTANT_SYMBOL, blank=True)
     variable_symbol = models.PositiveIntegerField(_(u'variable symbol'),
         validators=[MinValueValidator(0), MaxValueValidator(9999999999)],
         blank=True, null=True, default=None)
     specific_symbol = models.PositiveIntegerField(_(u'specific symbol'),
         validators=[MinValueValidator(0), MaxValueValidator(9999999999)],
         blank=True, null=True, default=None)
-    reference = models.CharField(_(u'reference'), max_length=140,
-        blank=True, null=True, default=None)
+    reference = models.CharField(_(u'reference'), max_length=140, blank=True)
 
-    bank_name = models.CharField(_(u'bank name'), max_length=255,
-        blank=True, null=True, default=None)
-    bank_street = models.CharField(_(u'bank street and number'), max_length=255,
-        blank=True, null=True, default=None)
-    bank_zip = models.CharField(_(u'bank ZIP'), max_length=255,
-        blank=True, null=True, default=None)
-    bank_city = models.CharField(_(u'bank city'), max_length=255,
-        blank=True, null=True, default=None)
-    bank_country = CountryField(_(u'bank country'), max_length=255,
-        blank=True, null=True, default=None)
+    bank_name = models.CharField(_(u'bank name'), max_length=255, blank=True)
+    bank_street = models.CharField(_(u'bank street and number'), max_length=255, blank=True)
+    bank_zip = models.CharField(_(u'bank ZIP'), max_length=255, blank=True)
+    bank_city = models.CharField(_(u'bank city'), max_length=255, blank=True)
+    bank_country = CountryField(_(u'bank country'), max_length=255, blank=True)
     bank_iban = IBANField(verbose_name=_(u'Account number (IBAN)'), default=None)
     bank_swift_bic = SWIFTBICField(verbose_name=_(u'Bank SWIFT / BIC'), default=None)
 
     # Issuer details
     supplier_name = models.CharField(_(u'supplier name'), max_length=255, default=None)
-    supplier_street = models.CharField(_(u'supplier street and number'), max_length=255,
-        blank=True, null=True, default=None)
-    supplier_zip = models.CharField(_(u'supplier ZIP'), max_length=255,
-        blank=True, null=True, default=None)
-    supplier_city = models.CharField(_(u'supplier city'), max_length=255,
-        blank=True, null=True, default=None)
+    supplier_street = models.CharField(_(u'supplier street and number'), max_length=255, blank=True)
+    supplier_zip = models.CharField(_(u'supplier ZIP'), max_length=255, blank=True)
+    supplier_city = models.CharField(_(u'supplier city'), max_length=255, blank=True)
     supplier_country = CountryField(_(u'supplier country'), default=None)
-    supplier_registration_id = models.CharField(_(u'supplier Reg. No.'), max_length=255,
-        blank=True, null=True, default=None)
-    supplier_tax_id = models.CharField(_(u'supplier Tax No.'), max_length=255,
-        blank=True, null=True, default=None)
-    supplier_vat_id = VATField(_(u'supplier VAT No.'),
-        blank=True, null=True, default=None)
+    supplier_registration_id = models.CharField(_(u'supplier Reg. No.'), max_length=255, blank=True)
+    supplier_tax_id = models.CharField(_(u'supplier Tax No.'), max_length=255, blank=True)
+    supplier_vat_id = VATField(_(u'supplier VAT No.'), blank=True)
     supplier_additional_info = JSONField(_(u'supplier additional information'),
         load_kwargs={'object_pairs_hook': OrderedDict},
         blank=True, null=True, default=None)  # for example www or legal matters
 
     # Contact details
-    issuer_name = models.CharField(_(u'issuer name'), max_length=255,
-        blank=True, null=True, default=None)
-    issuer_email = models.EmailField(_(u'issuer email'),
-        blank=True, null=True, default=None)
-    issuer_phone = models.CharField(_(u'issuer phone'), max_length=255,
-        blank=True, null=True, default=None)
+    issuer_name = models.CharField(_(u'issuer name'), max_length=255, blank=True)
+    issuer_email = models.EmailField(_(u'issuer email'), blank=True)
+    issuer_phone = models.CharField(_(u'issuer phone'), max_length=255, blank=True)
 
     # Customer details
     customer_name = models.CharField(_(u'customer name'), max_length=255)
-    customer_street = models.CharField(_(u'customer street and number'), max_length=255,
-        blank=True, null=True, default=None)
-    customer_zip = models.CharField(_(u'customer ZIP'), max_length=255,
-        blank=True, null=True, default=None)
-    customer_city = models.CharField(_(u'customer city'), max_length=255,
-        blank=True, null=True, default=None)
+    customer_street = models.CharField(_(u'customer street and number'), max_length=255, blank=True)
+    customer_zip = models.CharField(_(u'customer ZIP'), max_length=255, blank=True)
+    customer_city = models.CharField(_(u'customer city'), max_length=255, blank=True)
     customer_country = CountryField(_(u'customer country'))
-    customer_registration_id = models.CharField(_(u'customer Reg. No.'), max_length=255,
-        blank=True, null=True, default=None)
-    customer_tax_id = models.CharField(_(u'customer Tax No.'), max_length=255,
-        blank=True, null=True, default=None)
-    customer_vat_id = VATField(_(u'customer VAT No.'),
-        blank=True, null=True, default=None)
+    customer_registration_id = models.CharField(_(u'customer Reg. No.'), max_length=255, blank=True)
+    customer_tax_id = models.CharField(_(u'customer Tax No.'), max_length=255, blank=True)
+    customer_vat_id = VATField(_(u'customer VAT No.'), blank=True)
     customer_additional_info = JSONField(_(u'customer additional information'),
         load_kwargs={'object_pairs_hook': OrderedDict},
         blank=True, null=True, default=None)
+    customer_email = models.EmailField(_(u'customer email'), blank=True)
+    customer_phone = models.CharField(_(u'customer phone'), max_length=255, blank=True)
 
     # Shipping details
-    shipping_name = models.CharField(_(u'shipping name'), max_length=255,
-        blank=True, null=True, default=None)
-    shipping_street = models.CharField(_(u'shipping street and number'), max_length=255,
-        blank=True, null=True, default=None)
-    shipping_zip = models.CharField(_(u'shipping ZIP'), max_length=255,
-        blank=True, null=True, default=None)
-    shipping_city = models.CharField(_(u'shipping city'), max_length=255,
-        blank=True, null=True, default=None)
-    shipping_country = CountryField(_(u'shipping country'),
-        blank=True, null=True, default=None)
+    shipping_name = models.CharField(_(u'shipping name'), max_length=255, blank=True)
+    shipping_street = models.CharField(_(u'shipping street and number'), max_length=255, blank=True)
+    shipping_zip = models.CharField(_(u'shipping ZIP'), max_length=255, blank=True)
+    shipping_city = models.CharField(_(u'shipping city'), max_length=255, blank=True)
+    shipping_country = CountryField(_(u'shipping country'), blank=True)
 
     # Delivery details
     delivery_method = models.CharField(_(u'delivery method'), choices=DELIVERY_METHOD, max_length=64,

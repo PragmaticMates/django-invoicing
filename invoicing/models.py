@@ -205,6 +205,9 @@ class Invoice(models.Model):
         blank=True, null=True, default=0)
 
     # Other
+    attachments = JSONField(_(u'attachments'),
+        load_kwargs={'object_pairs_hook': OrderedDict},
+        blank=True, null=True, default=None)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)
     objects = InvoiceManager()

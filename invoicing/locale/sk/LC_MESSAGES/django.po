@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-19 13:50+0200\n"
-"PO-Revision-Date: 2018-06-19 13:51+0058\n"
+"POT-Creation-Date: 2018-06-19 14:15+0200\n"
+"PO-Revision-Date: 2018-06-19 14:15+0058\n"
 "Last-Translator: b'Erik Telepovsky <erik@pragmaticmates.com>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -105,7 +105,6 @@ msgid "Proforma invoice"
 msgstr "Proforma faktúra"
 
 #: models.py:66
-#| msgid "VAT credit note"
 msgid "Credit note"
 msgstr "Dobropis"
 
@@ -467,12 +466,10 @@ msgid "customer additional information"
 msgstr "dodatočné informácie odberateľa"
 
 #: models.py:187
-#| msgid "Customer details"
 msgid "customer email"
 msgstr "email odberateľa"
 
 #: models.py:188
-#| msgid "customer name"
 msgid "customer phone"
 msgstr "telefón odberateľa"
 
@@ -508,75 +505,79 @@ msgstr "celkom"
 msgid "VAT"
 msgstr "DPH"
 
-#: models.py:208 models.py:461
+#: models.py:208
+msgid "attachments"
+msgstr "prílohy"
+
+#: models.py:211 models.py:464
 msgid "created"
 msgstr "vytvorené"
 
-#: models.py:209 models.py:462
+#: models.py:212 models.py:465
 msgid "modified"
 msgstr "upravené"
 
-#: models.py:214 models.py:449
+#: models.py:217 models.py:452
 msgid "invoice"
 msgstr "faktúra"
 
-#: models.py:215
+#: models.py:218
 msgid "invoices"
 msgstr "faktúry"
 
-#: models.py:445
+#: models.py:448
 msgid "pcs."
 msgstr "ks"
 
-#: models.py:446
+#: models.py:449
 msgid "hours"
 msgstr "hod."
 
-#: models.py:450
+#: models.py:453
 msgid "title"
 msgstr "názov"
 
-#: models.py:451
+#: models.py:454
 msgid "quantity"
 msgstr "počet"
 
-#: models.py:452
+#: models.py:455
 msgid "unit"
 msgstr "jednotka"
 
-#: models.py:453
+#: models.py:456
 msgid "unit price"
 msgstr "jednotková cena"
 
-#: models.py:454
+#: models.py:457
 msgid "discount (%)"
 msgstr "zľava (%)"
 
-#: models.py:455
+#: models.py:458
 msgid "tax rate (%)"
 msgstr "sadzba DPH (%)"
 
-#: models.py:455
+#: models.py:458
 msgid "VAT rate"
 msgstr "sadzba DPH"
 
-#: models.py:457
+#: models.py:460
 msgid "tag"
 msgstr "značka"
 
-#: models.py:459
+#: models.py:462
 msgid "weight"
 msgstr "váha"
 
-#: models.py:459
+#: models.py:462
 msgid "order"
 msgstr "poradie"
 
-#: models.py:467
+#: models.py:470
 msgid "item"
 msgstr "položka"
 
-#: models.py:468
+#: models.py:471
 msgid "items"
 msgstr "položky"
 

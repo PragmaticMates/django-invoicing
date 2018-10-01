@@ -19,7 +19,7 @@ class VATField(models.CharField):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('max_length', 13)
+        kwargs.setdefault('max_length', 14)
         super(VATField, self).__init__(*args, **kwargs)
         self.validators.append(VATValidator())
         self.validators.append(validate_min_length)

@@ -22,7 +22,7 @@ except ImportError:
     from django.urls import reverse
 
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Max
 from django.template import Template, Context
 from django.utils.timezone import now
@@ -225,6 +225,7 @@ class Invoice(models.Model):
     def __unicode__(self):
         return self.number
 
+    @transaction.atomic
     def save(self, **kwargs):
         if self.sequence in EMPTY_VALUES:
             self.sequence = self._get_next_sequence()

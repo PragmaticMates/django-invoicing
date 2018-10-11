@@ -228,8 +228,7 @@ class Invoice(models.Model):
     @transaction.atomic
     def save(self, **kwargs):
         if self.sequence in EMPTY_VALUES:
-            self.sequence = self._get_next_sequence()
-
+            self.sequence = Invoice.get_next_sequence(self.type, self.date_tax_point)  # self.date_issue
         if self.number in EMPTY_VALUES:
             self.number = self._get_number()
 
@@ -240,7 +239,8 @@ class Invoice(models.Model):
             lambda invoice: reverse('invoicing:invoice_detail', args=(invoice.pk,))
         )(self)
 
-    def _get_next_sequence(self):
+    @staticmethod
+    def get_next_sequence(type, important_date):
         """
         Returns next invoice sequence based on ``settings.INVOICING_COUNTER_PERIOD``.
 
@@ -255,30 +255,32 @@ class Invoice(models.Model):
 
         :return: string (generated next sequence)
         """
-        invoice_counter_reset = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD.YEARLY)
+        with transaction.atomic():
+            Invoice.objects.lock()
 
-        important_date = self.date_tax_point  # self.date_issue
-        if invoice_counter_reset == Invoice.COUNTER_PERIOD.DAILY:
-            relative_invoices = Invoice.objects.filter(date_issue=important_date)
+            invoice_counter_reset = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD.YEARLY)
 
-        elif invoice_counter_reset == Invoice.COUNTER_PERIOD.YEARLY:
-            relative_invoices = Invoice.objects.filter(date_issue__year=important_date.year)
+            if invoice_counter_reset == Invoice.COUNTER_PERIOD.DAILY:
+                relative_invoices = Invoice.objects.filter(date_issue=important_date)
 
-        elif invoice_counter_reset == Invoice.COUNTER_PERIOD.MONTHLY:
-            relative_invoices = Invoice.objects.filter(date_issue__year=important_date.year, date_issue__month=important_date.month)
+            elif invoice_counter_reset == Invoice.COUNTER_PERIOD.YEARLY:
+                relative_invoices = Invoice.objects.filter(date_issue__year=important_date.year)
 
-        else:
-            raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: DAILY, MONTHLY, YEARLY.")
+            elif invoice_counter_reset == Invoice.COUNTER_PERIOD.MONTHLY:
+                relative_invoices = Invoice.objects.filter(date_issue__year=important_date.year, date_issue__month=important_date.month)
 
-        invoice_counter_per_type = getattr(settings, 'INVOICING_COUNTER_PER_TYPE', False)
+            else:
+                raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: DAILY, MONTHLY, YEARLY.")
 
-        if invoice_counter_per_type:
-            relative_invoices = relative_invoices.filter(type=self.type)
+            invoice_counter_per_type = getattr(settings, 'INVOICING_COUNTER_PER_TYPE', False)
 
-        start_from = getattr(settings, 'INVOICING_NUMBER_START_FROM', 1)
-        last_sequence = relative_invoices.aggregate(Max('sequence'))['sequence__max'] or start_from - 1
+            if invoice_counter_per_type:
+                relative_invoices = relative_invoices.filter(type=type)
 
-        return last_sequence + 1
+            start_from = getattr(settings, 'INVOICING_NUMBER_START_FROM', 1)
+            last_sequence = relative_invoices.aggregate(Max('sequence'))['sequence__max'] or start_from - 1
+
+            return last_sequence + 1
 
     def _get_number(self):
         """

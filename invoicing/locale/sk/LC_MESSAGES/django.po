@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-11-21 09:51+0100\n"
-"PO-Revision-Date: 2018-06-19 14:15+0058\n"
+"PO-Revision-Date: 2018-11-21 15:51+0058\n"
 "Last-Translator: b'Erik Telepovsky <erik@pragmaticmates.com>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -291,7 +291,7 @@ msgstr "podnadpis"
 
 #: models.py:128
 msgid "related document"
-msgstr ""
+msgstr "súvisiaci dokument"
 
 #: models.py:129
 msgid "language"

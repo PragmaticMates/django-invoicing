@@ -125,6 +125,7 @@ class Invoice(models.Model):
     number = models.CharField(_(u'number'), max_length=128, blank=True)
     status = models.CharField(_(u'status'), choices=STATUS, max_length=64, default=STATUS.NEW)
     subtitle = models.CharField(_(u'subtitle'), max_length=255, blank=True)
+    related_document = models.CharField(_(u'related document'), max_length=100, blank=True)
     language = models.CharField(_(u'language'), max_length=10, choices=settings.LANGUAGES)
     note = models.CharField(_(u'note'), max_length=255, blank=True, default=_(u'Thank you for using our services.'))
     date_issue = models.DateField(_(u'issue date'))

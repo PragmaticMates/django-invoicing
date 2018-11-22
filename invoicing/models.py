@@ -1,6 +1,6 @@
 from __future__ import division
 
-from cached_property import cached_property
+from django.utils.functional import cached_property
 
 try:
     from collections import OrderedDict

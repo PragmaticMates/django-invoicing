@@ -6,7 +6,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('invoicing', '0020_auto_20181001_1025'),
+        ('invoicing', '0018_invoice_attachments'),
+        # ('invoicing', '0020_auto_20181001_1025'),
     ]
 
     operations = [

@@ -14,6 +14,7 @@ def recalculate(*args, **kwargs):
 class Migration(migrations.Migration):
     dependencies = [
         ('invoicing', '0018_invoice_attachments'),
+        ('invoicing', '0021_invoice_related_document'),
     ]
 
     operations = [

@@ -231,7 +231,7 @@ class Invoice(models.Model):
     @transaction.atomic
     def save(self, **kwargs):
         if self.sequence in EMPTY_VALUES:
-            self.sequence = Invoice.get_next_sequence(self.type, self.date_tax_point)  # self.date_issue
+            self.sequence = Invoice.get_next_sequence(self.type, self.date_issue)
         if self.number in EMPTY_VALUES:
             self.number = self._get_number()
 

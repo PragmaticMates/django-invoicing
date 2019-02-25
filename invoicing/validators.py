@@ -15,7 +15,6 @@ class VATValidator(object):
         self.use_vies_validation = use_vies_validation
 
     def __call__(self, value):
-
         # check country code
         country_code = str(value[:2])
         country = Country(code=country_code.upper(), flag_url=None)

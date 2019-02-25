@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -21,7 +22,8 @@ class VATField(models.CharField):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('max_length', 14)
         super(VATField, self).__init__(*args, **kwargs)
-        self.validators.append(VATValidator())
+        use_vies_validation = getattr(settings, 'INVOICING_USE_VIES_VALIDATOR', True)
+        self.validators.append(VATValidator(use_vies_validation))
         self.validators.append(validate_min_length)
 
     def to_python(self, value):

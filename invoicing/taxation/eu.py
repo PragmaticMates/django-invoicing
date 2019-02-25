@@ -1,4 +1,5 @@
 import vatnumber
+from django.conf import settings
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -91,9 +92,12 @@ class EUTaxationPolicy(TaxationPolicy):
             if cls.is_in_EU(customer_country):
                 # Company is from other EU country
                 try:
-                    if vat_id and vatnumber.check_vies(vat_id):
-                    # Company is registered in VIES
-                    # Charge back
+                    use_vies_validator = getattr(settings, 'INVOICING_USE_VIES_VALIDATOR', True)
+                    vies_valid = vatnumber.check_vies(vat_id) if use_vies_validator else True
+
+                    if vat_id and vies_valid:
+                        # Company is registered in VIES
+                        # Charge back
                         return None
                     else:
                         return cls.get_default_tax()

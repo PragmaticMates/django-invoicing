@@ -31,5 +31,5 @@ setup(
         'Development Status :: 3 - Alpha'
     ],
     license='GPL License',
-    keywords = "django invoice invoicing billing supplier issuer purchaser buyer commerce products taxes vat pdf",
+    keywords="django invoice invoicing billing supplier issuer purchaser buyer commerce products taxes vat pdf",
 )

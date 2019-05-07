@@ -406,11 +406,17 @@ class Invoice(models.Model):
 
     @cached_property
     def has_discount(self):
+        if not self.item_set.exists():
+            return False
+
         discounts = list(set(self.item_set.values_list('discount', flat=True)))
         return len(discounts) > 1 or discounts[0] > 0
 
     @cached_property
     def has_unit(self):
+        if not self.item_set.exists():
+            return False
+
         units = list(set(self.item_set.values_list('unit', flat=True)))
         return len(units) > 1 or units[0] != Item.UNIT_EMPTY
 

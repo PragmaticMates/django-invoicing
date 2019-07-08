@@ -231,9 +231,9 @@ class Invoice(models.Model):
     @transaction.atomic
     def save(self, **kwargs):
         if self.sequence in EMPTY_VALUES:
-            self.sequence = Invoice.get_next_sequence(self.type, self.date_issue)
+            self.sequence = Invoice.get_next_sequence(self.type, self.date_issue, getattr(self, 'number_prefix', None))
         if self.number in EMPTY_VALUES:
-            self.number = self._get_number()
+            self.number = self._get_number(getattr(self, 'number_format', None))
 
         return super(Invoice, self).save(**kwargs)
 
@@ -243,7 +243,7 @@ class Invoice(models.Model):
         )(self)
 
     @staticmethod
-    def get_next_sequence(type, important_date):
+    def get_next_sequence(type, important_date, number_prefix=None):
         """
         Returns next invoice sequence based on ``settings.INVOICING_COUNTER_PERIOD``.
 
@@ -280,12 +280,15 @@ class Invoice(models.Model):
             if invoice_counter_per_type:
                 relative_invoices = relative_invoices.filter(type=type)
 
+            if number_prefix is not None:
+                relative_invoices = relative_invoices.filter(number__startswith=number_prefix)
+
             start_from = getattr(settings, 'INVOICING_NUMBER_START_FROM', 1)
             last_sequence = relative_invoices.aggregate(Max('sequence'))['sequence__max'] or start_from - 1
 
             return last_sequence + 1
 
-    def _get_number(self):
+    def _get_number(self, number_format=None):
         """
         Generates on the fly invoice number from template provided by ``settings.INVOICING_NUMBER_FORMAT``.
         ``Invoice`` object is provided as ``invoice`` variable to the template, therefore all object fields
@@ -298,7 +301,8 @@ class Invoice(models.Model):
 
         :return: string (generated number)
         """
-        number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_tax_point|date:'Y' }}/{{ invoice.sequence }}")
+        if not number_format:
+            number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_tax_point|date:'Y' }}/{{ invoice.sequence }}")
         return Template(number_format).render(Context({'invoice': self}))
 
     def get_tax_rate(self):

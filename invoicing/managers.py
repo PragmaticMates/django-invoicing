@@ -35,7 +35,7 @@ class InvoiceManager(Manager):
         """ Lock table.
 
         Locks the object model table so that atomic update is possible.
-        Simulatenous database access request pend until the lock is unlock()'ed.
+        Simultaneous database access request pend until the lock is unlock()'ed.
 
         Note: If you need to lock multiple tables, you need to do lock them
         all in one SQL clause and this function is not enough. To avoid

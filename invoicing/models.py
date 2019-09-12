@@ -487,7 +487,7 @@ class Item(models.Model):
         blank=True, null=True, default=None)
     tag = models.CharField(_(u'tag'), max_length=128,
         blank=True, null=True, default=None)
-    weight = models.IntegerField(_(u'weight'), choices=WEIGHT, help_text=_(u'order'),
+    weight = models.IntegerField(_(u'weight'), choices=WEIGHT, help_text=_(u'ordering'),
         blank=True, null=True, default=0)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)

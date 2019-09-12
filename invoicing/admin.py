@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.db.models import F
+from django.db.models.functions import Coalesce
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -40,7 +42,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     list_display = ['pk', 'type', 'number', 'status',
                     'supplier_info', 'customer_info',
-                    'subtotal', 'vat', 'total',  # TODO: annotate values using subqueries to improve performance
+                    'annotated_subtotal', 'vat', 'total',
                     'currency', 'date_issue', 'payment_term_days', 'is_overdue_boolean', 'is_paid']
     list_editable = ['status']
     list_filter = ['type', 'status', 'payment_method', OverdueFilter, 'language', 'currency']
@@ -85,6 +87,13 @@ class InvoiceAdmin(admin.ModelAdmin):
             )
         })
     )
+
+    def get_queryset(self, request):
+        return self.model.objects.annotate(annotated_subtotal=F('total')-Coalesce(F('vat'), 0))
+
+    def annotated_subtotal(self, invoice):
+        return invoice.annotated_subtotal
+    annotated_subtotal.short_description = _(u'subtotal')
 
     def supplier_info(self, invoice):
         return mark_safe(u'%s<br>%s' % (invoice.supplier_name, invoice.supplier_country.name))

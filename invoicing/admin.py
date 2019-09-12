@@ -35,6 +35,7 @@ class OverdueFilter(admin.SimpleListFilter):
             return queryset.overdue()
 
 
+@admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     list_display = ['pk', 'type', 'number', 'status',
@@ -49,7 +50,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         (_(u'General information'), {
             'fields': (
                 'type', 'sequence', 'number', 'status', 'subtitle', 'language', 'note',
-                'date_issue', 'date_tax_point', 'date_due', 'date_sent'
+                'date_issue', 'date_tax_point', 'date_due', 'date_sent', 'date_paid'
             )
         }),
         (_(u'Contact details'), {
@@ -106,5 +107,3 @@ class InvoiceAdmin(admin.ModelAdmin):
         return invoice.status == Invoice.STATUS.PAID
     is_paid.boolean = True
     is_paid.short_description = _(u'is paid')
-
-admin.site.register(Invoice, InvoiceAdmin)

@@ -132,7 +132,9 @@ class Invoice(models.Model):
     date_tax_point = models.DateField(_(u'tax point date'), help_text=_(u'time of supply'))
     date_due = models.DateField(_(u'due date'), help_text=_(u'payment till'))
     date_sent = MonitorField(monitor='status', when=[STATUS.SENT], verbose_name=_(u'date sent'),
-        blank=True, null=True, default=None)
+                             blank=True, null=True, default=None)
+    date_paid = MonitorField(monitor='status', when=[STATUS.PAID], verbose_name=_(u'date paid'),
+                             blank=True, null=True, default=None)
 
     # Payment details
     currency = models.CharField(_(u'currency'), max_length=10, choices=CURRENCY_CHOICES)

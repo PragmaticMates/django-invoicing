@@ -329,6 +329,10 @@ msgstr "uhradiť do"
 msgid "date sent"
 msgstr "dátum odoslania"
 
+#: models.py:135
+msgid "date sent"
+msgstr "dátum úhrady"
+
 #: models.py:138
 msgid "currency"
 msgstr "mena"

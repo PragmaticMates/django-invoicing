@@ -344,13 +344,13 @@ class Invoice(models.Model):
 
     def set_supplier_data(self, supplier):
         self.supplier_name = supplier.get('name')
-        self.supplier_street = supplier.get('street', None)
-        self.supplier_zip = supplier.get('zip', None)
-        self.supplier_city = supplier.get('city', None)
+        self.supplier_street = supplier.get('street', '')
+        self.supplier_zip = supplier.get('zip', '')
+        self.supplier_city = supplier.get('city', '')
         self.supplier_country = supplier.get('country_code')
-        self.supplier_registration_id = supplier.get('registration_id', None)
-        self.supplier_tax_id = supplier.get('tax_id', None)
-        self.supplier_vat_id = supplier.get('vat_id', None)
+        self.supplier_registration_id = supplier.get('registration_id', '')
+        self.supplier_tax_id = supplier.get('tax_id', '')
+        self.supplier_vat_id = supplier.get('vat_id', '')
         self.supplier_additional_info = supplier.get('additional_info', None)
 
         bank = supplier.get('bank')
@@ -364,21 +364,21 @@ class Invoice(models.Model):
 
     def set_customer_data(self, customer):
         self.customer_name = customer.get('name')
-        self.customer_street = customer.get('street', None)
-        self.customer_zip = customer.get('zip', None)
-        self.customer_city = customer.get('city', None)
+        self.customer_street = customer.get('street', '')
+        self.customer_zip = customer.get('zip', '')
+        self.customer_city = customer.get('city', '')
         self.customer_country = customer.get('country_code')
-        self.customer_registration_id = customer.get('registration_id', None)
-        self.customer_tax_id = customer.get('tax_id', None)
-        self.customer_vat_id = customer.get('vat_id', None)
+        self.customer_registration_id = customer.get('registration_id', '')
+        self.customer_tax_id = customer.get('tax_id', '')
+        self.customer_vat_id = customer.get('vat_id', '')
         self.customer_additional_info = customer.get('additional_info', None)
         
     def set_shipping_data(self, shipping):
-        self.shipping_name = shipping.get('name', None)
-        self.shipping_street = shipping.get('street', None)
-        self.shipping_zip = shipping.get('zip', None)
-        self.shipping_city = shipping.get('city', None)
-        self.shipping_country = shipping.get('country_code', None)
+        self.shipping_name = shipping.get('name', '')
+        self.shipping_street = shipping.get('street', '')
+        self.shipping_zip = shipping.get('zip', '')
+        self.shipping_city = shipping.get('city', '')
+        self.shipping_country = shipping.get('country_code', '')
 
     # http://www.superfaktura.sk/blog/neplatca-dph-vzor-faktury/
     def is_supplier_vat_id_visible(self):

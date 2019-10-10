@@ -31,7 +31,7 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from invoicing.fields import VATField
-from invoicing.managers import InvoiceManager, ItemManager
+from invoicing.querysets import InvoiceQuerySet, ItemQuerySet
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
 from invoicing.utils import import_name
@@ -215,7 +215,7 @@ class Invoice(models.Model):
         blank=True, null=True, default=None)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)
-    objects = InvoiceManager()
+    objects = InvoiceQuerySet.as_manager()
 
     class Meta:
         db_table = 'invoicing_invoices'
@@ -491,7 +491,7 @@ class Item(models.Model):
         blank=True, null=True, default=0)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)
-    objects = ItemManager()
+    objects = ItemQuerySet.as_manager()
 
     class Meta:
         db_table = 'invoicing_items'

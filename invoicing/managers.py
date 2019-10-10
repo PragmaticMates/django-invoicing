@@ -13,6 +13,12 @@ class InvoiceQuerySet(QuerySet):
     def not_overdue(self):
         return self.filter(Q(date_due__gt=datetime.datetime.combine(now().date(), datetime.time.max)) | Q(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED]))
 
+    def paid(self):
+        return self.filter(status=self.model.STATUS.PAID)
+
+    def unpaid(self):
+        return self.filter(date_paid=None).exclude(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED])
+
     def valid(self):
         return self.exclude(status__in=[self.model.STATUS.RETURNED, self.model.STATUS.CANCELED])
 
@@ -27,6 +33,15 @@ class InvoiceManager(Manager):
 
     def overdue(self):
         return self.get_queryset().overdue()
+
+    def not_overdue(self):
+        return self.get_queryset().not_overdue()
+
+    def paid(self):
+        return self.get_queryset().paid()
+
+    def unpaid(self):
+        return self.get_queryset().unpaid()
 
     def valid(self):
         return self.get_queryset().valid()

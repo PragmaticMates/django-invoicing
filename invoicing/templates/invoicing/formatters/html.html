@@ -156,7 +156,7 @@
                         {% for item in invoice.item_set.all %}
                         <tr>
                             <td class="minimal-width nowrap">
-                                <a href="{{ item.get_absolute_url }}">{{ forloop.counter}}</a>
+                                <a href="{{ item.get_absolute_url }}">{{ forloop.counter }}</a>
                             </td>
                             <td>{{ item.title|linebreaksbr }}</td>
                             <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat:"-3" }}</td>
@@ -226,19 +226,35 @@
 
             <div class="row">
                 <div class="col-md-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">{% trans 'Other' %}</h3>
-                        </div>
-                        <div class="panel-body mb-4">
-                            <div class="row">
-                                <div class="col-md-12 text-right">
-                                    <strong>{% trans 'credit' %}:</strong> {{ invoice.credit|floatformat:"2" }} {{ invoice.currency }}
+                    {% if invoice.credit or invoice.has_discount %}
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">{% trans 'Other' %}</h3>
+                            </div>
+                            <div class="panel-body mb-4">
+                                <div class="row">
+                                    {% if invoice.credit %}
+                                        <div class="col-md-12 text-right">
+                                            <strong>{% trans 'credit' %}:</strong> {{ invoice.credit|floatformat:"2" }} {{ invoice.currency }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if invoice.has_discount %}
+                                        <div class="col-md-12 text-right">
+                                            <strong>{% trans 'price before discount' %}:</strong>
+                                            {{ invoice.total_without_discount|floatformat:"2" }} {{ invoice.currency }}
+                                        </div>
+                                        <div class="col-md-12 text-right">
+                                            <strong>{% trans 'total discount' %}:</strong>
+                                            {{ invoice.discount|floatformat:"2" }} {{ invoice.currency }}
+                                            ({{ invoice.discount_percentage }}%)
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                {% endif %}
 
                 <div class="col-md-12">
                     <div class="panel panel-danger">

@@ -443,6 +443,21 @@ class Invoice(models.Model):
             sum += item.subtotal
         return round(sum, 2)
 
+    @property
+    def discount(self):
+        sum = 0
+        for item in self.item_set.all():
+            sum += item.discount_amount
+        return Decimal(round(sum, 2))
+
+    @property
+    def discount_percentage(self):
+        return Decimal(round(100*self.discount/self.total_without_discount, 2))
+
+    @property
+    def total_without_discount(self):
+        return self.total + self.discount
+
     def calculate_vat(self):
         if len(self.vat_summary) == 1 and self.vat_summary[0]['vat'] is None:
             return None
@@ -453,17 +468,16 @@ class Invoice(models.Model):
         return vat
 
     def calculate_total(self):
-        # TODO: save into model field on post_save signal for InvoiceItem
-
         #total = self.subtotal + self.vat  # subtotal with vat
         total = 0
-        for vat_rate in self.vat_summary:
-            total += float(vat_rate['vat'] or 0) + float(vat_rate['base'])
 
-        #total *= float((100 - float(self.discount)) / 100)  # subtract discount amount
-        total -= float(self.credit)  # subtract credit
+        for vat_rate in self.vat_summary:
+            total += Decimal(vat_rate['base']) + Decimal(vat_rate['vat'] or 0)
+
+        #total *= Decimal((100 - Decimal(self.discount)) / 100)  # subtract discount amount
+        total -= Decimal(self.credit)  # subtract credit
         #total -= self.already_paid  # subtract already paid
-        return round(total, 2)
+        return Decimal(round(total, 2))
 
 
 class Item(models.Model):
@@ -509,6 +523,11 @@ class Item(models.Model):
     def subtotal(self):
         subtotal = round(self.unit_price * self.quantity, 2)
         return round(Decimal(subtotal) * Decimal((100 - self.discount) / 100), 2)
+
+    @property
+    def discount_amount(self):
+        subtotal = round(self.unit_price * self.quantity, 2)
+        return round(Decimal(subtotal) * Decimal(self.discount / 100), 2)
 
     @property
     def vat(self):

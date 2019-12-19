@@ -8,16 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-12 09:13+0200\n"
-"PO-Revision-Date: 2019-09-12 09:15+0058\n"
-"Last-Translator: b'Erik Telepovsky <erik@pragmaticmates.com>'\n"
+"POT-Creation-Date: 2019-12-19 11:58+0100\n"
+"PO-Revision-Date: 2019-12-19 12:00+0020\n"
+"Last-Translator: Erik Telepovsky <erik@pragmaticmates.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
-"X-Translated-Using: django-rosetta 0.9.3\n"
+"X-Translated-Using: django-rosetta 0.9.0\n"
 
 #: admin.py:24
 msgid "overdue"
@@ -56,7 +56,6 @@ msgid "Shipping details"
 msgstr "Doručovacie informácie"
 
 #: admin.py:96
-#| msgid "total"
 msgid "subtotal"
 msgstr "medzisúčet"
 
@@ -342,7 +341,7 @@ msgstr "dátum úhrady"
 msgid "currency"
 msgstr "mena"
 
-#: models.py:141 templates/invoicing/formatters/html.html:236
+#: models.py:141 templates/invoicing/formatters/html.html:238
 msgid "credit"
 msgstr "kredit"
 
@@ -522,15 +521,15 @@ msgstr "DPH"
 msgid "attachments"
 msgstr "prílohy"
 
-#: models.py:216 models.py:492
+#: models.py:216 models.py:507
 msgid "created"
 msgstr "vytvorené"
 
-#: models.py:217 models.py:493
+#: models.py:217 models.py:508
 msgid "modified"
 msgstr "upravené"
 
-#: models.py:222 models.py:480
+#: models.py:222 models.py:495
 msgid "invoice"
 msgstr "faktúra"
 
@@ -538,60 +537,59 @@ msgstr "faktúra"
 msgid "invoices"
 msgstr "faktúry"
 
-#: models.py:476
+#: models.py:491
 msgid "pcs."
 msgstr "ks"
 
-#: models.py:477
+#: models.py:492
 msgid "hours"
 msgstr "hod."
 
-#: models.py:481
+#: models.py:496
 msgid "title"
 msgstr "názov"
 
-#: models.py:482
+#: models.py:497
 msgid "quantity"
 msgstr "počet"
 
-#: models.py:483
+#: models.py:498
 msgid "unit"
 msgstr "jednotka"
 
-#: models.py:484
+#: models.py:499
 msgid "unit price"
 msgstr "jednotková cena"
 
-#: models.py:485
+#: models.py:500
 msgid "discount (%)"
 msgstr "zľava (%)"
 
-#: models.py:486
+#: models.py:501
 msgid "tax rate (%)"
 msgstr "sadzba DPH (%)"
 
-#: models.py:486
+#: models.py:501
 msgid "VAT rate"
 msgstr "sadzba DPH"
 
-#: models.py:488
+#: models.py:503
 msgid "tag"
 msgstr "značka"
 
-#: models.py:490
+#: models.py:505
 msgid "weight"
 msgstr "váha"
 
-#: models.py:490
-#| msgid "order"
+#: models.py:505
 msgid "ordering"
 msgstr "poradie"
 
-#: models.py:498
+#: models.py:513
 msgid "item"
 msgstr "položka"
 
-#: models.py:499
+#: models.py:514
 msgid "items"
 msgstr "položky"
 
@@ -766,11 +764,20 @@ msgstr "Základ dane"
 msgid "Not a VAT payer"
 msgstr "Dodávateľ nie je platcom DPH"
 
-#: templates/invoicing/formatters/html.html:231
+#: templates/invoicing/formatters/html.html:232
 msgid "Other"
 msgstr "Iné"
 
-#: templates/invoicing/formatters/html.html:246
+#: templates/invoicing/formatters/html.html:244
+msgid "price before discount"
+msgstr "cena pred zľavou"
+
+#: templates/invoicing/formatters/html.html:248
+#| msgid "Discount"
+msgid "total discount"
+msgstr "celkom zľava"
+
+#: templates/invoicing/formatters/html.html:262
 msgid "TOTAL DUE"
 msgstr "Suma na úhradu"
 

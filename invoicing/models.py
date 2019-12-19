@@ -448,15 +448,16 @@ class Invoice(models.Model):
         sum = 0
         for item in self.item_set.all():
             sum += item.discount_amount
-        return Decimal(round(sum, 2))
+        return round(sum, 2)
 
     @property
     def discount_percentage(self):
-        return Decimal(round(100*self.discount/self.total_without_discount, 2))
+        percentage = 100*self.discount/self.total_without_discount
+        return round(percentage, 2)
 
     @property
     def total_without_discount(self):
-        return self.total + self.discount
+        return float(self.total) + self.discount
 
     def calculate_vat(self):
         if len(self.vat_summary) == 1 and self.vat_summary[0]['vat'] is None:
@@ -477,7 +478,7 @@ class Invoice(models.Model):
         #total *= Decimal((100 - Decimal(self.discount)) / 100)  # subtract discount amount
         total -= Decimal(self.credit)  # subtract credit
         #total -= self.already_paid  # subtract already paid
-        return Decimal(round(total, 2))
+        return round(total, 2)
 
 
 class Item(models.Model):

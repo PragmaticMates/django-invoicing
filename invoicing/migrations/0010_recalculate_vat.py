@@ -3,12 +3,13 @@ from invoicing.models import Invoice
 
 
 def recalculate_vat(*args, **kwargs):
-    try:
-        for invoice in Invoice.objects.all():
-            invoice.vat = invoice.calculate_vat()
-            invoice.save(update_fields=['vat'])
-    except:
-        pass
+    pass
+    # try:
+    #     for invoice in Invoice.objects.all():
+    #         invoice.vat = invoice.calculate_vat()
+    #         invoice.save(update_fields=['vat'])
+    # except:
+    #     pass
 
 
 class Migration(migrations.Migration):

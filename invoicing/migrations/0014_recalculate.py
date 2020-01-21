@@ -3,15 +3,16 @@ from invoicing.models import Invoice
 
 
 def recalculate(*args, **kwargs):
-    try:
-        for invoice in Invoice.objects.all():
-            with transaction.atomic():
-                invoice.total = invoice.calculate_total()
-                invoice.vat = invoice.calculate_vat()
-                invoice.save(update_fields=['total'])
-                invoice.save(update_fields=['vat'])
-    except:
-        pass
+    pass
+    # try:
+    #     for invoice in Invoice.objects.all():
+    #         with transaction.atomic():
+    #             invoice.total = invoice.calculate_total()
+    #             invoice.vat = invoice.calculate_vat()
+    #             invoice.save(update_fields=['total'])
+    #             invoice.save(update_fields=['vat'])
+    # except:
+    #     pass
 
 
 class Migration(migrations.Migration):

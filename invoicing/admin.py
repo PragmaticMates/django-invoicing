@@ -48,11 +48,13 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_filter = ['type', 'status', 'payment_method', OverdueFilter, 'language', 'currency']
     search_fields = ['number', 'subtitle', 'note', 'supplier_name', 'customer_name', 'shipping_name']
     inlines = (ItemInline, )
+    autocomplete_fields = ('related_invoices',)
     fieldsets = (
         (_(u'General information'), {
             'fields': (
-                'type', 'sequence', 'number', 'status', 'subtitle', 'language', 'note',
-                'date_issue', 'date_tax_point', 'date_due', 'date_sent', 'date_paid'
+                'type', 'status', 'language', ('sequence', 'number'), 'subtitle', 'related_document', 'related_invoices',
+                'date_issue', 'date_tax_point', 'date_due', 'date_sent', 'date_paid',
+                'note'
             )
         }),
         (_(u'Contact details'), {

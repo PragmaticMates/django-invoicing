@@ -8,7 +8,10 @@ from django.utils.timezone import now
 
 class InvoiceQuerySet(QuerySet):
     def overdue(self):
-        return self.filter(date_due__lt=datetime.datetime.combine(now().date(), datetime.time.max)).exclude(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED])
+        # TODO: not having related credit notes
+        return self.not_having_related_invoices() \
+            .exclude(type=self.model.TYPE.CREDIT_NOTE)\
+            .filter(date_due__lt=datetime.datetime.combine(now().date(), datetime.time.max)).exclude(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED])
 
     def not_overdue(self):
         return self.filter(Q(date_due__gt=datetime.datetime.combine(now().date(), datetime.time.max)) | Q(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED]))

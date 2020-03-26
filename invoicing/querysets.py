@@ -22,6 +22,12 @@ class InvoiceQuerySet(QuerySet):
     def valid(self):
         return self.exclude(status__in=[self.model.STATUS.RETURNED, self.model.STATUS.CANCELED])
 
+    def having_related_invoices(self):
+        return self.exclude(related_invoices=None)
+
+    def not_having_related_invoices(self):
+        return self.filter(related_invoices=None)
+
     def lock(self):
         """ Lock table.
 

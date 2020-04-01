@@ -8,22 +8,21 @@ from django.utils.timezone import now
 
 class InvoiceQuerySet(QuerySet):
     def overdue(self):
-        # TODO: not having related credit notes
-        return self.not_having_related_invoices() \
-            .exclude(type=self.model.TYPE.CREDIT_NOTE)\
-            .filter(date_due__lt=datetime.datetime.combine(now().date(), datetime.time.max)).exclude(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED])
+        return self.unpaid() \
+            .filter(date_due__lt=datetime.datetime.combine(now().date(), datetime.time.max)) \
+            .exclude(type=self.model.TYPE.CREDIT_NOTE)
 
     def not_overdue(self):
-        return self.filter(Q(date_due__gt=datetime.datetime.combine(now().date(), datetime.time.max)) | Q(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED]))
+        return self.filter(Q(date_due__gt=datetime.datetime.combine(now().date(), datetime.time.max)) | Q(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED, self.model.STATUS.CREDITED]))
 
     def paid(self):
         return self.filter(status=self.model.STATUS.PAID)
 
     def unpaid(self):
-        return self.exclude(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED])
+        return self.exclude(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED, self.model.STATUS.CREDITED])
 
     def valid(self):
-        return self.exclude(status__in=[self.model.STATUS.RETURNED, self.model.STATUS.CANCELED])
+        return self.exclude(status__in=[self.model.STATUS.RETURNED, self.model.STATUS.CANCELED, self.model.STATUS.CREDITED, self.model.STATUS.UNCOLLECTIBLE])
 
     def having_related_invoices(self):
         return self.exclude(related_invoices=None)

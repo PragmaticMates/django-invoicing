@@ -73,7 +73,9 @@ class Invoice(models.Model):
         ('SENT', _(u'sent')),
         ('RETURNED', _(u'returned')),
         ('CANCELED', _(u'canceled')),
-        ('PAID', _(u'paid'))
+        ('PAID', _(u'paid')),
+        ('CREDITED', _(u'credited')),
+        ('UNCOLLECTIBLE', _(u'uncollectible')),
     )
 
     PAYMENT_METHOD = Choices(
@@ -333,7 +335,7 @@ class Invoice(models.Model):
 
     @property
     def is_overdue(self):
-        return self.date_due < now().date() and self.status not in [self.STATUS.PAID, self.STATUS.CANCELED]
+        return self.date_due < now().date() and self.status not in [self.STATUS.PAID, self.STATUS.CANCELED, self.STATUS.CREDITED]
 
     @property
     def overdue_days(self):

@@ -335,7 +335,13 @@ class Invoice(models.Model):
 
     @property
     def is_overdue(self):
-        return self.date_due < now().date() and self.status not in [self.STATUS.PAID, self.STATUS.CANCELED, self.STATUS.CREDITED]
+        if self.status not in [self.STATUS.PAID, self.STATUS.CANCELED, self.STATUS.CREDITED]:
+            return False
+
+        if self.type == self.TYPE.CREDIT_NOTE:
+            return False
+
+        return self.date_due < now().date()
 
     @property
     def overdue_days(self):

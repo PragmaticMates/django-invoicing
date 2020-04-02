@@ -335,7 +335,7 @@ class Invoice(models.Model):
 
     @property
     def is_overdue(self):
-        if self.status not in [self.STATUS.PAID, self.STATUS.CANCELED, self.STATUS.CREDITED]:
+        if self.status in [self.STATUS.PAID, self.STATUS.CANCELED, self.STATUS.CREDITED]:
             return False
 
         if self.type == self.TYPE.CREDIT_NOTE:

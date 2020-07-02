@@ -11,7 +11,7 @@ from decimal import Decimal
 from django_countries.fields import CountryField
 from django_iban.fields import IBANField, SWIFTBICField
 from djmoney.forms.widgets import CURRENCY_CHOICES
-from jsonfield import JSONField
+from jsonfield import JSONField  # TODO: use native postgresql JSONfield instead
 from model_utils import Choices
 from model_utils.fields import MonitorField
 
@@ -128,7 +128,7 @@ class Invoice(models.Model):
     status = models.CharField(_(u'status'), choices=STATUS, max_length=64, default=STATUS.NEW)
     subtitle = models.CharField(_(u'subtitle'), max_length=255, blank=True)
     related_document = models.CharField(_(u'related document'), max_length=100, blank=True)
-    related_invoices = models.ManyToManyField(to='self', verbose_name=_(u'related invoices'))
+    related_invoices = models.ManyToManyField(to='self', verbose_name=_(u'related invoices'), blank=True)
     language = models.CharField(_(u'language'), max_length=10, choices=settings.LANGUAGES)
     note = models.CharField(_(u'note'), max_length=255, blank=True, default=_(u'Thank you for using our services.'))
     date_issue = models.DateField(_(u'issue date'))

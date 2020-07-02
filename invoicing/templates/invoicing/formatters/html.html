@@ -39,13 +39,16 @@
                     {% if invoice.issuer_name %}
                         <strong>{% trans 'Name' %}:</strong> {{ invoice.issuer_name|default:'' }}<br>
                     {% endif %}
-                    <strong>{% trans 'Phone' %}:</strong> {{ invoice.issuer_phone|default:'' }}<br>
+                    {% if invoice.issuer_phone %}<strong>{% trans 'Phone' %}:</strong> {{ invoice.issuer_phone|default:'' }}<br>{% endif %}
                     <strong>{% trans 'Email' %}:</strong> {{ invoice.issuer_email|default:'' }}<br>
-                    <br>
-                    <i>{% trans 'Additional data' %}:</i><br>
-                    {% for label, value in invoice.supplier_additional_info.items %}
-                        <strong>{{ label }}:</strong> {{ value|default:'' }}<br>
-                    {% endfor %}
+
+                    {% if invoice.supplier_additional_info %}
+                        <br>
+                        <i>{% trans 'Additional data' %}:</i><br>
+                        {% for label, value in invoice.supplier_additional_info.items %}
+                            <strong>{{ label }}:</strong> {{ value|default:'' }}<br>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -114,12 +117,12 @@
 
             <div class="panel panel-warning">
                 <div class="panel-body mb-4">
-                    <strong>{% trans 'Delivery method' %}:</strong> {{ invoice.get_delivery_method_display|default:'' }}<br>
-                    <strong>{% trans 'Payment method' %}:</strong> {{ invoice.get_payment_method_display|default:'' }}<br>
-                    <strong>{% trans 'Constant symbol' %}:</strong> {{ invoice.constant_symbol|default:'' }}<br>
-                    <strong>{% trans 'Variable symbol' %}:</strong> {{ invoice.variable_symbol|default:'' }}<br>
-                    <strong>{% trans 'Specific symbol' %}:</strong> {{ invoice.specific_symbol|default:'' }}<br>
-                    <strong>{% trans 'Reference' %}:</strong> {{ invoice.reference|default:'' }}<br>
+                    {% if invoice.delivery_method %}<strong>{% trans 'Delivery method' %}:</strong> {{ invoice.get_delivery_method_display|default:'' }}<br>{% endif %}
+                    {% if invoice.payment_method %}<strong>{% trans 'Payment method' %}:</strong> {{ invoice.get_payment_method_display|default:'' }}<br>{% endif %}
+                    {% if invoice.constant_symbol %}<strong>{% trans 'Constant symbol' %}:</strong> {{ invoice.constant_symbol|default:'' }}<br>{% endif %}
+                    {% if invoice.variable_symbol %}<strong>{% trans 'Variable symbol' %}:</strong> {{ invoice.variable_symbol|default:'' }}<br>{% endif %}
+                    {% if invoice.specific_symbol %}<strong>{% trans 'Specific symbol' %}:</strong> {{ invoice.specific_symbol|default:'' }}<br>{% endif %}
+                    {% if invoice.reference %}<strong>{% trans 'Reference' %}:</strong> {{ invoice.reference|default:'' }}<br>{% endif %}
                 </div>
             </div>
         </div>
@@ -156,7 +159,11 @@
                         {% for item in invoice.item_set.all %}
                         <tr>
                             <td class="minimal-width nowrap">
-                                <a href="{{ item.get_absolute_url }}">{{ forloop.counter }}</a>
+                                {% if item.get_absolute_url %}
+                                    <a href="{{ item.get_absolute_url }}">{{ forloop.counter }}</a>
+                                {% else %}
+                                    {{ forloop.counter }}
+                                {% endif %}
                             </td>
                             <td>{{ item.title|linebreaksbr }}</td>
                             <td class="minimal-width nowrap text-right">{{ item.quantity|floatformat:"-3" }}</td>

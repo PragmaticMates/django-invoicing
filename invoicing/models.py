@@ -466,7 +466,7 @@ class Invoice(models.Model):
 
     @property
     def total_without_discount(self):
-        return float(self.total) + self.discount
+        return Decimal(self.total) + self.discount
 
     def calculate_vat(self):
         if len(self.vat_summary) == 1 and self.vat_summary[0]['vat'] is None:
@@ -523,7 +523,7 @@ class Item(models.Model):
         verbose_name_plural = _(u'items')
         ordering = ('-invoice', 'weight', 'created')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_absolute_url(self):

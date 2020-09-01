@@ -138,6 +138,8 @@ class Invoice(models.Model):
                              blank=True, null=True, default=None)
     date_paid = MonitorField(monitor='status', when=[STATUS.PAID], verbose_name=_(u'date paid'),
                              blank=True, null=True, default=None)
+    date_reminder_sent = models.DateTimeField(verbose_name=_(u'date reminder sent'),
+                                              blank=True, null=True, default=None)
 
     # Payment details
     currency = models.CharField(_(u'currency'), max_length=10, choices=CURRENCY_CHOICES)

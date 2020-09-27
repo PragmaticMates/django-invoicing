@@ -452,6 +452,9 @@ class Invoice(models.Model):
         sum = 0
         for item in self.item_set.all():
             sum += item.subtotal
+
+        sum -= Decimal(self.credit)  # subtract credit
+
         return round(sum, 2)
 
     @property

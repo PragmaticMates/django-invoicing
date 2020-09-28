@@ -164,7 +164,7 @@ class Invoice(models.Model):
     bank_iban = IBANField(verbose_name=_(u'Account number (IBAN)'), default=None)
     bank_swift_bic = SWIFTBICField(verbose_name=_(u'Bank SWIFT / BIC'), default=None)
 
-    # Issuer details
+    # Supplier details
     supplier_name = models.CharField(_(u'supplier name'), max_length=255, default=None)
     supplier_street = models.CharField(_(u'supplier street and number'), max_length=255, blank=True)
     supplier_zip = models.CharField(_(u'supplier ZIP'), max_length=255, blank=True)

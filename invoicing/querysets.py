@@ -24,6 +24,12 @@ class InvoiceQuerySet(QuerySet):
     def valid(self):
         return self.exclude(status__in=[self.model.STATUS.RETURNED, self.model.STATUS.CANCELED, self.model.STATUS.CREDITED, self.model.STATUS.UNCOLLECTIBLE])
 
+    def collectible(self):
+        return self.exclude(status=self.model.STATUS.UNCOLLECTIBLE)
+
+    def uncollectible(self):
+        return self.filter(status=self.model.STATUS.UNCOLLECTIBLE)
+
     def having_related_invoices(self):
         return self.exclude(related_invoices=None)
 

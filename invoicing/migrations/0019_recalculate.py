@@ -3,7 +3,7 @@ from invoicing.models import Invoice
 
 
 def recalculate(*args, **kwargs):
-    for invoice in Invoice.objects.all().defer('date_paid', 'date_reminder_sent'):
+    for invoice in Invoice.objects.all().only('total', 'vat'):
         with transaction.atomic():
             invoice.total = invoice.calculate_total()
             invoice.vat = invoice.calculate_vat()

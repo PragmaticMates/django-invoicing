@@ -174,7 +174,6 @@ class Invoice(models.Model):
     supplier_tax_id = models.CharField(_(u'supplier Tax No.'), max_length=255, blank=True)
     supplier_vat_id = VATField(_(u'supplier VAT No.'), blank=True)
     supplier_additional_info = JSONField(_(u'supplier additional information'),
-        load_kwargs={'object_pairs_hook': OrderedDict},
         blank=True, null=True, default=None)  # for example www or legal matters
 
     # Contact details
@@ -192,7 +191,6 @@ class Invoice(models.Model):
     customer_tax_id = models.CharField(_(u'customer Tax No.'), max_length=255, blank=True)
     customer_vat_id = VATField(_(u'customer VAT No.'), blank=True)
     customer_additional_info = JSONField(_(u'customer additional information'),
-        load_kwargs={'object_pairs_hook': OrderedDict},
         blank=True, null=True, default=None)
     customer_email = models.EmailField(_(u'customer email'), blank=True)
     customer_phone = models.CharField(_(u'customer phone'), max_length=255, blank=True)
@@ -216,7 +214,6 @@ class Invoice(models.Model):
 
     # Other
     attachments = JSONField(_(u'attachments'),
-        load_kwargs={'object_pairs_hook': OrderedDict},
         blank=True, null=True, default=None)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
     modified = models.DateTimeField(_(u'modified'), auto_now=True)

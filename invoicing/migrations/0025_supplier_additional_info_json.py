@@ -9,7 +9,7 @@ from invoicing.models import Invoice
 def string_supplier_additional_info(*args, **kwargs):
     for invoice in Invoice.objects.all().only('id', 'supplier_additional_info'):
         if isinstance(invoice.supplier_additional_info, dict):
-            invoice.export_fields_permissions = json.dumps(invoice.supplier_additional_info)
+            invoice.supplier_additional_info = json.dumps(invoice.supplier_additional_info)
             invoice.save(update_fields=['supplier_additional_info'])
 
 

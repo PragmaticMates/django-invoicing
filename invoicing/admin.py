@@ -169,6 +169,7 @@ class InvoiceAdmin(admin.ModelAdmin):
                     "clientPostalPostCode": invoice.shipping_zip,
                     "clientPostalTown": invoice.shipping_city,
                     "clientPostalCountry": invoice.get_shipping_country_display(),
+                    "clientInternalId": f'{invoice.customer_country}001',
                     # "clientHasDifferentPostalAddress": True,
                     "currency": invoice.currency,
                     # "orderNumber": invoice.variable_symbol,

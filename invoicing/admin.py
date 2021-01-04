@@ -169,7 +169,7 @@ class InvoiceAdmin(admin.ModelAdmin):
                     "clientPostalPostCode": invoice.shipping_zip,
                     "clientPostalTown": invoice.shipping_city,
                     "clientPostalCountry": invoice.get_shipping_country_display(),
-                    "clientInternalId": f'{invoice.customer_country}001',
+                    "clientInternalId": f'{invoice.customer_country}001',  # TODO: custom mapping
                     # "clientHasDifferentPostalAddress": True,
                     "currency": invoice.currency,
                     # "orderNumber": invoice.variable_symbol,
@@ -202,9 +202,8 @@ class InvoiceAdmin(admin.ModelAdmin):
 
                 invoices_data.append(invoice_data)
 
-            # pprint(invoices_data)
+            # pprint(invoices_data)  # TODO: logging
             payload = json.dumps(invoices_data)
-
 
             url = invoicing_settings.ACCOUNTING_SOFTWARE_IKROS_API_URL
             api_key = invoicing_settings.ACCOUNTING_SOFTWARE_API_KEY
@@ -215,7 +214,7 @@ class InvoiceAdmin(admin.ModelAdmin):
             r = requests.post(url=url, data=payload, headers=headers)
             data = r.json()
             
-            # pprint(data)
+            # pprint(data)  # TODO: logging
 
             if data.get('message', None) is not None:
                 messages.error(request, _('Result code: %d. Message: %s (%s)') % (

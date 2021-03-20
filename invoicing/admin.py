@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from invoicing import settings as invoicing_settings
+from invoicing.managers import get_accounting_software_manager
 from invoicing.models import Invoice, Item
 
 
@@ -132,109 +133,25 @@ class InvoiceAdmin(admin.ModelAdmin):
             messages.error(request, _('Missing specification of accounting software'))
             return
 
-        if invoicing_settings.ACCOUNTING_SOFTWARE_API_KEY in EMPTY_VALUES:
-            messages.error(request, _('Missing accounting software API'))
-            return
+        try:
+            manager = get_accounting_software_manager()
+            result = manager.send_to_accounting_software(queryset)
 
-        if invoicing_settings.ACCOUNTING_SOFTWARE != 'IKROS':
-            # TODO: more universal implementation
-            messages.error(request, _('Accounting software %s not implemented') % invoicing_settings.ACCOUNTING_SOFTWARE)
-            return
+            if isinstance(result, str):
+                messages.success(request, result)
+            elif isinstance(result, list):
+                success = 0
 
-        invoices_data = []
-
-        if invoicing_settings.ACCOUNTING_SOFTWARE == 'IKROS':
-            for invoice in queryset:
-                invoice_data = {
-                    "documentNumber": invoice.number,
-                    "createDate": invoice.date_issue.strftime('%Y-%m-%dT00:00:00'),
-                    "dueDate": invoice.date_due.strftime('%Y-%m-%dT00:00:00'),
-                    "completionDate": invoice.date_tax_point.strftime('%Y-%m-%dT00:00:00'),
-                    "clientName": invoice.customer_name,
-                    "clientStreet": invoice.customer_street,
-                    "clientPostCode": invoice.customer_zip,
-                    "clientTown": invoice.customer_city,
-                    "clientCountry": invoice.get_customer_country_display(),
-                    "clientRegistrationId": invoice.customer_registration_id,
-                    "clientTaxId": invoice.customer_tax_id,
-                    "clientVatId": invoice.customer_vat_id,
-                    "clientPhone": invoice.customer_phone,
-                    "clientEmail": invoice.customer_email,
-                    "variableSymbol": invoice.variable_symbol,
-                    "paymentType": invoice.get_payment_method_display(),
-                    "deliveryType": invoice.get_delivery_method_display(),
-                    "senderContactName": invoice.issuer_name,
-                    "clientPostalName": invoice.shipping_name,
-                    "clientPostalStreet": invoice.shipping_street,
-                    "clientPostalPostCode": invoice.shipping_zip,
-                    "clientPostalTown": invoice.shipping_city,
-                    "clientPostalCountry": invoice.get_shipping_country_display(),
-                    "clientInternalId": f'{invoice.customer_country}001',  # TODO: custom mapping
-                    # "clientHasDifferentPostalAddress": True,
-                    "currency": invoice.currency,
-                    # "orderNumber": invoice.variable_symbol,
-                    "items": []
-                }
-
-                for item in invoice.item_set.all():
-                    item_data = {
-                        "name": item.title,
-                        "count": str(item.quantity),
-                        "measureType": item.get_unit_display(),
-                        "unitPrice": str(item.unit_price),
-                        "vat": item.vat
-                    }
-
-                    if invoice.status == Invoice.STATUS.CANCELED:
-                        item_data['count'] = 0  # not working actually (min value = 1)
-                        item_data['unitPrice'] = 0
-                        # item_data['description'] = 'STORNO'
-
-                    invoice_data['items'].append(item_data)
-
-                if invoice.status == Invoice.STATUS.CANCELED:
-                    invoice_data['closingText'] = 'STORNO'
-
-                if invoice.credit != 0:
-                    invoice_data['items'][0]['hasDiscount'] = True
-                    invoice_data['items'][0]['discountValue'] = str(invoice.credit * -1)  # TODO: substract VAT
-                    # invoice_data['items'][0]['discountValueWithVat'] = str(invoice.credit * -1)
-
-                invoices_data.append(invoice_data)
-
-            # pprint(invoices_data)  # TODO: logging
-            payload = json.dumps(invoices_data)
-
-            url = invoicing_settings.ACCOUNTING_SOFTWARE_IKROS_API_URL
-            api_key = invoicing_settings.ACCOUNTING_SOFTWARE_API_KEY
-            headers = {
-                'Authorization': 'Bearer ' + str(api_key),
-                'Content-Type': 'application/json'
-            }
-            r = requests.post(url=url, data=payload, headers=headers)
-            data = r.json()
-            
-            # pprint(data)  # TODO: logging
-
-            if data.get('message', None) is not None:
-                messages.error(request, _('Result code: %d. Message: %s (%s)') % (
-                    data.get('code', data.get('resultCode')),
-                    data['message'],
-                    data.get('errorType', '-'))
-                )
-            else:
-                if 'documents' in data:
-                    if len(data['documents']) > 0:
-                        download_url = data['documents'][0]['downloadUrl']
-                        # requests.get(download_url)
-
-                        messages.success(request, mark_safe(_('%d invoices sent to accounting software [<a href="%s" target="_blank">Fetch</a>]') % (
-                            queryset.count(),
-                            download_url
-                        )))
+                for r in result:
+                    if r['status_code'] == 200:
+                        success += 1
                     else:
-                        messages.success(request, _('%d invoices sent to accounting software') % (
-                            queryset.count(),
-                        ))
+                        messages.error(request, f"[{r['invoice']}]: {r['status_code']} ({r['reason']})")
+
+                if success > 0:
+                    messages.success(request, _('%d invoices sent to accounting software') % success)
+
+        except Exception as e:
+            messages.error(request, e)
 
     send_to_accounting_software.short_description = _('Send to accounting software')

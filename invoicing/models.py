@@ -247,7 +247,7 @@ class Invoice(models.Model):
         )(self)
 
     @staticmethod
-    def get_next_sequence(type, important_date, number_prefix=None):
+    def get_next_sequence(type, important_date, number_prefix=None, related_invoices=None):
         """
         Returns next invoice sequence based on ``settings.INVOICING_COUNTER_PERIOD``.
 
@@ -267,14 +267,17 @@ class Invoice(models.Model):
 
             invoice_counter_reset = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD.YEARLY)
 
+            if related_invoices is None:
+                related_invoices = Invoice.objects.all()
+
             if invoice_counter_reset == Invoice.COUNTER_PERIOD.DAILY:
-                relative_invoices = Invoice.objects.filter(date_issue=important_date)
+                related_invoices = related_invoices.filter(date_issue=important_date)
 
             elif invoice_counter_reset == Invoice.COUNTER_PERIOD.YEARLY:
-                relative_invoices = Invoice.objects.filter(date_issue__year=important_date.year)
+                related_invoices = related_invoices.filter(date_issue__year=important_date.year)
 
             elif invoice_counter_reset == Invoice.COUNTER_PERIOD.MONTHLY:
-                relative_invoices = Invoice.objects.filter(date_issue__year=important_date.year, date_issue__month=important_date.month)
+                related_invoices = related_invoices.filter(date_issue__year=important_date.year, date_issue__month=important_date.month)
 
             else:
                 raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: DAILY, MONTHLY, YEARLY.")
@@ -282,13 +285,13 @@ class Invoice(models.Model):
             invoice_counter_per_type = getattr(settings, 'INVOICING_COUNTER_PER_TYPE', False)
 
             if invoice_counter_per_type:
-                relative_invoices = relative_invoices.filter(type=type)
+                related_invoices = related_invoices.filter(type=type)
 
             if number_prefix is not None:
-                relative_invoices = relative_invoices.filter(number__startswith=number_prefix)
+                related_invoices = related_invoices.filter(number__startswith=number_prefix)
 
             start_from = getattr(settings, 'INVOICING_NUMBER_START_FROM', 1)
-            last_sequence = relative_invoices.aggregate(Max('sequence'))['sequence__max'] or start_from - 1
+            last_sequence = related_invoices.aggregate(Max('sequence'))['sequence__max'] or start_from - 1
 
             return last_sequence + 1
 

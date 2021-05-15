@@ -253,7 +253,7 @@ class Invoice(models.Model):
         Returns next invoice sequence based on ``settings.INVOICING_SEQUENCE_GENERATOR``.
         """
         generator = getattr(settings, 'INVOICING_SEQUENCE_GENERATOR', 'invoicing.helpers.sequence_generator')
-        import_string(generator)
+        generator = import_string(generator)
         return generator(type, important_date, number_prefix, related_invoices)
 
     def _get_number(self, number_format=None):
@@ -261,7 +261,7 @@ class Invoice(models.Model):
         Returns next invoice sequence based on ``settings.INVOICING_NUMBER_FORMATTER``.
         """
         formatter = getattr(settings, 'INVOICING_NUMBER_FORMATTER', 'invoicing.helpers.number_formatter')
-        import_string(formatter)
+        formatter = import_string(formatter)
         return formatter(self, number_format)
 
     def get_tax_rate(self):

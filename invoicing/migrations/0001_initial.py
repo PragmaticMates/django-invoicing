@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import jsonfield.fields
 import django.core.validators
 import django_countries.fields
 import django_iban.fields
@@ -54,7 +53,7 @@ class Migration(migrations.Migration):
                 ('supplier_registration_id', models.CharField(default=None, max_length=255, null=True, verbose_name='supplier Reg. No.', blank=True)),
                 ('supplier_tax_id', models.CharField(default=None, max_length=255, null=True, verbose_name='supplier Tax No.', blank=True)),
                 ('supplier_vat_id', invoicing.fields.VATField(default=None, max_length=13, null=True, verbose_name='supplier VAT No.', blank=True)),
-                ('supplier_additional_info', jsonfield.fields.JSONField(default=None, null=True, verbose_name='supplier additional information', blank=True)),
+                ('supplier_additional_info', models.TextField(default=None, null=True, verbose_name='supplier additional information', blank=True)),
                 ('issuer_name', models.CharField(default=None, max_length=255, null=True, verbose_name='issuer name', blank=True)),
                 ('issuer_email', models.EmailField(default=None, max_length=254, null=True, verbose_name='issuer email', blank=True)),
                 ('issuer_phone', models.CharField(default=None, max_length=255, null=True, verbose_name='issuer phone', blank=True)),
@@ -66,7 +65,7 @@ class Migration(migrations.Migration):
                 ('customer_registration_id', models.CharField(default=None, max_length=255, null=True, verbose_name='customer Reg. No.', blank=True)),
                 ('customer_tax_id', models.CharField(default=None, max_length=255, null=True, verbose_name='customer Tax No.', blank=True)),
                 ('customer_vat_id', invoicing.fields.VATField(default=None, max_length=13, null=True, verbose_name='customer VAT No.', blank=True)),
-                ('customer_additional_info', jsonfield.fields.JSONField(default=None, null=True, verbose_name='customer additional information', blank=True)),
+                ('customer_additional_info', models.JSONField(default=None, null=True, verbose_name='customer additional information', blank=True)),
                 ('shipping_name', models.CharField(default=None, max_length=255, null=True, verbose_name='shipping name', blank=True)),
                 ('shipping_street', models.CharField(default=None, max_length=255, null=True, verbose_name='shipping street and number', blank=True)),
                 ('shipping_zip', models.CharField(default=None, max_length=255, null=True, verbose_name='shipping ZIP', blank=True)),

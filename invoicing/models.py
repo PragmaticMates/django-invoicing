@@ -1,33 +1,28 @@
-from __future__ import division
+from __future__ import division  # TODO: refactor
 
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
 
 from decimal import Decimal
 from django_countries.fields import CountryField
 from django_iban.fields import IBANField, SWIFTBICField
 from djmoney.forms.widgets import CURRENCY_CHOICES
-from jsonfield import JSONField  # TODO: use native postgresql JSONfield instead
 from model_utils import Choices
 from model_utils.fields import MonitorField
 
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
-
-try:
-    from django.core.urlresolvers import reverse
-except ImportError:
-    from django.urls import reverse
-
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from django.db.models import Max
-from django.template import Template, Context
+
+try:
+    # Django 3.1
+    from django.db.models import JSONField
+except ImportError:
+    # older Django
+    from django.contrib.postgres.fields import JSONField
+
+from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 

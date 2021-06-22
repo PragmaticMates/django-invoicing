@@ -15,13 +15,10 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=(
-        'django', 'django-countries', 'django-iban', 'jsonfield', 'django-model-utils', 'django-money', 'vatnumber'
+        'django>=3.1', 'django-countries', 'django-iban', 'django-model-utils', 'django-money', 'vatnumber'
     ),
     classifiers=[
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.5',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Operating System :: OS Independent',
         'Environment :: Web Environment',

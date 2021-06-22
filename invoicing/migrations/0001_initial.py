@@ -2,6 +2,14 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+
+try:
+    # Django 3.1
+    from django.db.models import JSONField
+except ImportError:
+    # older Django
+    from django.contrib.postgres.fields import JSONField
+
 import django.core.validators
 import django_countries.fields
 import django_iban.fields
@@ -65,7 +73,7 @@ class Migration(migrations.Migration):
                 ('customer_registration_id', models.CharField(default=None, max_length=255, null=True, verbose_name='customer Reg. No.', blank=True)),
                 ('customer_tax_id', models.CharField(default=None, max_length=255, null=True, verbose_name='customer Tax No.', blank=True)),
                 ('customer_vat_id', invoicing.fields.VATField(default=None, max_length=13, null=True, verbose_name='customer VAT No.', blank=True)),
-                ('customer_additional_info', models.JSONField(default=None, null=True, verbose_name='customer additional information', blank=True)),
+                ('customer_additional_info', JSONField(default=None, null=True, verbose_name='customer additional information', blank=True)),
                 ('shipping_name', models.CharField(default=None, max_length=255, null=True, verbose_name='shipping name', blank=True)),
                 ('shipping_street', models.CharField(default=None, max_length=255, null=True, verbose_name='shipping street and number', blank=True)),
                 ('shipping_zip', models.CharField(default=None, max_length=255, null=True, verbose_name='shipping ZIP', blank=True)),

@@ -7,13 +7,14 @@ class TaxationPolicy(object):
     Taxation policy is a way to handle what tax rate should be put on the invoice items by default if not set any.
     It depends on customer billing data.
 
-    Custom taxation policy should implement only method ``get_default_tax(vat_id, country_code)``.
+    Custom taxation policy should implement only method
+    ``get_tax_rate(vat_id, customer_country_code, supplier_country_code)``.
     This method should return a percent value of tax that should be added to the invoice item
     or 0 if tax is not applicable.
     """
 
     @classmethod
-    def get_default_tax(cls):
+    def get_default_tax(cls, country_code=None):
         """
         Gets default tax rate.``
 
@@ -32,7 +33,7 @@ class TaxationPolicy(object):
         return supplier['country_code']
 
     @classmethod
-    def get_tax_rate(cls, vat_id, country_code):
+    def get_tax_rate(cls, vat_id, customer_country_code, supplier_country_code):
         """
         Methods
 

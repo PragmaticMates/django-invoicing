@@ -260,18 +260,20 @@ class Invoice(models.Model):
         return formatter(self, number_format)
 
     def get_tax_rate(self):
+        customer_country_code = self.customer_country.code if self.customer_country else None
+        supplier_country_code = self.supplier_country.code if self.supplier_country else None
+
         if self.taxation_policy:
             # There is taxation policy -> get tax rate
-            customer_country_code = self.customer_country.code if self.customer_country else None
-            supplier_country_code = self.supplier_country.code if self.supplier_country else None
             return self.taxation_policy.get_tax_rate(self.customer_vat_id, customer_country_code, supplier_country_code)
         else:
             # If there is not any special taxation policy, set default tax rate
-            return TaxationPolicy.get_default_tax()
+            return TaxationPolicy.get_default_tax(supplier_country_code)
 
     @property
     def taxation_policy(self):
         taxation_policy = getattr(settings, 'INVOICING_TAXATION_POLICY', None)
+
         if taxation_policy is not None:
             return import_name(taxation_policy)
 

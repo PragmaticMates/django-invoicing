@@ -13,7 +13,7 @@ from model_utils.fields import MonitorField
 from django.conf import settings
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
 from django.db import models, transaction
-from django.db.models import Max
+from django.db.models import Max, Sum
 
 try:
     # Django 3.1
@@ -394,7 +394,16 @@ class Invoice(models.Model):
     @cached_property
     def max_quantity(self):
         quantity = self.item_set.aggregate(Max('quantity'))
-        return quantity.get('quantity__max', 1) if quantity else 1
+        return quantity.get('quantity__max', 1) if quantity else 0
+
+    @cached_property
+    def sum_quantity(self):
+        quantity = self.item_set.aggregate(Sum('quantity'))
+        return quantity.get('quantity__sum', 1) if quantity else 0
+
+    @cached_property
+    def all_items_with_single_quantity(self):
+        return self.item_set.count() == self.sum_quantity
 
     @property
     def subtotal(self):

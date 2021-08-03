@@ -299,6 +299,10 @@ class Invoice(models.Model):
         return (now().date() - self.date_due).days
 
     @property
+    def days_to_overdue(self):
+        return (self.date_due - now().date()).days
+
+    @property
     def payment_term(self):
         return (self.date_due - self.date_issue).days if self.total > 0 else 0
 

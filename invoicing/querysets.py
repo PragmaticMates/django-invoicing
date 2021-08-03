@@ -19,7 +19,7 @@ class InvoiceQuerySet(QuerySet):
         return self.filter(status=self.model.STATUS.PAID)
 
     def unpaid(self):
-        return self.exclude(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED, self.model.STATUS.CREDITED])
+        return self.exclude(Q(status__in=[self.model.STATUS.PAID, self.model.STATUS.CANCELED, self.model.STATUS.CREDITED]) | Q(total=0))
 
     def valid(self):
         return self.exclude(status__in=[self.model.STATUS.RETURNED, self.model.STATUS.CANCELED, self.model.STATUS.CREDITED, self.model.STATUS.UNCOLLECTIBLE])

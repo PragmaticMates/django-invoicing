@@ -71,9 +71,10 @@ class EUTaxationPolicy(TaxationPolicy):
         default_tax_rate = super().get_default_tax(country_code)
 
         # tax rate by country
-        country_tax_rate = cls.EU_COUNTRIES_RATES.get(country_code, default_tax_rate) if country_code else default_tax_rate
+        if country_code and not hasattr(settings, 'INVOICING_TAX_RATE'):
+            return cls.EU_COUNTRIES_RATES.get(country_code, default_tax_rate)
 
-        return country_tax_rate
+        return default_tax_rate
 
     @classmethod
     def get_tax_rate(cls, vat_id, customer_country, supplier_country=None):

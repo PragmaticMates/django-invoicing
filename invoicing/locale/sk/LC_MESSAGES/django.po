@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-10-11 19:57+0200\n"
-"PO-Revision-Date: 2021-10-11 18:08+0000\n"
+"PO-Revision-Date: 2021-10-13 15:24+0000\n"
 "Last-Translator: Weblate Admin <erik@pragmaticmates.com>\n"
 "Language-Team: Slovak <https://weblate.swida.sk/projects/django-invoicing/"
 "app/sk/>\n"
@@ -306,7 +306,7 @@ msgstr "1148 - platba - bežná záloha"
 #: models.py:110
 msgid ""
 "1744 - Accounting of tax at income tax of physical body and corporate body"
-msgstr "1744 - vyúčtovanie dane u dane  z príjmov FP a PO prednostné"
+msgstr "1744 - vyúčtovanie dane u dane z príjmov FP a PO prednostné"
 
 #: models.py:111
 msgid ""

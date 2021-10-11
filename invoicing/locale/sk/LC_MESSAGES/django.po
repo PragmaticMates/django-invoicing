@@ -3,21 +3,22 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-10-11 19:57+0200\n"
-"PO-Revision-Date: 2020-04-01 15:19+0058\n"
-"Last-Translator: b'Erik Telepovsky <erik@pragmaticmates.com>'\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2021-10-11 18:08+0000\n"
+"Last-Translator: Weblate Admin <erik@pragmaticmates.com>\n"
+"Language-Team: Slovak <https://weblate.swida.sk/projects/django-invoicing/"
+"app/sk/>\n"
+"Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n "
 ">= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
+"X-Generator: Weblate 4.7.2\n"
 "X-Translated-Using: django-rosetta 0.9.3\n"
 
 #: admin.py:31
@@ -82,16 +83,16 @@ msgstr "je uhradená"
 
 #: admin.py:133
 msgid "Missing specification of accounting software"
-msgstr ""
+msgstr "Chýba špecifikácia účtovného softvéru"
 
 #: admin.py:152 managers.py:126
 #, python-format
 msgid "%d invoices sent to accounting software"
-msgstr ""
+msgstr "%d faktúr odoslaných do účtovného softvéru"
 
 #: admin.py:157
 msgid "Send to accounting software"
-msgstr ""
+msgstr "Odoslať do účtovného softvéru"
 
 #: fields.py:12
 #, python-format
@@ -101,16 +102,16 @@ msgstr "Minimálna dĺžka je %d"
 #: managers.py:21
 #, python-format
 msgid "Accounting software %s not implemented"
-msgstr ""
+msgstr "Účtovný softvér %s nie je implementovaný"
 
 #: managers.py:32
 msgid "Missing accounting software API key"
-msgstr ""
+msgstr "Chýba API kľúč účtovného softvéru"
 
 #: managers.py:110
 #, python-format
 msgid "Result code: %d. Message: %s (%s)"
-msgstr ""
+msgstr "Návratový kód: %d. Správa: %s (%s)"
 
 #: managers.py:121
 #, python-format
@@ -118,10 +119,12 @@ msgid ""
 "%d invoices sent to accounting software [<a href=\"%s\" target=\"_blank"
 "\">Fetch</a>]"
 msgstr ""
+"%d faktúr odoslaných do účtovného sotvéru [<a href=\"%s\" target=\"_blank\""
+">Fetch</a>]"
 
 #: managers.py:134
 msgid "Missing accounting software API data"
-msgstr ""
+msgstr "Chýbajú API dáta účtovného softvéru"
 
 #: managers.py:151 templates/invoicing/formatters/html.html:24
 #: templates/invoicing/formatters/html.html:70
@@ -404,10 +407,8 @@ msgid "date paid"
 msgstr "dátum úhrady"
 
 #: models.py:137
-#, fuzzy
-#| msgid "date sent"
 msgid "date reminder sent"
-msgstr "dátum odoslania"
+msgstr "dátum odoslania upomienky"
 
 #: models.py:141
 msgid "currency"

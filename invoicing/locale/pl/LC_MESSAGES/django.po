@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-10-11 19:57+0200\n"
-"PO-Revision-Date: 2021-10-13 15:24+0000\n"
+"PO-Revision-Date: 2021-10-15 14:24+0000\n"
 "Last-Translator: Rafal Szczepanowicz <rafal@transportly.eu>\n"
 "Language-Team: Polish <https://weblate.swida.sk/projects/django-invoicing/"
 "app/pl/>\n"
@@ -75,15 +75,17 @@ msgstr "termin płatności"
 
 #: admin.py:124
 msgid "is overdue"
-msgstr ""
+msgstr "jest po terminie"
 
 #: admin.py:129
+#, fuzzy
 msgid "is paid"
-msgstr ""
+msgstr "jest zapłacone"
 
 #: admin.py:133
+#, fuzzy
 msgid "Missing specification of accounting software"
-msgstr ""
+msgstr "Brak specyfikacji oprogramowania księgowego"
 
 #: admin.py:152 managers.py:126
 #, python-format
@@ -92,7 +94,7 @@ msgstr ""
 
 #: admin.py:157
 msgid "Send to accounting software"
-msgstr ""
+msgstr "Wyślij do oprogramowania księgowego"
 
 #: fields.py:12
 #, python-format
@@ -100,9 +102,9 @@ msgid "Minimal length is %d"
 msgstr "Minimalna długość wynosi %d"
 
 #: managers.py:21
-#, python-format
+#, fuzzy, python-format
 msgid "Accounting software %s not implemented"
-msgstr ""
+msgstr "Oprogramowanie księgowe %s nie zostało zaimplementowane"
 
 #: managers.py:32
 msgid "Missing accounting software API key"
@@ -148,8 +150,9 @@ msgid "monthly"
 msgstr "miesięczny"
 
 #: models.py:57
+#, fuzzy
 msgid "yearly"
-msgstr ""
+msgstr "roczny"
 
 #: models.py:61
 msgid "Invoice"
@@ -237,15 +240,15 @@ msgstr "0008 - Płatności bezgotówkowe za towary"
 
 #: models.py:93
 msgid "0038 - Cashless funds for wages"
-msgstr ""
+msgstr "0038 - Środki bezgotówkowe na wynagrodzenia"
 
 #: models.py:94
 msgid "0058 - Cashless penalty and delinquency charges"
-msgstr ""
+msgstr "0058 — Kara bezgotówkowa i opłaty za wykroczenie"
 
 #: models.py:95
 msgid "0068 - Transfer of funds for wages and other personal costs"
-msgstr ""
+msgstr "0068 - Przelew środków na wynagrodzenia i inne koszty osobiste"
 
 #: models.py:96
 msgid "0138 - Cashless deductions at source"
@@ -657,7 +660,7 @@ msgstr "wysokość podatku (%)"
 
 #: models.py:477
 msgid "VAT rate"
-msgstr ""
+msgstr "stawka VAT"
 
 #: models.py:479
 msgid "tag"
@@ -665,7 +668,7 @@ msgstr ""
 
 #: models.py:481
 msgid "weight"
-msgstr ""
+msgstr "waga"
 
 #: models.py:481
 msgid "ordering"

@@ -58,6 +58,9 @@ class EUTaxationPolicy(TaxationPolicy):
 
     @classmethod
     def is_in_EU(cls, country_code):
+        if country_code == 'GB':
+            return False
+
         return country_code.upper() in cls.EU_COUNTRIES_RATES.keys()
 
     @classmethod

@@ -233,7 +233,7 @@ class Invoice(models.Model):
         if self.sequence in EMPTY_VALUES:
             self.sequence = Invoice.get_next_sequence(self.type, self.date_issue, getattr(self, 'number_prefix', None))
         if self.number in EMPTY_VALUES:
-            self.number = self._get_number(getattr(self, 'number_format', None))
+            self.number = self._get_number()
 
         return super(Invoice, self).save(**kwargs)
 
@@ -251,13 +251,13 @@ class Invoice(models.Model):
         generator = import_string(generator)
         return generator(type, important_date, number_prefix, related_invoices)
 
-    def _get_number(self, number_format=None):
+    def _get_number(self):
         """
         Returns next invoice sequence based on ``settings.INVOICING_NUMBER_FORMATTER``.
         """
         formatter = getattr(settings, 'INVOICING_NUMBER_FORMATTER', 'invoicing.helpers.number_formatter')
         formatter = import_string(formatter)
-        return formatter(self, number_format)
+        return formatter(self)
 
     def get_tax_rate(self):
         customer_country_code = self.customer_country.code if self.customer_country else None

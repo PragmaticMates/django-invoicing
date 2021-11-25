@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.core.validators import EMPTY_VALUES
 from django.db import transaction
 from django.db.models import Max
 from django.template import Template, Context
+from django.utils.translation import ugettext_lazy as _
 
 from invoicing.models import Invoice
 
@@ -46,6 +48,9 @@ def sequence_generator(type, important_date, number_prefix=None, counter_period=
         invoice_counter_per_type = getattr(settings, 'INVOICING_COUNTER_PER_TYPE', False)
 
         if invoice_counter_per_type:
+            if type in EMPTY_VALUES:
+                raise ValueError(_('Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled'))
+
             related_invoices = related_invoices.filter(type=type)
 
         if number_prefix is not None:

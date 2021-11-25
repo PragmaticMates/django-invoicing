@@ -52,6 +52,9 @@ def sequence_generator(type, important_date, number_prefix=None, counter_period=
                 raise ValueError(_('Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled'))
 
             related_invoices = related_invoices.filter(type=type)
+        elif type not in EMPTY_VALUES:
+            # TODO: log instead
+            print(_('Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled'))
 
         if number_prefix is not None:
             related_invoices = related_invoices.filter(number__startswith=number_prefix)

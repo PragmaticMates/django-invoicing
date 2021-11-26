@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import django_countries.fields
-import invoicing.fields
+from internationalflavor.vat_number import VATNumberField
 
 
 class Migration(migrations.Migration):
@@ -85,7 +85,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='invoice',
             name='customer_vat_id',
-            field=invoicing.fields.VATField(blank=True, default='', max_length=13),
+            field=VATNumberField(blank=True, default='', max_length=13),
             preserve_default=False,
         ),
         migrations.AlterField(
@@ -196,7 +196,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='invoice',
             name='supplier_vat_id',
-            field=invoicing.fields.VATField(blank=True, default='', max_length=13),
+            field=VATNumberField(blank=True, default='', max_length=13),
             preserve_default=False,
         ),
         migrations.AlterField(

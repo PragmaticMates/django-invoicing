@@ -1,4 +1,3 @@
-import vatnumber
 from decimal import Decimal
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, ValidationError

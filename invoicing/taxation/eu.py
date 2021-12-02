@@ -112,23 +112,25 @@ class EUTaxationPolicy(TaxationPolicy):
             # Normal tax
             return cls.get_default_tax(supplier_country)
 
-        if cls.is_in_EU(customer_country):
-            # Company is from other EU country
-            use_vies_validator = getattr(settings, 'INVOICING_USE_VIES_VALIDATOR', True)
-
-            if use_vies_validator and vat_id:
-                try:
-                    # verify VAT ID in VIES
-                    VATNumberValidator(eu_only=True, vies_check=True)(vat_id)
-
-                    # Company is registered in VIES
-                    # Charge back
-                    return None
-                except ValidationError:
-                    pass
-
-            return cls.get_default_tax(supplier_country)
-        else:
+        if not cls.is_in_EU(customer_country):
             # Company is not from EU
             # Charge back
             return None
+
+        # Company is from other EU country
+        use_vies_validator = getattr(settings, 'INVOICING_USE_VIES_VALIDATOR', True)
+
+        if not use_vies_validator:
+            # trust VAT ID is correct
+            # Charge back
+            return None
+
+        try:
+            # verify VAT ID in VIES
+            VATNumberValidator(eu_only=True, vies_check=True)(vat_id)
+
+            # Company is registered in VIES
+            # Charge back
+            return None
+        except ValidationError:
+            return cls.get_default_tax(supplier_country)

@@ -1,13 +1,15 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.core.validators import EMPTY_VALUES
 from django.db import transaction
 from django.db.models import Max
 from django.template import Template, Context
+from django.utils.translation import ugettext_lazy as _
 
 from invoicing.models import Invoice
 
 
-def sequence_generator(type, important_date, number_prefix=None, related_invoices=None):
+def sequence_generator(type, important_date, number_prefix=None, counter_period=None, related_invoices=None):
     """
     Returns next invoice sequence based on ``settings.INVOICING_COUNTER_PERIOD``.
 
@@ -25,18 +27,19 @@ def sequence_generator(type, important_date, number_prefix=None, related_invoice
     with transaction.atomic():
         Invoice.objects.lock()
 
-        invoice_counter_reset = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD.YEARLY)
+        if not counter_period:
+            counter_period = getattr(settings, 'INVOICING_COUNTER_PERIOD', Invoice.COUNTER_PERIOD.YEARLY)
 
         if related_invoices is None:
             related_invoices = Invoice.objects.all()
 
-        if invoice_counter_reset == Invoice.COUNTER_PERIOD.DAILY:
+        if counter_period == Invoice.COUNTER_PERIOD.DAILY:
             related_invoices = related_invoices.filter(date_issue=important_date)
 
-        elif invoice_counter_reset == Invoice.COUNTER_PERIOD.YEARLY:
+        elif counter_period == Invoice.COUNTER_PERIOD.YEARLY:
             related_invoices = related_invoices.filter(date_issue__year=important_date.year)
 
-        elif invoice_counter_reset == Invoice.COUNTER_PERIOD.MONTHLY:
+        elif counter_period == Invoice.COUNTER_PERIOD.MONTHLY:
             related_invoices = related_invoices.filter(date_issue__year=important_date.year, date_issue__month=important_date.month)
 
         else:
@@ -45,7 +48,13 @@ def sequence_generator(type, important_date, number_prefix=None, related_invoice
         invoice_counter_per_type = getattr(settings, 'INVOICING_COUNTER_PER_TYPE', False)
 
         if invoice_counter_per_type:
+            if type in EMPTY_VALUES:
+                raise ValueError(_('Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled'))
+
             related_invoices = related_invoices.filter(type=type)
+        elif type not in EMPTY_VALUES:
+            # TODO: log instead
+            print(_('Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled'))
 
         if number_prefix is not None:
             related_invoices = related_invoices.filter(number__startswith=number_prefix)
@@ -56,7 +65,7 @@ def sequence_generator(type, important_date, number_prefix=None, related_invoice
         return last_sequence + 1
 
 
-def number_formatter(invoice, number_format=None):
+def number_formatter(invoice):
     """
     Generates on the fly invoice number from template provided by ``settings.INVOICING_NUMBER_FORMAT``.
     ``Invoice`` object is provided as ``invoice`` variable to the template, therefore all object fields
@@ -69,6 +78,12 @@ def number_formatter(invoice, number_format=None):
 
     :return: string (generated number)
     """
-    if not number_format:
-        number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_tax_point|date:'Y' }}/{{ invoice.sequence }}")
+
+    # default settings number format
+    default_number_format = getattr(settings, "INVOICING_NUMBER_FORMAT", "{{ invoice.date_tax_point|date:'Y' }}/{{ invoice.sequence }}")
+
+    # specific invoice number format
+    number_format = getattr(invoice, 'number_format', default_number_format)
+
+    # render number by given format
     return Template(number_format).render(Context({'invoice': invoice}))

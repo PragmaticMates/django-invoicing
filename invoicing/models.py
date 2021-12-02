@@ -7,6 +7,7 @@ from decimal import Decimal
 from django_countries.fields import CountryField
 from django_iban.fields import IBANField, SWIFTBICField
 from djmoney.forms.widgets import CURRENCY_CHOICES
+from internationalflavor.vat_number import VATNumberField
 from model_utils import Choices
 from model_utils.fields import MonitorField
 
@@ -26,7 +27,6 @@ from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from invoicing.fields import VATField
 from invoicing.querysets import InvoiceQuerySet, ItemQuerySet
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
@@ -168,7 +168,7 @@ class Invoice(models.Model):
     supplier_country = CountryField(_(u'supplier country'), default=None)
     supplier_registration_id = models.CharField(_(u'supplier Reg. No.'), max_length=255, blank=True)
     supplier_tax_id = models.CharField(_(u'supplier Tax No.'), max_length=255, blank=True)
-    supplier_vat_id = VATField(_(u'supplier VAT No.'), blank=True)
+    supplier_vat_id = VATNumberField(verbose_name=_(u'supplier VAT No.'), blank=True)
     supplier_additional_info = JSONField(_(u'supplier additional information'),
         blank=True, null=True, default=None)  # for example www or legal matters
 
@@ -185,7 +185,7 @@ class Invoice(models.Model):
     customer_country = CountryField(_(u'customer country'))
     customer_registration_id = models.CharField(_(u'customer Reg. No.'), max_length=255, blank=True)
     customer_tax_id = models.CharField(_(u'customer Tax No.'), max_length=255, blank=True)
-    customer_vat_id = VATField(_(u'customer VAT No.'), blank=True)
+    customer_vat_id = VATNumberField(verbose_name=_(u'customer VAT No.'), blank=True)
     customer_additional_info = JSONField(_(u'customer additional information'),
         blank=True, null=True, default=None)
     customer_email = models.EmailField(_(u'customer email'), blank=True)
@@ -233,7 +233,7 @@ class Invoice(models.Model):
         if self.sequence in EMPTY_VALUES:
             self.sequence = Invoice.get_next_sequence(self.type, self.date_issue, getattr(self, 'number_prefix', None))
         if self.number in EMPTY_VALUES:
-            self.number = self._get_number(getattr(self, 'number_format', None))
+            self.number = self._get_number()
 
         return super(Invoice, self).save(**kwargs)
 
@@ -251,13 +251,13 @@ class Invoice(models.Model):
         generator = import_string(generator)
         return generator(type, important_date, number_prefix, related_invoices)
 
-    def _get_number(self, number_format=None):
+    def _get_number(self):
         """
         Returns next invoice sequence based on ``settings.INVOICING_NUMBER_FORMATTER``.
         """
         formatter = getattr(settings, 'INVOICING_NUMBER_FORMATTER', 'invoicing.helpers.number_formatter')
         formatter = import_string(formatter)
-        return formatter(self, number_format)
+        return formatter(self)
 
     def get_tax_rate(self):
         customer_country_code = self.customer_country.code if self.customer_country else None

@@ -1,8 +1,8 @@
-import vatnumber
 from decimal import Decimal
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.validators import EMPTY_VALUES
+from internationalflavor.vat_number import VATNumberValidator
 
 from invoicing.taxation import TaxationPolicy
 
@@ -114,21 +114,20 @@ class EUTaxationPolicy(TaxationPolicy):
 
         if cls.is_in_EU(customer_country):
             # Company is from other EU country
-            try:
-                use_vies_validator = getattr(settings, 'INVOICING_USE_VIES_VALIDATOR', True)
-                vies_valid = vatnumber.check_vies(vat_id) if use_vies_validator else True
+            use_vies_validator = getattr(settings, 'INVOICING_USE_VIES_VALIDATOR', True)
 
-                if vat_id and vies_valid:
+            if use_vies_validator and vat_id:
+                try:
+                    # verify VAT ID in VIES
+                    VATNumberValidator(eu_only=True, vies_check=True)(vat_id)
+
                     # Company is registered in VIES
                     # Charge back
                     return None
-                else:
-                    return cls.get_default_tax(supplier_country)
-            except ImportError as e:
-                raise e
-            except Exception as e:
-                # If we could not connect to VIES
-                return cls.get_default_tax(supplier_country)
+                except ValidationError:
+                    pass
+
+            return cls.get_default_tax(supplier_country)
         else:
             # Company is not from EU
             # Charge back

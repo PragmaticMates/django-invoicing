@@ -249,7 +249,13 @@ class Invoice(models.Model):
         """
         generator = getattr(settings, 'INVOICING_SEQUENCE_GENERATOR', 'invoicing.helpers.sequence_generator')
         generator = import_string(generator)
-        return generator(type, important_date, number_prefix, related_invoices)
+        return generator(
+            type=type,
+            important_date=important_date,
+            number_prefix=number_prefix,
+            counter_period=None,
+            related_invoices=related_invoices
+        )
 
     def _get_number(self):
         """

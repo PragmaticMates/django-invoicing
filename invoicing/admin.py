@@ -1,15 +1,9 @@
-import json
-from pprint import pprint
-
-import requests
 from django.contrib import admin, messages
-from django.core.validators import EMPTY_VALUES
 from django.db.models import F
 from django.db.models.functions import Coalesce
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from invoicing import settings as invoicing_settings
 from invoicing.managers import get_accounting_software_manager
 from invoicing.models import Invoice, Item
 
@@ -129,13 +123,14 @@ class InvoiceAdmin(admin.ModelAdmin):
     is_paid.short_description = _(u'is paid')
 
     def send_to_accounting_software(self, request, queryset):
-        if invoicing_settings.ACCOUNTING_SOFTWARE in EMPTY_VALUES:
+        manager = get_accounting_software_manager()
+
+        if manager is None:
             messages.error(request, _('Missing specification of accounting software'))
             return
 
         try:
-            manager = get_accounting_software_manager()
-            result = manager.send_to_accounting_software(queryset)
+            result = manager.send_to_accounting_software(request, queryset)
 
             if isinstance(result, str):
                 messages.success(request, result)

@@ -1,8 +1,8 @@
 import json
-from pprint import pprint
 
 import requests
 from django.utils import translation
+from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django_filters.constants import EMPTY_VALUES
 from django.utils.translation import ugettext_lazy as _
@@ -11,18 +11,24 @@ from invoicing.models import Invoice
 
 
 def get_accounting_software_manager():
-    # TODO: use title()
-    if invoicing_settings.ACCOUNTING_SOFTWARE == 'IKROS':
-        return IKrosManager()
+    if invoicing_settings.ACCOUNTING_SOFTWARE_MANAGER is not None:
+        return import_string(invoicing_settings.ACCOUNTING_SOFTWARE_MANAGER)()
 
-    if invoicing_settings.ACCOUNTING_SOFTWARE == 'PROFIT365':
-        return Profit365Manager()
+    if invoicing_settings.ACCOUNTING_SOFTWARE not in EMPTY_VALUES:
+        # TODO: use title()
+        if invoicing_settings.ACCOUNTING_SOFTWARE == 'IKROS':
+            return IKrosManager()
 
-    return NotImplementedError(_('Accounting software %s not implemented') % invoicing_settings.ACCOUNTING_SOFTWARE)
+        if invoicing_settings.ACCOUNTING_SOFTWARE == 'PROFIT365':
+            return Profit365Manager()
+
+        return NotImplementedError(_('Accounting software %s not implemented') % invoicing_settings.ACCOUNTING_SOFTWARE)
+
+    return None
 
 
 class AccountingSoftwareManager(object):
-    def send_to_accounting_software(self, queryset):
+    def send_to_accounting_software(self, request, queryset):
         raise NotImplementedError()
 
 
@@ -31,7 +37,7 @@ class IKrosManager(AccountingSoftwareManager):
         if invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA in EMPTY_VALUES:
             raise EnvironmentError(_('Missing accounting software API key'))
 
-    def send_to_accounting_software(self, queryset):
+    def send_to_accounting_software(self, request, queryset):
         invoices_data = []
 
         for invoice in queryset:
@@ -133,7 +139,7 @@ class Profit365Manager(AccountingSoftwareManager):
         if invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA in EMPTY_VALUES:
             raise EnvironmentError(_('Missing accounting software API data'))
 
-    def send_to_accounting_software(self, queryset):
+    def send_to_accounting_software(self, request, queryset):
         results = []
 
         for invoice in queryset:

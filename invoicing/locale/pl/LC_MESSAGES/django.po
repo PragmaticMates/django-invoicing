@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-26 11:44+0200\n"
+"POT-Creation-Date: 2021-12-08 13:33+0100\n"
 "PO-Revision-Date: 2021-10-23 11:24+0000\n"
 "Last-Translator: Rafal Szczepanowicz <rafal@transportly.eu>\n"
 "Language-Team: Polish <https://weblate.swida.sk/projects/django-invoicing/"
@@ -21,99 +21,102 @@ msgstr ""
 "%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
 "X-Generator: Weblate 4.7.2\n"
 
-#: admin.py:31
+#: admin.py:25
 msgid "overdue"
 msgstr "po terminie"
 
-#: admin.py:36
+#: admin.py:30
 msgid "no"
 msgstr "nie"
 
-#: admin.py:37
+#: admin.py:31
 msgid "yes"
 msgstr "tak"
 
-#: admin.py:62
+#: admin.py:56
 msgid "General information"
 msgstr "Ogólne informacje"
 
-#: admin.py:69
+#: admin.py:63
 msgid "Contact details"
 msgstr "Dane kontaktowe"
 
-#: admin.py:74
+#: admin.py:68
 msgid "Payment details"
 msgstr "Szczegóły płatności"
 
-#: admin.py:82
+#: admin.py:76
 msgid "Supplier details"
 msgstr "Dane dostawcy"
 
-#: admin.py:89
+#: admin.py:83
 msgid "Customer details"
 msgstr "Dane klienta"
 
-#: admin.py:95
+#: admin.py:89
 msgid "Shipping details"
 msgstr "Szczegóły dostawy"
 
-#: admin.py:107
+#: admin.py:101
 msgid "subtotal"
 msgstr "suma częściowa"
 
-#: admin.py:111
+#: admin.py:105
 msgid "supplier"
 msgstr "dostawca"
 
-#: admin.py:115
+#: admin.py:109
 msgid "customer"
 msgstr "klient"
 
-#: admin.py:119
+#: admin.py:113
 msgid "payment term"
 msgstr "termin płatności"
 
-#: admin.py:124
+#: admin.py:118
 msgid "is overdue"
 msgstr "jest po terminie"
 
-#: admin.py:129
+#: admin.py:123
 msgid "is paid"
 msgstr "jest zapłacona"
 
-#: admin.py:133
+#: admin.py:129
 msgid "Missing specification of accounting software"
 msgstr "Brak specyfikacji oprogramowania księgowego"
 
-#: admin.py:152 managers.py:126
+#: admin.py:147 managers.py:132
 #, python-format
 msgid "%d invoices sent to accounting software"
 msgstr "%d faktury wysłane do oprogramowania księgowego"
 
-#: admin.py:157
+#: admin.py:152
 msgid "Send to accounting software"
 msgstr "Wyślij do oprogramowania księgowego"
 
-#: fields.py:12
-#, python-format
-msgid "Minimal length is %d"
-msgstr "Minimalna długość wynosi %d"
+#: helpers.py:52
+msgid "Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled"
+msgstr ""
 
-#: managers.py:21
+#: helpers.py:57
+msgid "Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled"
+msgstr ""
+
+#: managers.py:25
 #, python-format
 msgid "Accounting software %s not implemented"
 msgstr "Oprogramowanie księgowe %s nie zostało zaimplementowane"
 
-#: managers.py:32
+#: managers.py:38
 msgid "Missing accounting software API key"
 msgstr "Brak klucza API oprogramowania księgowego"
 
-#: managers.py:110
+#: managers.py:116
 #, python-format
 msgid "Result code: %d. Message: %s (%s)"
 msgstr "Kod wyniku: %d. Wiadomość: %s (%s)"
 
-#: managers.py:121
+#: managers.py:127
 #, python-format
 msgid ""
 "%d invoices sent to accounting software [<a href=\"%s\" target=\"_blank"
@@ -122,21 +125,21 @@ msgstr ""
 "%d faktury wysłane do oprogramowania księgowego [<a href=\"%s\" target="
 "\"_blank\">Fetch</a>]"
 
-#: managers.py:134
+#: managers.py:140
 msgid "Missing accounting software API data"
 msgstr "Brak danych API oprogramowania księgowego"
 
-#: managers.py:151 templates/invoicing/formatters/html.html:24
+#: managers.py:157 templates/invoicing/formatters/html.html:24
 #: templates/invoicing/formatters/html.html:70
 msgid "Reg. No."
 msgstr "Numer rejestracyjny"
 
-#: managers.py:156 templates/invoicing/formatters/html.html:25
+#: managers.py:162 templates/invoicing/formatters/html.html:25
 #: templates/invoicing/formatters/html.html:71
 msgid "Tax No."
 msgstr "Numer podatkowy"
 
-#: managers.py:161 templates/invoicing/formatters/html.html:26
+#: managers.py:167 templates/invoicing/formatters/html.html:26
 #: templates/invoicing/formatters/html.html:72
 msgid "VAT No."
 msgstr "Numer VAT"
@@ -602,15 +605,15 @@ msgstr "VAT"
 msgid "attachments"
 msgstr "załączniki"
 
-#: models.py:214 models.py:483
+#: models.py:214 models.py:489
 msgid "created"
 msgstr "utworzone"
 
-#: models.py:215 models.py:484
+#: models.py:215 models.py:490
 msgid "modified"
 msgstr "zmodyfikowane"
 
-#: models.py:220 models.py:471
+#: models.py:220 models.py:477
 msgid "invoice"
 msgstr "faktura"
 
@@ -618,59 +621,59 @@ msgstr "faktura"
 msgid "invoices"
 msgstr "faktury"
 
-#: models.py:467
+#: models.py:473
 msgid "pcs."
 msgstr "szt."
 
-#: models.py:468
+#: models.py:474
 msgid "hours"
 msgstr "godz."
 
-#: models.py:472
+#: models.py:478
 msgid "title"
 msgstr "nazwa"
 
-#: models.py:473
+#: models.py:479
 msgid "quantity"
 msgstr "ilość"
 
-#: models.py:474
+#: models.py:480
 msgid "unit"
 msgstr "jednostka"
 
-#: models.py:475
+#: models.py:481
 msgid "unit price"
 msgstr "cena jednostkowa"
 
-#: models.py:476
+#: models.py:482
 msgid "discount (%)"
 msgstr "rabat (%)"
 
-#: models.py:477
+#: models.py:483
 msgid "tax rate (%)"
 msgstr "wysokość podatku (%)"
 
-#: models.py:477
+#: models.py:483
 msgid "VAT rate"
 msgstr "stawka VAT"
 
-#: models.py:479
+#: models.py:485
 msgid "tag"
 msgstr "etykieta"
 
-#: models.py:481
+#: models.py:487
 msgid "weight"
 msgstr "waga"
 
-#: models.py:481
+#: models.py:487
 msgid "ordering"
 msgstr "kolejność"
 
-#: models.py:489
+#: models.py:495
 msgid "item"
 msgstr "przedmiot"
 
-#: models.py:490
+#: models.py:496
 msgid "items"
 msgstr "przedmioty"
 
@@ -846,12 +849,14 @@ msgstr "suma rabatu"
 msgid "TOTAL DUE"
 msgstr "SUMA NALEŻNOŚCI"
 
-#: validators.py:22
-#, python-brace-format
-msgid "{0} is not a valid country code."
-msgstr "{0} nie jest prawidłowym kodem kraju."
+#, python-format
+#~ msgid "Minimal length is %d"
+#~ msgstr "Minimalna długość wynosi %d"
 
-#: validators.py:25 validators.py:29
 #, python-brace-format
-msgid "{0} is not a valid VAT number"
-msgstr "{0} nie jest prawidłowym numerem VAT"
+#~ msgid "{0} is not a valid country code."
+#~ msgstr "{0} nie jest prawidłowym kodem kraju."
+
+#, python-brace-format
+#~ msgid "{0} is not a valid VAT number"
+#~ msgstr "{0} nie jest prawidłowym numerem VAT"

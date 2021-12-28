@@ -6,5 +6,4 @@ django-money>=0.4.1
 psycopg2>=2.5.2
 py-moneyed>=0.5.0
 six>=1.6.1
-vatnumber>=1.2
 wsgiref>=0.1.2

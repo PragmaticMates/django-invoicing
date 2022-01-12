@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-12-08 13:33+0100\n"
-"PO-Revision-Date: 2022-01-05 14:33+0000\n"
+"PO-Revision-Date: 2022-01-13 16:33+0000\n"
 "Last-Translator: Samuel Sas <samuel.sas@swida.sk>\n"
 "Language-Team: Czech <https://weblate.swida.sk/projects/django-invoicing/app/"
 "cs/>\n"
@@ -606,7 +606,7 @@ msgstr "upravené"
 
 #: models.py:220 models.py:477
 msgid "invoice"
-msgstr ""
+msgstr "faktura"
 
 #: models.py:221
 msgid "invoices"
@@ -670,7 +670,7 @@ msgstr "položky"
 
 #: templates/invoicing/formatters/html.html:13
 msgid "Supplier"
-msgstr ""
+msgstr "Dodavatel"
 
 #: templates/invoicing/formatters/html.html:30
 msgid "Bank"
@@ -678,7 +678,7 @@ msgstr "Banka"
 
 #: templates/invoicing/formatters/html.html:31
 msgid "Title"
-msgstr ""
+msgstr "Název"
 
 #: templates/invoicing/formatters/html.html:33
 msgid "Agency address"
@@ -714,19 +714,19 @@ msgstr "Dodatečné informace"
 
 #: templates/invoicing/formatters/html.html:59
 msgid "Customer"
-msgstr ""
+msgstr "Odběratel"
 
 #: templates/invoicing/formatters/html.html:85
 msgid "Issue date"
-msgstr ""
+msgstr "Datum vystavení"
 
 #: templates/invoicing/formatters/html.html:95
 msgid "Time of supply"
-msgstr ""
+msgstr "Datum dodání"
 
 #: templates/invoicing/formatters/html.html:109
 msgid "Due date"
-msgstr ""
+msgstr "Datum splatnosti"
 
 #: templates/invoicing/formatters/html.html:112
 msgid "day,days"
@@ -778,7 +778,7 @@ msgstr ""
 
 #: templates/invoicing/formatters/html.html:144
 msgid "Unit price"
-msgstr ""
+msgstr "Jednotková cena"
 
 #: templates/invoicing/formatters/html.html:146
 msgid "Discount"
@@ -810,7 +810,7 @@ msgstr "Faktura nemá žádné položky."
 
 #: templates/invoicing/formatters/html.html:196
 msgid "Note"
-msgstr ""
+msgstr "Poznámka"
 
 #: templates/invoicing/formatters/html.html:204
 msgid "Summary"

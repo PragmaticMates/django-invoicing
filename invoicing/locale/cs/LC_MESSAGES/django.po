@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-12-08 13:33+0100\n"
-"PO-Revision-Date: 2022-01-13 16:33+0000\n"
+"PO-Revision-Date: 2022-01-19 11:33+0000\n"
 "Last-Translator: Samuel Sas <samuel.sas@swida.sk>\n"
 "Language-Team: Czech <https://weblate.swida.sk/projects/django-invoicing/app/"
 "cs/>\n"
@@ -734,27 +734,27 @@ msgstr "den, dní"
 
 #: templates/invoicing/formatters/html.html:120
 msgid "Delivery method"
-msgstr ""
+msgstr "Způsob doručení"
 
 #: templates/invoicing/formatters/html.html:121
 msgid "Payment method"
-msgstr ""
+msgstr "Způsob platby"
 
 #: templates/invoicing/formatters/html.html:122
 msgid "Constant symbol"
-msgstr ""
+msgstr "Konstantní symbol"
 
 #: templates/invoicing/formatters/html.html:123
 msgid "Variable symbol"
-msgstr ""
+msgstr "Variabilní symbol"
 
 #: templates/invoicing/formatters/html.html:124
 msgid "Specific symbol"
-msgstr ""
+msgstr "Specifický symbol"
 
 #: templates/invoicing/formatters/html.html:125
 msgid "Reference"
-msgstr ""
+msgstr "Odkaz"
 
 #: templates/invoicing/formatters/html.html:133
 msgid "Invoice items"
@@ -770,11 +770,11 @@ msgstr "Popis"
 
 #: templates/invoicing/formatters/html.html:142
 msgid "Quantity"
-msgstr ""
+msgstr "Množství"
 
 #: templates/invoicing/formatters/html.html:143
 msgid "Unit"
-msgstr ""
+msgstr "Jednotka"
 
 #: templates/invoicing/formatters/html.html:144
 msgid "Unit price"

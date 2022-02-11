@@ -1,7 +1,7 @@
 import datetime
 
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db.models.query import QuerySet
 from django.utils.timezone import now
 
@@ -35,6 +35,14 @@ class InvoiceQuerySet(QuerySet):
 
     def not_having_related_invoices(self):
         return self.filter(related_invoices=None)
+
+    def duplicate_numbers(self):
+        return list(self
+                    .values('number')
+                    .order_by()
+                    .annotate(count=Count('id'))
+                    .filter(count__gt=1)
+                    .values_list('number', flat=True))
 
     def lock(self):
         """ Lock table.

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
 
+from invoicing import VERSION
 
 setup(
     name='django-invoicing',
-    version='4.1.0',
+    version=VERSION,
     description='Django app for invoicing.',
     long_description=open('README.rst').read(),
     author='Pragmatic Mates',

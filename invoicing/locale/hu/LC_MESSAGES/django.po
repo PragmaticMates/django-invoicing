@@ -3,115 +3,117 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-12-08 13:33+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2022-02-22 15:13+0000\n"
+"Last-Translator: Samuel Sas <samuel.sas@swida.sk>\n"
+"Language-Team: Hungarian <https://weblate.swida.sk/projects/django-invoicing/"
+"app/hu/>\n"
+"Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.9.1\n"
 
 #: admin.py:25
 msgid "overdue"
-msgstr ""
+msgstr "lejárt"
 
 #: admin.py:30
 msgid "no"
-msgstr ""
+msgstr "nem"
 
 #: admin.py:31
 msgid "yes"
-msgstr ""
+msgstr "Igen"
 
 #: admin.py:56
 msgid "General information"
-msgstr ""
+msgstr "Általános információ"
 
 #: admin.py:63
 msgid "Contact details"
-msgstr ""
+msgstr "Elérhetőségeit"
 
 #: admin.py:68
 msgid "Payment details"
-msgstr ""
+msgstr "fizetési részletek"
 
 #: admin.py:76
 msgid "Supplier details"
-msgstr ""
+msgstr "Szállító adatai"
 
 #: admin.py:83
 msgid "Customer details"
-msgstr ""
+msgstr "Vásárló adatai"
 
 #: admin.py:89
 msgid "Shipping details"
-msgstr ""
+msgstr "Szállítási adatok"
 
 #: admin.py:101
 msgid "subtotal"
-msgstr ""
+msgstr "részösszeg"
 
 #: admin.py:105
 msgid "supplier"
-msgstr ""
+msgstr "támogató"
 
 #: admin.py:109
 msgid "customer"
-msgstr ""
+msgstr "vevő"
 
 #: admin.py:113
 msgid "payment term"
-msgstr ""
+msgstr "fizetési határidő"
 
 #: admin.py:118
 msgid "is overdue"
-msgstr ""
+msgstr "lejárt"
 
 #: admin.py:123
 msgid "is paid"
-msgstr ""
+msgstr "ki van fizetve"
 
 #: admin.py:129
 msgid "Missing specification of accounting software"
-msgstr ""
+msgstr "Hiányzik a számviteli szoftver specifikációja"
 
 #: admin.py:147 managers.py:132
 #, python-format
 msgid "%d invoices sent to accounting software"
-msgstr ""
+msgstr "%d számla elküldve a könyvelő szoftvernek"
 
 #: admin.py:152
 msgid "Send to accounting software"
-msgstr ""
+msgstr "Küldje el a könyvelő szoftverbe"
 
 #: helpers.py:52
 msgid "Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled"
 msgstr ""
+"A számla típusa kötelező, ha az INVOICING_COUNTER_PER_TYPE engedélyezve van"
 
 #: helpers.py:57
 msgid "Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled"
-msgstr ""
+msgstr "A számla típusa megadva, de az INVOICING_COUNTER_PER_TYPE le van tiltva"
 
 #: managers.py:25
 #, python-format
 msgid "Accounting software %s not implemented"
-msgstr ""
+msgstr "%s számviteli szoftver nincs implementálva"
 
 #: managers.py:38
 msgid "Missing accounting software API key"
-msgstr ""
+msgstr "Hiányzik a könyvelési szoftver API-kulcsa"
 
 #: managers.py:116
 #, python-format
 msgid "Result code: %d. Message: %s (%s)"
-msgstr ""
+msgstr "Eredménykód: %d. Üzenet: %s (%s)"
 
 #: managers.py:127
 #, python-format
@@ -119,719 +121,726 @@ msgid ""
 "%d invoices sent to accounting software [<a href=\"%s\" target=\"_blank"
 "\">Fetch</a>]"
 msgstr ""
+"%d számla elküldve a könyvelő szoftvernek [ <a href=\"%s\" target=\"_blank\""
+">Letöltés</a> ]"
 
 #: managers.py:140
 msgid "Missing accounting software API data"
-msgstr ""
+msgstr "Hiányoznak a számviteli szoftver API-adatai"
 
 #: managers.py:157 templates/invoicing/formatters/html.html:24
 #: templates/invoicing/formatters/html.html:70
 msgid "Reg. No."
-msgstr ""
+msgstr "Reg. Nem."
 
 #: managers.py:162 templates/invoicing/formatters/html.html:25
 #: templates/invoicing/formatters/html.html:71
 msgid "Tax No."
-msgstr ""
+msgstr "Adószám"
 
 #: managers.py:167 templates/invoicing/formatters/html.html:26
 #: templates/invoicing/formatters/html.html:72
 msgid "VAT No."
-msgstr ""
+msgstr "ÁFA szám"
 
 #: models.py:55
 msgid "daily"
-msgstr ""
+msgstr "napi"
 
 #: models.py:56
 msgid "monthly"
-msgstr ""
+msgstr "havi"
 
 #: models.py:57
 msgid "yearly"
-msgstr ""
+msgstr "évi"
 
 #: models.py:61
 msgid "Invoice"
-msgstr ""
+msgstr "Számla"
 
 #: models.py:62
 msgid "Advance invoice"
-msgstr ""
+msgstr "Előlegszámla"
 
 #: models.py:63
 msgid "Proforma invoice"
-msgstr ""
+msgstr "Proforma számla"
 
 #: models.py:64
 msgid "Credit note"
-msgstr ""
+msgstr "Jóváírás"
 
 #: models.py:68
 msgid "new"
-msgstr ""
+msgstr "új"
 
 #: models.py:69
 msgid "sent"
-msgstr ""
+msgstr "küldött"
 
 #: models.py:70
 msgid "returned"
-msgstr ""
+msgstr "visszatért"
 
 #: models.py:71
 msgid "canceled"
-msgstr ""
+msgstr "törölve"
 
 #: models.py:72
 msgid "paid"
-msgstr ""
+msgstr "fizetett"
 
 #: models.py:73
 msgid "credited"
-msgstr ""
+msgstr "jóváírva"
 
 #: models.py:74
 msgid "uncollectible"
-msgstr ""
+msgstr "beszedhetetlen"
 
 #: models.py:78
 msgid "bank transfer"
-msgstr ""
+msgstr "banki átutalás"
 
 #: models.py:79
 msgid "cash"
-msgstr ""
+msgstr "készpénz"
 
 #: models.py:80
 msgid "cash on delivery"
-msgstr ""
+msgstr "utánvétes fizetés"
 
 #: models.py:81
 msgid "payment card"
-msgstr ""
+msgstr "bankkártya"
 
 #: models.py:85
 msgid "personal pickup"
-msgstr ""
+msgstr "személyes átvétel"
 
 #: models.py:86
 msgid "mailing"
-msgstr ""
+msgstr "postázás"
 
 #: models.py:87
 msgid "digital"
-msgstr ""
+msgstr "digitális"
 
 #: models.py:91
 msgid ""
 "0001 - Payments for goods based on legal and executable decision from legal "
 "authority"
 msgstr ""
+"0001 - Árufizetések törvényes és végrehajtható jogi hatósági határozat "
+"alapján"
 
 #: models.py:92
 msgid "0008 - Cashless payments for goods"
-msgstr ""
+msgstr "0008 - Készpénz nélküli fizetés az árukért"
 
 #: models.py:93
 msgid "0038 - Cashless funds for wages"
-msgstr ""
+msgstr "0038 - Készpénz nélküli pénzeszközök bérekhez"
 
 #: models.py:94
 msgid "0058 - Cashless penalty and delinquency charges"
-msgstr ""
+msgstr "0058 - Készpénz nélküli büntetés és mulasztási díjak"
 
 #: models.py:95
 msgid "0068 - Transfer of funds for wages and other personal costs"
-msgstr ""
+msgstr "0068 - Pénzeszközök átutalása bérekre és egyéb személyi költségekre"
 
 #: models.py:96
 msgid "0138 - Cashless deductions at source"
-msgstr ""
+msgstr "0138 – Készpénz nélküli levonások a forrásnál"
 
 #: models.py:97
 msgid "0168 - Cashless payments in loans"
-msgstr ""
+msgstr "0168 - Készpénz nélküli fizetések hitelekben"
 
 #: models.py:98
 msgid "0178 - Sales from provided services"
-msgstr ""
+msgstr "0178 - Eladás a nyújtott szolgáltatásokból"
 
 #: models.py:99
 msgid "0298 - Other cashless transfers"
-msgstr ""
+msgstr "0298 - Egyéb készpénz nélküli átutalások"
 
 #: models.py:100
 msgid "0304 - Prior payments for services"
-msgstr ""
+msgstr "0304 – Előzetes fizetés a szolgáltatásokért"
 
 #: models.py:101
 msgid "0308 - Cashless payments for services"
-msgstr ""
+msgstr "0308 - Szolgáltatások készpénz nélküli fizetése"
 
 #: models.py:102
 msgid "0358 - Payments dedicated to payout through post offices"
-msgstr ""
+msgstr "0358 – Postahivatalokon keresztül történő kifizetések"
 
 #: models.py:103
 msgid "0379 - Other income, income from postal order"
-msgstr ""
+msgstr "0379 - Egyéb bevétel, postai utalvány bevétel"
 
 #: models.py:104
 msgid "0498 - Payments in loans"
-msgstr ""
+msgstr "0498 - Kölcsönfizetések"
 
 #: models.py:105
 msgid "0558 - Cashless other financial payments"
-msgstr ""
+msgstr "0558 – Készpénz nélküli egyéb pénzügyi kifizetések"
 
 #: models.py:106
 msgid "0934 - Benefits - prior payments"
-msgstr ""
+msgstr "0934 - Juttatások - előzetes kifizetések"
 
 #: models.py:107
 msgid "0968 - Other cashless transfers"
-msgstr ""
+msgstr "0968 - Egyéb készpénz nélküli átutalások"
 
 #: models.py:108
 msgid "1144 - Prior payment - advance"
-msgstr ""
+msgstr "1144 - Előleg fizetés - előleg"
 
 #: models.py:109
 msgid "1148 - Payment - current advance"
-msgstr ""
+msgstr "1148 - Fizetés - aktuális előleg"
 
 #: models.py:110
 msgid ""
 "1744 - Accounting of tax at income tax of physical body and corporate body"
-msgstr ""
+msgstr "1744 - Adó elszámolása személyi és társasági adónál"
 
 #: models.py:111
 msgid ""
 "1748 - Income tax of physical body and corporate body based on declared tax "
 "year"
 msgstr ""
+"1748 - Fizikai és társasági jogi személy jövedelemadója a bevallott adóév "
+"alapján"
 
 #: models.py:112
 msgid "3118 - Insurance and empl. contrib. to insur. co. and the Labor Office"
 msgstr ""
+"3118 - Biztosítás és empl. contrib. biztosítani. co. és a Munkaügyi Hivatal"
 
 #: models.py:113
 msgid "3344 - Penalty from message - prior"
-msgstr ""
+msgstr "3344 - Üzenetbüntetés - előzetes"
 
 #: models.py:114
 msgid "3348 - Penalty from message"
-msgstr ""
+msgstr "3348 - Üzenetbüntetés"
 
 #: models.py:115
 msgid "3354 - Insurance payments by insurance companies"
-msgstr ""
+msgstr "3354 - Biztosítótársaságok biztosítási kifizetései"
 
 #: models.py:116
 msgid "3558 - Cashless insurance payments by insurance companies"
-msgstr ""
+msgstr "3558 - Biztosítótársaságok készpénz nélküli biztosítási kifizetései"
 
 #: models.py:117
 msgid "8147 - Payment (posted together with the instruction)"
-msgstr ""
+msgstr "8147 - Fizetés (az utasítással együtt)"
 
 #: models.py:121
 msgid "type"
-msgstr ""
+msgstr "típus"
 
 #: models.py:122
 msgid "sequence"
-msgstr ""
+msgstr "sorrend"
 
 #: models.py:123
 msgid "number"
-msgstr ""
+msgstr "szám"
 
 #: models.py:124
 msgid "status"
-msgstr ""
+msgstr "állapot"
 
 #: models.py:125
 msgid "subtitle"
-msgstr ""
+msgstr "felirat"
 
 #: models.py:126
 msgid "related document"
-msgstr ""
+msgstr "kapcsolódó dokumentum"
 
 #: models.py:127
 msgid "related invoices"
-msgstr ""
+msgstr "kapcsolódó számlák"
 
 #: models.py:128
 msgid "language"
-msgstr ""
+msgstr "nyelv"
 
 #: models.py:129
 msgid "note"
-msgstr ""
+msgstr "jegyzet"
 
 #: models.py:129
 msgid "Thank you for using our services."
-msgstr ""
+msgstr "Köszönjük, hogy igénybe vette szolgáltatásainkat."
 
 #: models.py:130
 msgid "issue date"
-msgstr ""
+msgstr "kiadás dátuma"
 
 #: models.py:131
 msgid "tax point date"
-msgstr ""
+msgstr "adópont dátuma"
 
 #: models.py:131
 msgid "time of supply"
-msgstr ""
+msgstr "az ellátás ideje"
 
 #: models.py:132
 msgid "due date"
-msgstr ""
+msgstr "esedékessége"
 
 #: models.py:132
 msgid "payment till"
-msgstr ""
+msgstr "Fizetés ... részére"
 
 #: models.py:133
 msgid "date sent"
-msgstr ""
+msgstr "küldés dátuma"
 
 #: models.py:135
 msgid "date paid"
-msgstr ""
+msgstr "fizetési dátum"
 
 #: models.py:137
 msgid "date reminder sent"
-msgstr ""
+msgstr "dátum emlékeztető küldése"
 
 #: models.py:141
 msgid "currency"
-msgstr ""
+msgstr "valuta"
 
 #: models.py:142 templates/invoicing/formatters/html.html:245
 msgid "credit"
-msgstr ""
+msgstr "hitel"
 
 #: models.py:145
 msgid "payment method"
-msgstr ""
+msgstr "fizetési mód"
 
 #: models.py:146
 msgid "constant symbol"
-msgstr ""
+msgstr "állandó szimbólum"
 
 #: models.py:147
 msgid "variable symbol"
-msgstr ""
+msgstr "változó szimbólum"
 
 #: models.py:150
 msgid "specific symbol"
-msgstr ""
+msgstr "konkrét szimbólum"
 
 #: models.py:153
 msgid "reference"
-msgstr ""
+msgstr "referencia"
 
 #: models.py:155
 msgid "bank name"
-msgstr ""
+msgstr "a bank neve"
 
 #: models.py:156
 msgid "bank street and number"
-msgstr ""
+msgstr "bank utca és házszám"
 
 #: models.py:157
 msgid "bank ZIP"
-msgstr ""
+msgstr "bank ZIP"
 
 #: models.py:158
 msgid "bank city"
-msgstr ""
+msgstr "bank város"
 
 #: models.py:159
 msgid "bank country"
-msgstr ""
+msgstr "bank ország"
 
 #: models.py:160
 msgid "Account number (IBAN)"
-msgstr ""
+msgstr "Számlaszám (IBAN)"
 
 #: models.py:161
 msgid "Bank SWIFT / BIC"
-msgstr ""
+msgstr "Bank SWIFT / BIC"
 
 #: models.py:164
 msgid "supplier name"
-msgstr ""
+msgstr "Szállító neve"
 
 #: models.py:165
 msgid "supplier street and number"
-msgstr ""
+msgstr "szállító utca és szám"
 
 #: models.py:166
 msgid "supplier ZIP"
-msgstr ""
+msgstr "szállító ZIP"
 
 #: models.py:167
 msgid "supplier city"
-msgstr ""
+msgstr "szállító város"
 
 #: models.py:168
 msgid "supplier country"
-msgstr ""
+msgstr "szállító ország"
 
 #: models.py:169
 msgid "supplier Reg. No."
-msgstr ""
+msgstr "szállító Reg. Nem."
 
 #: models.py:170
 msgid "supplier Tax No."
-msgstr ""
+msgstr "szállítói adószám."
 
 #: models.py:171
 msgid "supplier VAT No."
-msgstr ""
+msgstr "szállító áfa sz."
 
 #: models.py:172
 msgid "supplier additional information"
-msgstr ""
+msgstr "szállító további információi"
 
 #: models.py:176
 msgid "issuer name"
-msgstr ""
+msgstr "kibocsátó neve"
 
 #: models.py:177
 msgid "issuer email"
-msgstr ""
+msgstr "kibocsátó e-mail címe"
 
 #: models.py:178
 msgid "issuer phone"
-msgstr ""
+msgstr "kibocsátó telefon"
 
 #: models.py:181
 msgid "customer name"
-msgstr ""
+msgstr "Ügyfél neve"
 
 #: models.py:182
 msgid "customer street and number"
-msgstr ""
+msgstr "ügyfél utca és szám"
 
 #: models.py:183
 msgid "customer ZIP"
-msgstr ""
+msgstr "ügyfél ZIP"
 
 #: models.py:184
 msgid "customer city"
-msgstr ""
+msgstr "ügyfél város"
 
 #: models.py:185
 msgid "customer country"
-msgstr ""
+msgstr "ügyfél ország"
 
 #: models.py:186
 msgid "customer Reg. No."
-msgstr ""
+msgstr "ügyfél Reg. Nem."
 
 #: models.py:187
 msgid "customer Tax No."
-msgstr ""
+msgstr "ügyfél adószáma"
 
 #: models.py:188
 msgid "customer VAT No."
-msgstr ""
+msgstr "vásárlói áfa szám"
 
 #: models.py:189
 msgid "customer additional information"
-msgstr ""
+msgstr "ügyfél további információk"
 
 #: models.py:191
 msgid "customer email"
-msgstr ""
+msgstr "ügyfél email"
 
 #: models.py:192
 msgid "customer phone"
-msgstr ""
+msgstr "ügyfél telefon"
 
 #: models.py:195
 msgid "shipping name"
-msgstr ""
+msgstr "szállítási név"
 
 #: models.py:196
 msgid "shipping street and number"
-msgstr ""
+msgstr "szállítási utca és szám"
 
 #: models.py:197
 msgid "shipping ZIP"
-msgstr ""
+msgstr "szállítás ZIP"
 
 #: models.py:198
 msgid "shipping city"
-msgstr ""
+msgstr "szállítási város"
 
 #: models.py:199
 msgid "shipping country"
-msgstr ""
+msgstr "szállító ország"
 
 #: models.py:202
 msgid "delivery method"
-msgstr ""
+msgstr "szállítási mód"
 
 #: models.py:206
 msgid "total"
-msgstr ""
+msgstr "teljes"
 
 #: models.py:208 templates/invoicing/formatters/html.html:221
 msgid "VAT"
-msgstr ""
+msgstr "áfa"
 
 #: models.py:212
 msgid "attachments"
-msgstr ""
+msgstr "mellékleteket"
 
 #: models.py:214 models.py:489
 msgid "created"
-msgstr ""
+msgstr "létrehozás"
 
 #: models.py:215 models.py:490
 msgid "modified"
-msgstr ""
+msgstr "módosított"
 
 #: models.py:220 models.py:477
 msgid "invoice"
-msgstr ""
+msgstr "számla"
 
 #: models.py:221
 msgid "invoices"
-msgstr ""
+msgstr "számlákat"
 
 #: models.py:473
 msgid "pcs."
-msgstr ""
+msgstr "db."
 
 #: models.py:474
 msgid "hours"
-msgstr ""
+msgstr "órák"
 
 #: models.py:478
 msgid "title"
-msgstr ""
+msgstr "cím"
 
 #: models.py:479
 msgid "quantity"
-msgstr ""
+msgstr "Mennyiség"
 
 #: models.py:480
 msgid "unit"
-msgstr ""
+msgstr "Mértékegység"
 
 #: models.py:481
 msgid "unit price"
-msgstr ""
+msgstr "egységár"
 
 #: models.py:482
 msgid "discount (%)"
-msgstr ""
+msgstr "kedvezmény (%)"
 
 #: models.py:483
 msgid "tax rate (%)"
-msgstr ""
+msgstr "adókulcs (%)"
 
 #: models.py:483
 msgid "VAT rate"
-msgstr ""
+msgstr "Áfakulcs"
 
 #: models.py:485
 msgid "tag"
-msgstr ""
+msgstr "címke"
 
 #: models.py:487
 msgid "weight"
-msgstr ""
+msgstr "súly"
 
 #: models.py:487
 msgid "ordering"
-msgstr ""
+msgstr "rendelés"
 
 #: models.py:495
 msgid "item"
-msgstr ""
+msgstr "tétel"
 
 #: models.py:496
 msgid "items"
-msgstr ""
+msgstr "tételeket"
 
 #: templates/invoicing/formatters/html.html:13
 msgid "Supplier"
-msgstr ""
+msgstr "Támogató"
 
 #: templates/invoicing/formatters/html.html:30
 msgid "Bank"
-msgstr ""
+msgstr "Bank"
 
 #: templates/invoicing/formatters/html.html:31
 msgid "Title"
-msgstr ""
+msgstr "Cím"
 
 #: templates/invoicing/formatters/html.html:33
 msgid "Agency address"
-msgstr ""
+msgstr "Ügynökség címe"
 
 #: templates/invoicing/formatters/html.html:35
 msgid "Bank IBAN code"
-msgstr ""
+msgstr "Banki IBAN kód"
 
 #: templates/invoicing/formatters/html.html:36
 msgid "SWIFT / BIC"
-msgstr ""
+msgstr "SWIFT BIC"
 
 #: templates/invoicing/formatters/html.html:38
 msgid "Issuer"
-msgstr ""
+msgstr "Kibocsátó"
 
 #: templates/invoicing/formatters/html.html:40
 msgid "Name"
-msgstr ""
+msgstr "Név"
 
 #: templates/invoicing/formatters/html.html:42
 msgid "Phone"
-msgstr ""
+msgstr "Telefon"
 
 #: templates/invoicing/formatters/html.html:43
 msgid "Email"
-msgstr ""
+msgstr "Email"
 
 #: templates/invoicing/formatters/html.html:47
 msgid "Additional data"
-msgstr ""
+msgstr "További adatok"
 
 #: templates/invoicing/formatters/html.html:59
 msgid "Customer"
-msgstr ""
+msgstr "Vevő"
 
 #: templates/invoicing/formatters/html.html:85
 msgid "Issue date"
-msgstr ""
+msgstr "Kiadás dátuma"
 
 #: templates/invoicing/formatters/html.html:95
 msgid "Time of supply"
-msgstr ""
+msgstr "Az ellátás ideje"
 
 #: templates/invoicing/formatters/html.html:109
 msgid "Due date"
-msgstr ""
+msgstr "Esedékesség"
 
 #: templates/invoicing/formatters/html.html:112
 msgid "day,days"
-msgstr ""
+msgstr "nap, napok"
 
 #: templates/invoicing/formatters/html.html:120
 msgid "Delivery method"
-msgstr ""
+msgstr "Szállítási mód"
 
 #: templates/invoicing/formatters/html.html:121
 msgid "Payment method"
-msgstr ""
+msgstr "Fizetési mód"
 
 #: templates/invoicing/formatters/html.html:122
 msgid "Constant symbol"
-msgstr ""
+msgstr "Állandó szimbólum"
 
 #: templates/invoicing/formatters/html.html:123
 msgid "Variable symbol"
-msgstr ""
+msgstr "Változó szimbólum"
 
 #: templates/invoicing/formatters/html.html:124
 msgid "Specific symbol"
-msgstr ""
+msgstr "Konkrét szimbólum"
 
 #: templates/invoicing/formatters/html.html:125
 msgid "Reference"
-msgstr ""
+msgstr "Referencia"
 
 #: templates/invoicing/formatters/html.html:133
 msgid "Invoice items"
-msgstr ""
+msgstr "Számla tételek"
 
 #: templates/invoicing/formatters/html.html:140
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: templates/invoicing/formatters/html.html:141
 msgid "Description"
-msgstr ""
+msgstr "Leírás"
 
 #: templates/invoicing/formatters/html.html:142
 msgid "Quantity"
-msgstr ""
+msgstr "Mennyiség"
 
 #: templates/invoicing/formatters/html.html:143
 msgid "Unit"
-msgstr ""
+msgstr "Mértékegység"
 
 #: templates/invoicing/formatters/html.html:144
 msgid "Unit price"
-msgstr ""
+msgstr "Egységár"
 
 #: templates/invoicing/formatters/html.html:146
 msgid "Discount"
-msgstr ""
+msgstr "Kedvezmény"
 
 #: templates/invoicing/formatters/html.html:149
 msgid "Price"
-msgstr ""
+msgstr "Ár"
 
 #: templates/invoicing/formatters/html.html:150
 msgid "Tax rate"
-msgstr ""
+msgstr "Adókulcs"
 
 #: templates/invoicing/formatters/html.html:151
 msgid "VAT amount"
-msgstr ""
+msgstr "áfa összeg"
 
 #: templates/invoicing/formatters/html.html:153
 msgid "Line total"
-msgstr ""
+msgstr "Sor összesen"
 
 #: templates/invoicing/formatters/html.html:154
 msgid "with taxes"
-msgstr ""
+msgstr "adókkal"
 
 #: templates/invoicing/formatters/html.html:186
 msgid "There are no invoice items."
-msgstr ""
+msgstr "Nincsenek számlatételek."
 
 #: templates/invoicing/formatters/html.html:196
 msgid "Note"
-msgstr ""
+msgstr "jegyzet"
 
 #: templates/invoicing/formatters/html.html:204
 msgid "Summary"
-msgstr ""
+msgstr "Összegzés"
 
 #: templates/invoicing/formatters/html.html:210
 msgid "Base"
-msgstr ""
+msgstr "Bázis"
 
 #: templates/invoicing/formatters/html.html:227
 msgid "Not a VAT payer"
-msgstr ""
+msgstr "Nem ÁFA fizető"
 
 #: templates/invoicing/formatters/html.html:239
 msgid "Other"
-msgstr ""
+msgstr "Egyéb"
 
 #: templates/invoicing/formatters/html.html:251
 msgid "price before discount"
-msgstr ""
+msgstr "ár engedmény előtt"
 
 #: templates/invoicing/formatters/html.html:255
 msgid "total discount"
-msgstr ""
+msgstr "teljes kedvezmény"
 
 #: templates/invoicing/formatters/html.html:269
 msgid "TOTAL DUE"
-msgstr ""
+msgstr "TELJES TARTOZÁS"

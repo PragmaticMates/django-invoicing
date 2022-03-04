@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-12-08 13:33+0100\n"
-"PO-Revision-Date: 2021-10-13 15:24+0000\n"
+"PO-Revision-Date: 2022-03-04 11:02+0000\n"
 "Last-Translator: Weblate Admin <erik@pragmaticmates.com>\n"
 "Language-Team: Slovak <https://weblate.swida.sk/projects/django-invoicing/"
 "app/sk/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n "
 ">= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
-"X-Generator: Weblate 4.7.2\n"
+"X-Generator: Weblate 4.9.1\n"
 "X-Translated-Using: django-rosetta 0.9.3\n"
 
 #: admin.py:25
@@ -96,11 +96,12 @@ msgstr "Odoslať do účtovného softvéru"
 
 #: helpers.py:52
 msgid "Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled"
-msgstr ""
+msgstr "Typ faktúry je požadovaný keď je povolené INVOICING_COUNTER_PER_TYPE"
 
 #: helpers.py:57
 msgid "Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled"
 msgstr ""
+"Typ faktúry bol špecifikovaný ale INVOICING_COUNTER_PER_TYPE je zakázané"
 
 #: managers.py:25
 #, python-format

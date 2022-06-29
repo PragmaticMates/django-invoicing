@@ -4,6 +4,7 @@ from django.db.models.functions import Coalesce
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
+from invoicing.exporters import InvoiceXlsxListExporter
 from invoicing.managers import get_accounting_software_manager
 from invoicing.models import Invoice, Item
 
@@ -42,7 +43,7 @@ class OverdueFilter(admin.SimpleListFilter):
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     ordering = ['-date_issue', '-sequence']
-    actions = ['send_to_accounting_software']
+    actions = ['send_to_accounting_software', 'export']
     list_display = ['pk', 'type', 'number', 'status',
                     'supplier_info', 'customer_info',
                     'annotated_subtotal', 'vat', 'total',
@@ -150,3 +151,17 @@ class InvoiceAdmin(admin.ModelAdmin):
             messages.error(request, e)
 
     send_to_accounting_software.short_description = _('Send to accounting software')
+
+    def export(self, request, queryset):
+        # init exporter
+        exporter = InvoiceXlsxListExporter(
+            user=request.user,
+            recipients=[request.user],
+            selected_fields=None
+        )
+        exporter.queryset = queryset
+
+        # export to file
+        return exporter.export_to_response()
+
+    export.short_description = _('Export to xlsx')

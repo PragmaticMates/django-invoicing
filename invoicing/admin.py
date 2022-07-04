@@ -4,7 +4,6 @@ from django.db.models.functions import Coalesce
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from invoicing.exporters import InvoiceXlsxListExporter
 from invoicing.managers import get_accounting_software_manager
 from invoicing.models import Invoice, Item
 
@@ -153,6 +152,8 @@ class InvoiceAdmin(admin.ModelAdmin):
     send_to_accounting_software.short_description = _('Send to accounting software')
 
     def export(self, request, queryset):
+        from invoicing.exporters import InvoiceXlsxListExporter
+
         # init exporter
         exporter = InvoiceXlsxListExporter(
             user=request.user,

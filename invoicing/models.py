@@ -231,7 +231,11 @@ class Invoice(models.Model):
     @transaction.atomic
     def save(self, **kwargs):
         if self.sequence in EMPTY_VALUES:
-            self.sequence = Invoice.get_next_sequence(self.type, self.date_issue, getattr(self, 'number_prefix', None))
+            self.sequence = Invoice.get_next_sequence(
+                type=self.type,
+                important_date=self.date_issue,
+                number_prefix=getattr(self, 'number_prefix', None),
+                generator=getattr(self, 'sequence_generator', None))
         if self.number in EMPTY_VALUES:
             self.number = self._get_number()
 
@@ -243,12 +247,15 @@ class Invoice(models.Model):
         )(self)
 
     @staticmethod
-    def get_next_sequence(type, important_date, number_prefix=None, related_invoices=None):
+    def get_next_sequence(type, important_date, number_prefix=None, related_invoices=None, generator=None):
         """
         Returns next invoice sequence based on ``settings.INVOICING_SEQUENCE_GENERATOR``.
         """
-        generator = getattr(settings, 'INVOICING_SEQUENCE_GENERATOR', 'invoicing.helpers.sequence_generator')
-        generator = import_string(generator)
+
+        if not generator:
+            generator = getattr(settings, 'INVOICING_SEQUENCE_GENERATOR', 'invoicing.helpers.sequence_generator')
+            generator = import_string(generator)
+
         return generator(
             type=type,
             important_date=important_date,
@@ -261,8 +268,13 @@ class Invoice(models.Model):
         """
         Returns next invoice sequence based on ``settings.INVOICING_NUMBER_FORMATTER``.
         """
-        formatter = getattr(settings, 'INVOICING_NUMBER_FORMATTER', 'invoicing.helpers.number_formatter')
-        formatter = import_string(formatter)
+
+        if hasattr(self, 'number_formatter'):
+            formatter = self.number_formatter
+        else:
+            formatter = getattr(settings, 'INVOICING_NUMBER_FORMATTER', 'invoicing.helpers.number_formatter')
+            formatter = import_string(formatter)
+
         return formatter(self)
 
     def get_tax_rate(self):
@@ -461,6 +473,40 @@ class Invoice(models.Model):
         total -= Decimal(self.credit)  # subtract credit
         #total -= self.already_paid  # subtract already paid
         return round(total, 2)
+
+    def create_copy(self, **kwargs):
+        # prepare new instance data
+        from django.forms import model_to_dict
+        invoice_dict = model_to_dict(self, exclude=['id', 'related_invoices', 'number', 'sequence'])
+
+        # update data with custom params
+        invoice_dict.update(kwargs)
+
+        # check presence of custom sequence generator and number formatter
+        sequence_generator = invoice_dict.pop('sequence_generator')
+        number_formatter = invoice_dict.pop('number_formatter')
+
+        # create new instance but don't save yet
+        new_instance = Invoice(**invoice_dict)
+
+        # pass custom sequence generator and number formatter
+        new_instance.sequence_generator = sequence_generator
+        new_instance.number_formatter = number_formatter
+
+        # save new instance with new sequence and number
+        new_instance.save()
+
+        # set current invoice as related invoice
+        new_instance.related_invoices.set([self])
+
+        # duplicate items
+        for item in self.item_set.all():
+            item_kwargs = model_to_dict(item, exclude=['id', 'invoice'])
+            item_kwargs.update({'invoice': new_instance})
+            Item.objects.create(**item_kwargs)
+
+        # return copied invoice
+        return new_instance
 
 
 class Item(models.Model):

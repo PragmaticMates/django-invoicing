@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-12-08 13:33+0100\n"
-"PO-Revision-Date: 2022-03-04 11:02+0000\n"
+"PO-Revision-Date: 2022-09-12 13:56+0000\n"
 "Last-Translator: Weblate Admin <erik@pragmaticmates.com>\n"
 "Language-Team: Slovak <https://weblate.swida.sk/projects/django-invoicing/"
 "app/sk/>\n"
@@ -75,7 +75,7 @@ msgstr "lehota splatnosti"
 
 #: admin.py:118
 msgid "is overdue"
-msgstr "je oneskorená"
+msgstr "je po splatnosti"
 
 #: admin.py:123
 msgid "is paid"

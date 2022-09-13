@@ -304,6 +304,9 @@ class Invoice(models.Model):
 
     @property
     def is_overdue(self):
+        if self.total == 0:
+            return False
+
         if self.status in [self.STATUS.PAID, self.STATUS.CANCELED, self.STATUS.CREDITED]:
             return False
 

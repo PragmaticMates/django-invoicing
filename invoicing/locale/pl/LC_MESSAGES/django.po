@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-12-08 13:33+0100\n"
-"PO-Revision-Date: 2021-10-23 11:24+0000\n"
+"PO-Revision-Date: 2022-09-28 09:18+0000\n"
 "Last-Translator: Rafal Szczepanowicz <rafal@transportly.eu>\n"
 "Language-Team: Polish <https://weblate.swida.sk/projects/django-invoicing/"
 "app/pl/>\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n"
 "%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n"
 "%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
-"X-Generator: Weblate 4.7.2\n"
+"X-Generator: Weblate 4.9.1\n"
 
 #: admin.py:25
 msgid "overdue"
@@ -97,10 +97,11 @@ msgstr "Wyślij do oprogramowania księgowego"
 #: helpers.py:52
 msgid "Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled"
 msgstr ""
+"Typ faktury jest wymagany, gdy włączona jest opcja INVOICING_COUNTER_PER_TYPE"
 
 #: helpers.py:57
 msgid "Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled"
-msgstr ""
+msgstr "Określono typ faktury, ale INVOICING_COUNTER_PER_TYPE jest wyłączony"
 
 #: managers.py:25
 #, python-format

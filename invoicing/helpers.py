@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from invoicing.models import Invoice
 
 
-def sequence_generator(type, important_date, number_prefix=None, counter_period=None, related_invoices=None):
+def sequence_generator(type, important_date, number_prefix=None, counter_period=None, related_invoices=None, start_from=None):
     """
     Returns next invoice sequence based on ``settings.INVOICING_COUNTER_PERIOD``.
 
@@ -59,7 +59,7 @@ def sequence_generator(type, important_date, number_prefix=None, counter_period=
         if number_prefix is not None:
             related_invoices = related_invoices.filter(number__startswith=number_prefix)
 
-        start_from = getattr(settings, 'INVOICING_NUMBER_START_FROM', 1)
+        start_from = start_from if start_from is not None else getattr(settings, 'INVOICING_NUMBER_START_FROM', 1)
         last_sequence = related_invoices.aggregate(Max('sequence'))['sequence__max'] or start_from - 1
 
         return last_sequence + 1

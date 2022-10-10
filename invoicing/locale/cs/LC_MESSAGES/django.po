@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-12-08 13:33+0100\n"
-"PO-Revision-Date: 2022-01-19 11:33+0000\n"
-"Last-Translator: Samuel Sas <samuel.sas@swida.sk>\n"
+"PO-Revision-Date: 2022-10-11 12:18+0000\n"
+"Last-Translator: Peter Rusinak <peter.rusinak@transportly.eu>\n"
 "Language-Team: Czech <https://weblate.swida.sk/projects/django-invoicing/app/"
 "cs/>\n"
 "Language: cs\n"
@@ -94,12 +94,15 @@ msgid "Send to accounting software"
 msgstr "Odeslat do účetního softwaru"
 
 #: helpers.py:52
+#, fuzzy
 msgid "Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled"
-msgstr ""
+msgstr "Typ faktury je požadován, když je povoleno INVOICING_COUNTER_PER_TYPE"
 
 #: helpers.py:57
+#, fuzzy
 msgid "Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled"
 msgstr ""
+"Typ faktury byl specifikován, ale INVOICING_COUNTER_PER_TYPE je zakázáno"
 
 #: managers.py:25
 #, python-format

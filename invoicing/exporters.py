@@ -1,12 +1,23 @@
 from collections import OrderedDict
 
-from django.utils.translation import ugettext_lazy as _, ugettext
-
-from outputs.mixins import ExcelExporterMixin
 from invoicing.models import Invoice
 
+from requests_futures import sessions
 
+from django.conf import settings
+from django.utils.translation import ugettext_lazy as _, ugettext
+
+from invoicing.utils import import_name
+
+from outputs.mixins import ExporterMixin, ExcelExporterMixin, FilterExporterMixin
+from outputs.models import Export
+from pragmatic.utils import compress
+
+
+# TODO: inherit from filterexporter mixin?
+# class InvoiceXlsxListExporter(FilterExporterMixin, ExcelExporterMixin):
 class InvoiceXlsxListExporter(ExcelExporterMixin):
+    # filter_class = InvoiceFilter
     queryset = None
     filename = _('invoices.xlsx')
 
@@ -92,13 +103,55 @@ class InvoiceXlsxListExporter(ExcelExporterMixin):
             # ],
         })
 
-    def get_whole_queryset(self, params):
-        return super().get_whole_queryset(params) \
-            .order_by('-created').distinct()
-            # .prefetch_related(Prefetch('item_set', queryset=Item.objects.all())) \
+    # def get_whole_queryset(self, params):
+    #     return super().get_whole_queryset(params) \
+    #         .order_by('-created').distinct()
+    #         # .prefetch_related(Prefetch('item_set', queryset=Item.objects.all())) \
 
     def get_worksheet_title(self, index=0):
         return ugettext('Invoices')
 
     def get_queryset(self):
         return self.queryset
+
+
+# TODO: inherit from filterexporter mixin?
+class InvoicePdfDetailExporter(ExporterMixin):
+# class InvoicePdfDetailExporter(FilterExporterMixin, ExporterMixin):
+    # filter_class = InvoiceFilter
+    queryset = Invoice.objects.all()
+    export_format = Export.FORMAT_PDF
+    export_context = Export.CONTEXT_DETAIL
+    filename = _('invoices.zip')
+
+    # def get_whole_queryset(self, params):
+    #     return super().get_whole_queryset(params) \
+    #         .order_by('-pk').distinct()
+
+    def get_queryset(self):
+        return self.queryset
+
+    def export(self):
+        self.write_data(self.output)
+
+    def write_data(self, output):
+        invoicing_formatter = getattr(settings, 'INVOICING_FORMATTER', 'invoicing.formatters.html.BootstrapHTMLFormatter')
+        formatter_class = import_name(invoicing_formatter)
+        print_api_url = getattr(settings, 'HTML_TO_PDF_API', None)
+        requests = []
+        export_files = []
+
+        for invoice in self.get_queryset():
+            formatter = formatter_class(invoice)
+            html_content = formatter.get_response().content
+            requests.append({'invoice': str(invoice), 'html_content': html_content})
+
+        session = sessions.FuturesSession(max_workers=3)
+        futures = [{'invoice': request.get('invoice'), 'future': session.post(print_api_url, data=request.get('html_content'))} for request in requests]
+
+        for f in futures:
+            file_name = f.get('invoice')
+            result = f.get('future').result()
+            export_files.append({'name': file_name + '.pdf', 'content': result.content})
+
+        output.write(compress(export_files).read())

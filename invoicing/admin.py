@@ -42,7 +42,7 @@ class OverdueFilter(admin.SimpleListFilter):
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     ordering = ['-date_issue', '-sequence']
-    actions = ['send_to_accounting_software', 'export']
+    actions = ['send_to_accounting_software', 'export', 'export_to_pdf']
     list_display = ['pk', 'type', 'number', 'status',
                     'supplier_info', 'customer_info',
                     'annotated_subtotal', 'vat', 'total',
@@ -160,9 +160,29 @@ class InvoiceAdmin(admin.ModelAdmin):
             recipients=[request.user],
             selected_fields=None
         )
+
+        # set queryset
         exporter.queryset = queryset
 
         # export to file
         return exporter.export_to_response()
 
     export.short_description = _('Export to xlsx')
+
+    def export_to_pdf(self, request, queryset):
+        from invoicing.exporters import InvoicePdfDetailExporter
+
+        # init exporter
+        exporter = InvoicePdfDetailExporter(
+            user=request.user,
+            recipients=[request.user],
+            selected_fields=None
+        )
+
+        # set queryset
+        exporter.queryset = queryset
+
+        # export to file
+        return exporter.export_to_response()
+
+    export_to_pdf.short_description = _('Export to PDF')

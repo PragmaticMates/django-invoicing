@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-08 13:33+0100\n"
+"POT-Creation-Date: 2022-11-24 21:09+0100\n"
 "PO-Revision-Date: 2022-09-28 09:18+0000\n"
 "Last-Translator: Rafal Szczepanowicz <rafal@transportly.eu>\n"
 "Language-Team: Polish <https://weblate.swida.sk/projects/django-invoicing/"
@@ -93,6 +93,332 @@ msgstr "%d faktury wysłane do oprogramowania księgowego"
 #: admin.py:152
 msgid "Send to accounting software"
 msgstr "Wyślij do oprogramowania księgowego"
+
+#: admin.py:170
+msgid "Export to xlsx"
+msgstr ""
+
+#: admin.py:188
+msgid "Export to PDF"
+msgstr ""
+
+#: exporters.py:22
+#, fuzzy
+#| msgid "invoices"
+msgid "invoices.xlsx"
+msgstr "faktury"
+
+#: exporters.py:28
+msgid "Details"
+msgstr ""
+
+#: exporters.py:29 templates/invoicing/formatters/html.html:140
+msgid "ID"
+msgstr "ID"
+
+#: exporters.py:30
+#, fuzzy
+#| msgid "created"
+msgid "Created"
+msgstr "utworzone"
+
+#: exporters.py:31
+msgid "Type"
+msgstr ""
+
+#: exporters.py:32
+#, fuzzy
+#| msgid "sequence"
+msgid "Sequence"
+msgstr "sekwencja"
+
+#: exporters.py:33
+#, fuzzy
+#| msgid "number"
+msgid "Number"
+msgstr "numer"
+
+#: exporters.py:34
+#, fuzzy
+#| msgid "status"
+msgid "Status"
+msgstr "status"
+
+#: exporters.py:35
+#, fuzzy
+#| msgid "subtitle"
+msgid "Subtitle"
+msgstr "podtytuł"
+
+#: exporters.py:36
+#, fuzzy
+#| msgid "language"
+msgid "Language"
+msgstr "język"
+
+#: exporters.py:37 templates/invoicing/formatters/html.html:196
+msgid "Note"
+msgstr "Uwagi"
+
+#: exporters.py:39
+msgid "Dates"
+msgstr ""
+
+#: exporters.py:40 templates/invoicing/formatters/html.html:85
+msgid "Issue date"
+msgstr "Data wystawienia"
+
+#: exporters.py:41
+#, fuzzy
+#| msgid "tax point date"
+msgid "Tax point date"
+msgstr "data obowiązku podatkowego"
+
+#: exporters.py:42 templates/invoicing/formatters/html.html:109
+msgid "Due date"
+msgstr "Termin płatności"
+
+#: exporters.py:43
+#, fuzzy
+#| msgid "due date"
+msgid "Sent (date)"
+msgstr "termin płatności"
+
+#: exporters.py:44
+msgid "Date of payment"
+msgstr ""
+
+#: exporters.py:45
+#, fuzzy
+#| msgid "payment term"
+msgid "Payment term (days)"
+msgstr "termin płatności"
+
+#: exporters.py:46
+msgid "Overdue (days)"
+msgstr ""
+
+#: exporters.py:51
+#, fuzzy
+#| msgid "Payment method"
+msgid "Payment"
+msgstr "Metoda płatności"
+
+#: exporters.py:52
+#, fuzzy
+#| msgid "total"
+msgid "Total"
+msgstr "suma"
+
+#: exporters.py:53 models.py:208 templates/invoicing/formatters/html.html:221
+msgid "VAT"
+msgstr "VAT"
+
+#: exporters.py:54
+#, fuzzy
+#| msgid "currency"
+msgid "Currency"
+msgstr "waluta"
+
+#: exporters.py:55
+#, fuzzy
+#| msgid "credit"
+msgid "Credit"
+msgstr "kredyt"
+
+#: exporters.py:56 templates/invoicing/formatters/html.html:121
+msgid "Payment method"
+msgstr "Metoda płatności"
+
+#: exporters.py:57 templates/invoicing/formatters/html.html:122
+msgid "Constant symbol"
+msgstr "Stały symbol"
+
+#: exporters.py:58 templates/invoicing/formatters/html.html:123
+msgid "Variable symbol"
+msgstr "Zmienny symbol"
+
+#: exporters.py:59 templates/invoicing/formatters/html.html:124
+msgid "Specific symbol"
+msgstr "Specyficzny symbol"
+
+#: exporters.py:60 templates/invoicing/formatters/html.html:125
+msgid "Reference"
+msgstr "Referencja"
+
+#: exporters.py:61
+#, fuzzy
+#| msgid "bank name"
+msgid "Bank name"
+msgstr "nazwa banku"
+
+#: exporters.py:66
+msgid "IBAN"
+msgstr ""
+
+#: exporters.py:67
+#, fuzzy
+#| msgid "SWIFT / BIC"
+msgid "SWIFT/BIC"
+msgstr "SWIFT / BIC"
+
+#: exporters.py:69 templates/invoicing/formatters/html.html:38
+msgid "Issuer"
+msgstr "Wystawca"
+
+#: exporters.py:70
+#, fuzzy
+#| msgid "supplier name"
+msgid "Supplier name"
+msgstr "nazwa dostawcy"
+
+#: exporters.py:71
+#, fuzzy
+#| msgid "Supplier details"
+msgid "Supplier street"
+msgstr "Dane dostawcy"
+
+#: exporters.py:72
+#, fuzzy
+#| msgid "Supplier"
+msgid "Supplier zip"
+msgstr "Dostawca"
+
+#: exporters.py:73
+#, fuzzy
+#| msgid "supplier city"
+msgid "Supplier city"
+msgstr "miasto dostawcy"
+
+#: exporters.py:74
+#, fuzzy
+#| msgid "supplier country"
+msgid "Supplier country"
+msgstr "kraj dostawcy"
+
+#: exporters.py:75
+#, fuzzy
+#| msgid "supplier Reg. No."
+msgid "Supplier reg. ID"
+msgstr "Numer KRS dostawcy"
+
+#: exporters.py:76
+#, fuzzy
+#| msgid "Supplier details"
+msgid "Supplier tax ID"
+msgstr "Dane dostawcy"
+
+#: exporters.py:77
+#, fuzzy
+#| msgid "supplier VAT No."
+msgid "Supplier VAT ID"
+msgstr "Numer VAT dostawcy"
+
+#: exporters.py:78
+#, fuzzy
+#| msgid "supplier additional information"
+msgid "Supplier additional info"
+msgstr "dodatkowe informacje o dostawcy"
+
+#: exporters.py:79
+#, fuzzy
+#| msgid "issuer name"
+msgid "Issuer name"
+msgstr "imię wystawcy"
+
+#: exporters.py:80
+#, fuzzy
+#| msgid "issuer email"
+msgid "Issuer email"
+msgstr "email wystawcy"
+
+#: exporters.py:81
+#, fuzzy
+#| msgid "issuer phone"
+msgid "Issuer phone"
+msgstr "telefon wystawcy"
+
+#: exporters.py:83 templates/invoicing/formatters/html.html:59
+msgid "Customer"
+msgstr "Klient"
+
+#: exporters.py:84
+#, fuzzy
+#| msgid "customer name"
+msgid "Customer name"
+msgstr "nazwa klienta"
+
+#: exporters.py:85
+#, fuzzy
+#| msgid "Customer details"
+msgid "Customer street"
+msgstr "Dane klienta"
+
+#: exporters.py:86
+#, fuzzy
+#| msgid "Customer"
+msgid "Customer zip"
+msgstr "Klient"
+
+#: exporters.py:87
+#, fuzzy
+#| msgid "customer city"
+msgid "Customer city"
+msgstr "miasto klienta"
+
+#: exporters.py:88
+#, fuzzy
+#| msgid "customer country"
+msgid "Customer country"
+msgstr "kraj klienta"
+
+#: exporters.py:89
+#, fuzzy
+#| msgid "customer Reg. No."
+msgid "Customer reg. ID"
+msgstr "Numer KRS klienta"
+
+#: exporters.py:90
+#, fuzzy
+#| msgid "Customer details"
+msgid "Customer tax ID"
+msgstr "Dane klienta"
+
+#: exporters.py:91
+#, fuzzy
+#| msgid "customer VAT No."
+msgid "Customer VAT ID"
+msgstr "Numer VAT klienta"
+
+#: exporters.py:92
+#, fuzzy
+#| msgid "customer additional information"
+msgid "Customer additional info"
+msgstr "dodatkowe informacje o kliencie"
+
+#: exporters.py:93
+#, fuzzy
+#| msgid "customer email"
+msgid "Customer email"
+msgstr "email klienta"
+
+#: exporters.py:94
+#, fuzzy
+#| msgid "customer phone"
+msgid "Customer phone"
+msgstr "numer telefonu klienta"
+
+#: exporters.py:112
+#, fuzzy
+#| msgid "Invoice"
+msgid "Invoices"
+msgstr "Faktura"
+
+#: exporters.py:125
+#, fuzzy
+#| msgid "invoices"
+msgid "invoices.zip"
+msgstr "faktury"
 
 #: helpers.py:52
 msgid "Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled"
@@ -598,23 +924,19 @@ msgstr "sposób dostawy"
 msgid "total"
 msgstr "suma"
 
-#: models.py:208 templates/invoicing/formatters/html.html:221
-msgid "VAT"
-msgstr "VAT"
-
 #: models.py:212
 msgid "attachments"
 msgstr "załączniki"
 
-#: models.py:214 models.py:489
+#: models.py:214 models.py:538
 msgid "created"
 msgstr "utworzone"
 
-#: models.py:215 models.py:490
+#: models.py:215 models.py:539
 msgid "modified"
 msgstr "zmodyfikowane"
 
-#: models.py:220 models.py:477
+#: models.py:220 models.py:526
 msgid "invoice"
 msgstr "faktura"
 
@@ -622,59 +944,59 @@ msgstr "faktura"
 msgid "invoices"
 msgstr "faktury"
 
-#: models.py:473
+#: models.py:522
 msgid "pcs."
 msgstr "szt."
 
-#: models.py:474
+#: models.py:523
 msgid "hours"
 msgstr "godz."
 
-#: models.py:478
+#: models.py:527
 msgid "title"
 msgstr "nazwa"
 
-#: models.py:479
+#: models.py:528
 msgid "quantity"
 msgstr "ilość"
 
-#: models.py:480
+#: models.py:529
 msgid "unit"
 msgstr "jednostka"
 
-#: models.py:481
+#: models.py:530
 msgid "unit price"
 msgstr "cena jednostkowa"
 
-#: models.py:482
+#: models.py:531
 msgid "discount (%)"
 msgstr "rabat (%)"
 
-#: models.py:483
+#: models.py:532
 msgid "tax rate (%)"
 msgstr "wysokość podatku (%)"
 
-#: models.py:483
+#: models.py:532
 msgid "VAT rate"
 msgstr "stawka VAT"
 
-#: models.py:485
+#: models.py:534
 msgid "tag"
 msgstr "etykieta"
 
-#: models.py:487
+#: models.py:536
 msgid "weight"
 msgstr "waga"
 
-#: models.py:487
+#: models.py:536
 msgid "ordering"
 msgstr "kolejność"
 
-#: models.py:495
+#: models.py:544
 msgid "item"
 msgstr "przedmiot"
 
-#: models.py:496
+#: models.py:545
 msgid "items"
 msgstr "przedmioty"
 
@@ -702,10 +1024,6 @@ msgstr "Kod IBAN"
 msgid "SWIFT / BIC"
 msgstr "SWIFT / BIC"
 
-#: templates/invoicing/formatters/html.html:38
-msgid "Issuer"
-msgstr "Wystawca"
-
 #: templates/invoicing/formatters/html.html:40
 msgid "Name"
 msgstr "Imię"
@@ -722,21 +1040,9 @@ msgstr "Adres email"
 msgid "Additional data"
 msgstr "Dodatkowe informacje"
 
-#: templates/invoicing/formatters/html.html:59
-msgid "Customer"
-msgstr "Klient"
-
-#: templates/invoicing/formatters/html.html:85
-msgid "Issue date"
-msgstr "Data wystawienia"
-
 #: templates/invoicing/formatters/html.html:95
 msgid "Time of supply"
 msgstr "Dzień dostawy"
-
-#: templates/invoicing/formatters/html.html:109
-msgid "Due date"
-msgstr "Termin płatności"
 
 #: templates/invoicing/formatters/html.html:112
 msgid "day,days"
@@ -746,33 +1052,9 @@ msgstr "dzień, dni"
 msgid "Delivery method"
 msgstr "Metoda dostawy"
 
-#: templates/invoicing/formatters/html.html:121
-msgid "Payment method"
-msgstr "Metoda płatności"
-
-#: templates/invoicing/formatters/html.html:122
-msgid "Constant symbol"
-msgstr "Stały symbol"
-
-#: templates/invoicing/formatters/html.html:123
-msgid "Variable symbol"
-msgstr "Zmienny symbol"
-
-#: templates/invoicing/formatters/html.html:124
-msgid "Specific symbol"
-msgstr "Specyficzny symbol"
-
-#: templates/invoicing/formatters/html.html:125
-msgid "Reference"
-msgstr "Referencja"
-
 #: templates/invoicing/formatters/html.html:133
 msgid "Invoice items"
 msgstr "Przedmioty faktury"
-
-#: templates/invoicing/formatters/html.html:140
-msgid "ID"
-msgstr "ID"
 
 #: templates/invoicing/formatters/html.html:141
 msgid "Description"
@@ -817,10 +1099,6 @@ msgstr "z podatkami"
 #: templates/invoicing/formatters/html.html:186
 msgid "There are no invoice items."
 msgstr "Nie ma żadnych przedmiotów faktury."
-
-#: templates/invoicing/formatters/html.html:196
-msgid "Note"
-msgstr "Uwagi"
 
 #: templates/invoicing/formatters/html.html:204
 msgid "Summary"

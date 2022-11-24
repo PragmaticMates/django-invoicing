@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-08 13:33+0100\n"
+"POT-Creation-Date: 2022-11-24 21:09+0100\n"
 "PO-Revision-Date: 2022-11-11 13:18+0000\n"
 "Last-Translator: Peter Rusinak <peter.rusinak@transportly.eu>\n"
 "Language-Team: Czech <https://weblate.swida.sk/projects/django-invoicing/app/"
@@ -93,6 +93,332 @@ msgstr "%d faktur odeslaných do účetního softwaru"
 msgid "Send to accounting software"
 msgstr "Odeslat do účetního softwaru"
 
+#: admin.py:170
+msgid "Export to xlsx"
+msgstr ""
+
+#: admin.py:188
+msgid "Export to PDF"
+msgstr ""
+
+#: exporters.py:22
+#, fuzzy
+#| msgid "invoices"
+msgid "invoices.xlsx"
+msgstr "faktury"
+
+#: exporters.py:28
+msgid "Details"
+msgstr ""
+
+#: exporters.py:29 templates/invoicing/formatters/html.html:140
+msgid "ID"
+msgstr "P.č."
+
+#: exporters.py:30
+#, fuzzy
+#| msgid "created"
+msgid "Created"
+msgstr "vytvořené"
+
+#: exporters.py:31
+msgid "Type"
+msgstr ""
+
+#: exporters.py:32
+#, fuzzy
+#| msgid "sequence"
+msgid "Sequence"
+msgstr "sekvence"
+
+#: exporters.py:33
+#, fuzzy
+#| msgid "number"
+msgid "Number"
+msgstr "číslo"
+
+#: exporters.py:34
+#, fuzzy
+#| msgid "status"
+msgid "Status"
+msgstr "stav"
+
+#: exporters.py:35
+#, fuzzy
+#| msgid "subtitle"
+msgid "Subtitle"
+msgstr "podnadpis"
+
+#: exporters.py:36
+#, fuzzy
+#| msgid "language"
+msgid "Language"
+msgstr "jazyk"
+
+#: exporters.py:37 templates/invoicing/formatters/html.html:196
+msgid "Note"
+msgstr "Poznámka"
+
+#: exporters.py:39
+msgid "Dates"
+msgstr ""
+
+#: exporters.py:40 templates/invoicing/formatters/html.html:85
+msgid "Issue date"
+msgstr "Datum vystavení"
+
+#: exporters.py:41
+#, fuzzy
+#| msgid "tax point date"
+msgid "Tax point date"
+msgstr "datum vzniku daňové povinnosti"
+
+#: exporters.py:42 templates/invoicing/formatters/html.html:109
+msgid "Due date"
+msgstr "Datum splatnosti"
+
+#: exporters.py:43
+#, fuzzy
+#| msgid "due date"
+msgid "Sent (date)"
+msgstr "datum splatnosti"
+
+#: exporters.py:44
+msgid "Date of payment"
+msgstr ""
+
+#: exporters.py:45
+#, fuzzy
+#| msgid "payment term"
+msgid "Payment term (days)"
+msgstr "lhůta splatnosti"
+
+#: exporters.py:46
+msgid "Overdue (days)"
+msgstr ""
+
+#: exporters.py:51
+#, fuzzy
+#| msgid "Payment method"
+msgid "Payment"
+msgstr "Způsob platby"
+
+#: exporters.py:52
+#, fuzzy
+#| msgid "total"
+msgid "Total"
+msgstr "celkem"
+
+#: exporters.py:53 models.py:208 templates/invoicing/formatters/html.html:221
+msgid "VAT"
+msgstr "DPH"
+
+#: exporters.py:54
+#, fuzzy
+#| msgid "currency"
+msgid "Currency"
+msgstr "jména"
+
+#: exporters.py:55
+#, fuzzy
+#| msgid "credit"
+msgid "Credit"
+msgstr "kredit"
+
+#: exporters.py:56 templates/invoicing/formatters/html.html:121
+msgid "Payment method"
+msgstr "Způsob platby"
+
+#: exporters.py:57 templates/invoicing/formatters/html.html:122
+msgid "Constant symbol"
+msgstr "Konstantní symbol"
+
+#: exporters.py:58 templates/invoicing/formatters/html.html:123
+msgid "Variable symbol"
+msgstr "Variabilní symbol"
+
+#: exporters.py:59 templates/invoicing/formatters/html.html:124
+msgid "Specific symbol"
+msgstr "Specifický symbol"
+
+#: exporters.py:60 templates/invoicing/formatters/html.html:125
+msgid "Reference"
+msgstr "Odkaz"
+
+#: exporters.py:61
+#, fuzzy
+#| msgid "bank name"
+msgid "Bank name"
+msgstr "Název banky"
+
+#: exporters.py:66
+msgid "IBAN"
+msgstr ""
+
+#: exporters.py:67
+#, fuzzy
+#| msgid "SWIFT / BIC"
+msgid "SWIFT/BIC"
+msgstr "SWIFT / BIC"
+
+#: exporters.py:69 templates/invoicing/formatters/html.html:38
+msgid "Issuer"
+msgstr "Vystavil"
+
+#: exporters.py:70
+#, fuzzy
+#| msgid "supplier name"
+msgid "Supplier name"
+msgstr "jméno dodavatele"
+
+#: exporters.py:71
+#, fuzzy
+#| msgid "Supplier details"
+msgid "Supplier street"
+msgstr "Dodavatel"
+
+#: exporters.py:72
+#, fuzzy
+#| msgid "Supplier"
+msgid "Supplier zip"
+msgstr "Dodavatel"
+
+#: exporters.py:73
+#, fuzzy
+#| msgid "supplier city"
+msgid "Supplier city"
+msgstr "město dodavatele"
+
+#: exporters.py:74
+#, fuzzy
+#| msgid "supplier country"
+msgid "Supplier country"
+msgstr "země dodavatele"
+
+#: exporters.py:75
+#, fuzzy
+#| msgid "supplier Reg. No."
+msgid "Supplier reg. ID"
+msgstr "IČO dodavatele"
+
+#: exporters.py:76
+#, fuzzy
+#| msgid "Supplier details"
+msgid "Supplier tax ID"
+msgstr "Dodavatel"
+
+#: exporters.py:77
+#, fuzzy
+#| msgid "supplier VAT No."
+msgid "Supplier VAT ID"
+msgstr "IČ DPH dodavatele"
+
+#: exporters.py:78
+#, fuzzy
+#| msgid "supplier additional information"
+msgid "Supplier additional info"
+msgstr "dodatečné informace dodavatele"
+
+#: exporters.py:79
+#, fuzzy
+#| msgid "issuer name"
+msgid "Issuer name"
+msgstr "jméno kontaktní osoby"
+
+#: exporters.py:80
+#, fuzzy
+#| msgid "issuer email"
+msgid "Issuer email"
+msgstr "e-mail kontaktní osoby"
+
+#: exporters.py:81
+#, fuzzy
+#| msgid "issuer phone"
+msgid "Issuer phone"
+msgstr "telefon kontaktní osoby"
+
+#: exporters.py:83 templates/invoicing/formatters/html.html:59
+msgid "Customer"
+msgstr "Odběratel"
+
+#: exporters.py:84
+#, fuzzy
+#| msgid "customer name"
+msgid "Customer name"
+msgstr "jméno odběratele"
+
+#: exporters.py:85
+#, fuzzy
+#| msgid "Customer details"
+msgid "Customer street"
+msgstr "Odběratel"
+
+#: exporters.py:86
+#, fuzzy
+#| msgid "Customer"
+msgid "Customer zip"
+msgstr "Odběratel"
+
+#: exporters.py:87
+#, fuzzy
+#| msgid "customer city"
+msgid "Customer city"
+msgstr "město odběratele"
+
+#: exporters.py:88
+#, fuzzy
+#| msgid "customer country"
+msgid "Customer country"
+msgstr "země odběratele"
+
+#: exporters.py:89
+#, fuzzy
+#| msgid "customer Reg. No."
+msgid "Customer reg. ID"
+msgstr "IČO odběratele"
+
+#: exporters.py:90
+#, fuzzy
+#| msgid "Customer details"
+msgid "Customer tax ID"
+msgstr "Odběratel"
+
+#: exporters.py:91
+#, fuzzy
+#| msgid "customer VAT No."
+msgid "Customer VAT ID"
+msgstr "IČ DPH odběratele"
+
+#: exporters.py:92
+#, fuzzy
+#| msgid "customer additional information"
+msgid "Customer additional info"
+msgstr "dodatečné informace odběratele"
+
+#: exporters.py:93
+#, fuzzy
+#| msgid "customer email"
+msgid "Customer email"
+msgstr "e-mail odběratele"
+
+#: exporters.py:94
+#, fuzzy
+#| msgid "customer phone"
+msgid "Customer phone"
+msgstr "telefon odběratele"
+
+#: exporters.py:112
+#, fuzzy
+#| msgid "Invoice"
+msgid "Invoices"
+msgstr "Faktura"
+
+#: exporters.py:125
+#, fuzzy
+#| msgid "invoices"
+msgid "invoices.zip"
+msgstr "faktury"
+
 #: helpers.py:52
 msgid "Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled"
 msgstr "Typ faktury je požadován, když je povoleno INVOICING_COUNTER_PER_TYPE"
@@ -122,8 +448,8 @@ msgid ""
 "%d invoices sent to accounting software [<a href=\"%s\" target=\"_blank"
 "\">Fetch</a>]"
 msgstr ""
-"%d faktur odeslaných do účetního softwaru [ <a href=\"%s\" target=\"_blank\""
-">Fetch</a> ]"
+"%d faktur odeslaných do účetního softwaru [ <a href=\"%s\" target=\"_blank"
+"\">Fetch</a> ]"
 
 #: managers.py:140
 msgid "Missing accounting software API data"
@@ -589,23 +915,19 @@ msgstr "způsob doručení"
 msgid "total"
 msgstr "celkem"
 
-#: models.py:208 templates/invoicing/formatters/html.html:221
-msgid "VAT"
-msgstr "DPH"
-
 #: models.py:212
 msgid "attachments"
 msgstr "přílohy"
 
-#: models.py:214 models.py:489
+#: models.py:214 models.py:538
 msgid "created"
 msgstr "vytvořené"
 
-#: models.py:215 models.py:490
+#: models.py:215 models.py:539
 msgid "modified"
 msgstr "upravené"
 
-#: models.py:220 models.py:477
+#: models.py:220 models.py:526
 msgid "invoice"
 msgstr "faktura"
 
@@ -613,59 +935,59 @@ msgstr "faktura"
 msgid "invoices"
 msgstr "faktury"
 
-#: models.py:473
+#: models.py:522
 msgid "pcs."
 msgstr "ks"
 
-#: models.py:474
+#: models.py:523
 msgid "hours"
 msgstr "hod."
 
-#: models.py:478
+#: models.py:527
 msgid "title"
 msgstr "název"
 
-#: models.py:479
+#: models.py:528
 msgid "quantity"
 msgstr "počet"
 
-#: models.py:480
+#: models.py:529
 msgid "unit"
 msgstr "jednotka"
 
-#: models.py:481
+#: models.py:530
 msgid "unit price"
 msgstr "jednotková cena"
 
-#: models.py:482
+#: models.py:531
 msgid "discount (%)"
 msgstr "sleva (%)"
 
-#: models.py:483
+#: models.py:532
 msgid "tax rate (%)"
 msgstr "sazba DPH (%)"
 
-#: models.py:483
+#: models.py:532
 msgid "VAT rate"
 msgstr "sazba DPH"
 
-#: models.py:485
+#: models.py:534
 msgid "tag"
 msgstr "značka"
 
-#: models.py:487
+#: models.py:536
 msgid "weight"
 msgstr "váha"
 
-#: models.py:487
+#: models.py:536
 msgid "ordering"
 msgstr "pořadí"
 
-#: models.py:495
+#: models.py:544
 msgid "item"
 msgstr "položka"
 
-#: models.py:496
+#: models.py:545
 msgid "items"
 msgstr "položky"
 
@@ -693,10 +1015,6 @@ msgstr "IBAN"
 msgid "SWIFT / BIC"
 msgstr "SWIFT / BIC"
 
-#: templates/invoicing/formatters/html.html:38
-msgid "Issuer"
-msgstr "Vystavil"
-
 #: templates/invoicing/formatters/html.html:40
 msgid "Name"
 msgstr "Jméno"
@@ -713,21 +1031,9 @@ msgstr "E-mail"
 msgid "Additional data"
 msgstr "Dodatečné informace"
 
-#: templates/invoicing/formatters/html.html:59
-msgid "Customer"
-msgstr "Odběratel"
-
-#: templates/invoicing/formatters/html.html:85
-msgid "Issue date"
-msgstr "Datum vystavení"
-
 #: templates/invoicing/formatters/html.html:95
 msgid "Time of supply"
 msgstr "Datum dodání"
-
-#: templates/invoicing/formatters/html.html:109
-msgid "Due date"
-msgstr "Datum splatnosti"
 
 #: templates/invoicing/formatters/html.html:112
 msgid "day,days"
@@ -737,33 +1043,9 @@ msgstr "den, dní"
 msgid "Delivery method"
 msgstr "Způsob doručení"
 
-#: templates/invoicing/formatters/html.html:121
-msgid "Payment method"
-msgstr "Způsob platby"
-
-#: templates/invoicing/formatters/html.html:122
-msgid "Constant symbol"
-msgstr "Konstantní symbol"
-
-#: templates/invoicing/formatters/html.html:123
-msgid "Variable symbol"
-msgstr "Variabilní symbol"
-
-#: templates/invoicing/formatters/html.html:124
-msgid "Specific symbol"
-msgstr "Specifický symbol"
-
-#: templates/invoicing/formatters/html.html:125
-msgid "Reference"
-msgstr "Odkaz"
-
 #: templates/invoicing/formatters/html.html:133
 msgid "Invoice items"
 msgstr "Položky faktury"
-
-#: templates/invoicing/formatters/html.html:140
-msgid "ID"
-msgstr "P.č."
 
 #: templates/invoicing/formatters/html.html:141
 msgid "Description"
@@ -808,10 +1090,6 @@ msgstr "s DPH"
 #: templates/invoicing/formatters/html.html:186
 msgid "There are no invoice items."
 msgstr "Faktura nemá žádné položky."
-
-#: templates/invoicing/formatters/html.html:196
-msgid "Note"
-msgstr "Poznámka"
 
 #: templates/invoicing/formatters/html.html:204
 msgid "Summary"

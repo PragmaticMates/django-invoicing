@@ -30,7 +30,7 @@
                     <i>{% trans 'Bank' %}:</i><br>
                     <strong>{% trans 'Title' %}:</strong> {{ invoice.bank_name|default:'' }}<br>
                     {% if invoice.bank_street or invoice.bank_zip or invoice.bank_city or invoice.bank_country %}
-                        <strong>{% trans 'Agency address' %}:</strong> {{ invoice.bank_street|default:'' }}, {{ invoice.bank_zip|default:'' }} {{ invoice.bank_city|default:'' }}, {{ invoice.get_bank_country_display|default:'' }}<br>
+                        <strong>{% trans 'Agency address' %}:</strong> {% if invoice.bank_street %}{{ invoice.bank_street|default:'' }}, {% endif %}{% if invoice.bank_zip or invoice.bank_city %}{{ invoice.bank_zip|default:'' }} {{ invoice.bank_city|default:'' }}, {% endif %}{% if invoice.bank_country %}{{ invoice.get_bank_country_display|default:'' }}{% endif %}<br>
                     {% endif %}
                     <strong>{% trans 'Bank IBAN code' %}:</strong> {{ invoice.bank_iban|nice_iban }}<br>
                     <strong>{% trans 'SWIFT / BIC' %}:</strong> {{ invoice.bank_swift_bic }}<br>

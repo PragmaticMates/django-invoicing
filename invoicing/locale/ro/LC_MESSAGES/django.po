@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-11-24 21:09+0100\n"
-"PO-Revision-Date: 2022-12-06 16:18+0000\n"
-"Last-Translator: Samuel Sas <samuel.sas@swida.sk>\n"
+"PO-Revision-Date: 2022-12-10 15:18+0000\n"
+"Last-Translator: Krisztina Mathe <krisztina.mathe@transportly.eu>\n"
 "Language-Team: Romanian <https://weblate.swida.sk/projects/django-invoicing/"
 "app/ro/>\n"
 "Language: ro\n"
@@ -58,7 +58,7 @@ msgstr "Detalii de expediere"
 
 #: admin.py:101
 msgid "subtotal"
-msgstr "subtotal"
+msgstr "total"
 
 #: admin.py:105
 msgid "supplier"
@@ -78,7 +78,7 @@ msgstr "este întârziată"
 
 #: admin.py:123
 msgid "is paid"
-msgstr "se plătește"
+msgstr "este plătit"
 
 #: admin.py:129
 msgid "Missing specification of accounting software"
@@ -135,7 +135,7 @@ msgstr "Stare"
 
 #: exporters.py:35
 msgid "Subtitle"
-msgstr "Subtitlu"
+msgstr "Subtitrare"
 
 #: exporters.py:36
 msgid "Language"
@@ -159,7 +159,7 @@ msgstr "Data punctului fiscal"
 
 #: exporters.py:42 templates/invoicing/formatters/html.html:109
 msgid "Due date"
-msgstr "Data limită"
+msgstr "Data scadentă"
 
 #: exporters.py:43
 msgid "Sent (date)"
@@ -191,7 +191,7 @@ msgstr "TVA"
 
 #: exporters.py:54
 msgid "Currency"
-msgstr "Monedă"
+msgstr "Valută"
 
 #: exporters.py:55
 msgid "Credit"
@@ -267,7 +267,7 @@ msgstr "Numărul de identificare TVA al furnizorului"
 
 #: exporters.py:78
 msgid "Supplier additional info"
-msgstr "Furnizor informații suplimentare"
+msgstr "Informații suplimentare ale furnizorului"
 
 #: exporters.py:79
 msgid "Issuer name"
@@ -295,7 +295,7 @@ msgstr "Strada clienților"
 
 #: exporters.py:86
 msgid "Customer zip"
-msgstr "Fermoarul clientului"
+msgstr "Zip-ul clientului"
 
 #: exporters.py:87
 msgid "Customer city"
@@ -315,7 +315,7 @@ msgstr "ID-ul fiscal al clientului"
 
 #: exporters.py:91
 msgid "Customer VAT ID"
-msgstr "ID-ul de TVA al clientului"
+msgstr "Codul de TVA al clientului"
 
 #: exporters.py:92
 msgid "Customer additional info"
@@ -355,7 +355,7 @@ msgstr "Software-ul de contabilitate %s nu este implementat"
 
 #: managers.py:38
 msgid "Missing accounting software API key"
-msgstr "Cheia API a software-ului de contabilitate lipsă"
+msgstr "Lipsește cheia API a software-ului de contabilitate"
 
 #: managers.py:116
 #, python-format
@@ -373,7 +373,7 @@ msgstr ""
 
 #: managers.py:140
 msgid "Missing accounting software API data"
-msgstr "Datele API ale software-ului de contabilitate care lipsesc"
+msgstr "Lipsesc datele API ale software-ului de contabilitate"
 
 #: managers.py:157 templates/invoicing/formatters/html.html:24
 #: templates/invoicing/formatters/html.html:70
@@ -383,7 +383,7 @@ msgstr "Reg. Nr."
 #: managers.py:162 templates/invoicing/formatters/html.html:25
 #: templates/invoicing/formatters/html.html:71
 msgid "Tax No."
-msgstr "Nr."
+msgstr "Nr. de impozit"
 
 #: managers.py:167 templates/invoicing/formatters/html.html:26
 #: templates/invoicing/formatters/html.html:72
@@ -428,7 +428,7 @@ msgstr "trimis"
 
 #: models.py:70
 msgid "returned"
-msgstr "a returnat"
+msgstr "returnat"
 
 #: models.py:71
 msgid "canceled"
@@ -468,7 +468,7 @@ msgstr "preluare personală"
 
 #: models.py:86
 msgid "mailing"
-msgstr "corespondență"
+msgstr "prin poștă"
 
 #: models.py:87
 msgid "digital"
@@ -572,8 +572,8 @@ msgstr ""
 #: models.py:112
 msgid "3118 - Insurance and empl. contrib. to insur. co. and the Labor Office"
 msgstr ""
-"3118 - Asigurări și contribuții la asigurările și la angajare pentru "
-"companiile de asigurări și Oficiul Muncii"
+"3118 - Asigurări și contribuții de personal la societățile de asigurări și "
+"la Oficiul Muncii"
 
 #: models.py:113
 msgid "3344 - Penalty from message - prior"
@@ -618,11 +618,11 @@ msgstr "subtitrare"
 
 #: models.py:126
 msgid "related document"
-msgstr "document conex"
+msgstr "document asociat"
 
 #: models.py:127
 msgid "related invoices"
-msgstr "facturile aferente"
+msgstr "facturi aferente"
 
 #: models.py:128
 msgid "language"
@@ -642,7 +642,7 @@ msgstr "data emiterii"
 
 #: models.py:131
 msgid "tax point date"
-msgstr "data punctului fiscal"
+msgstr "data punctului de impozitare"
 
 #: models.py:131
 msgid "time of supply"
@@ -666,11 +666,11 @@ msgstr "data plății"
 
 #: models.py:137
 msgid "date reminder sent"
-msgstr "data trimiterii unui memento"
+msgstr "data trimiterii atenționării"
 
 #: models.py:141
 msgid "currency"
-msgstr "monedă"
+msgstr "valută"
 
 #: models.py:142 templates/invoicing/formatters/html.html:245
 msgid "credit"
@@ -742,7 +742,7 @@ msgstr "oraș furnizor"
 
 #: models.py:168
 msgid "supplier country"
-msgstr "țara furnizoare"
+msgstr "țara furnizorului"
 
 #: models.py:169
 msgid "supplier Reg. No."
@@ -750,11 +750,11 @@ msgstr "furnizor Reg. Nr."
 
 #: models.py:170
 msgid "supplier Tax No."
-msgstr "furnizor Nr."
+msgstr "Nr. de identificare fiscală al furnizorului"
 
 #: models.py:171
 msgid "supplier VAT No."
-msgstr "furnizorului Număr de TVA."
+msgstr "nr. de TVA furnizorului"
 
 #: models.py:172
 msgid "supplier additional information"
@@ -766,7 +766,7 @@ msgstr "numele emitentului"
 
 #: models.py:177
 msgid "issuer email"
-msgstr "e-mail al emitentului"
+msgstr "e-mail-ul emitentului"
 
 #: models.py:178
 msgid "issuer phone"
@@ -782,7 +782,7 @@ msgstr "strada și numărul clientului"
 
 #: models.py:183
 msgid "customer ZIP"
-msgstr "client ZIP"
+msgstr "ZIP-ul clientului"
 
 #: models.py:184
 msgid "customer city"
@@ -794,31 +794,31 @@ msgstr "țara clientului"
 
 #: models.py:186
 msgid "customer Reg. No."
-msgstr "client Reg. Nr."
+msgstr "Nr. Reg. clientului"
 
 #: models.py:187
 msgid "customer Tax No."
-msgstr "client Nr."
+msgstr "numărul de identificare fiscală al clientului"
 
 #: models.py:188
 msgid "customer VAT No."
-msgstr "client Nr. de TVA."
+msgstr "numărul de TVA al clientului"
 
 #: models.py:189
 msgid "customer additional information"
-msgstr "informații suplimentare pentru clienți"
+msgstr "informații suplimentare despre client"
 
 #: models.py:191
 msgid "customer email"
-msgstr "e-mail client"
+msgstr "e-mail-ul clientului"
 
 #: models.py:192
 msgid "customer phone"
-msgstr "telefon pentru clienți"
+msgstr "telefonul clientului"
 
 #: models.py:195
 msgid "shipping name"
-msgstr "numele de expediere"
+msgstr "nume de expediere"
 
 #: models.py:196
 msgid "shipping street and number"
@@ -826,7 +826,7 @@ msgstr "strada și numărul de expediere"
 
 #: models.py:197
 msgid "shipping ZIP"
-msgstr "expediere ZIP"
+msgstr "ZIP de expediere"
 
 #: models.py:198
 msgid "shipping city"
@@ -850,7 +850,7 @@ msgstr "anexe"
 
 #: models.py:214 models.py:538
 msgid "created"
-msgstr "a creat"
+msgstr "creat"
 
 #: models.py:215 models.py:539
 msgid "modified"
@@ -1010,7 +1010,7 @@ msgstr "Valoarea TVA"
 
 #: templates/invoicing/formatters/html.html:153
 msgid "Line total"
-msgstr "Total linie"
+msgstr "Linia totală"
 
 #: templates/invoicing/formatters/html.html:154
 msgid "with taxes"
@@ -1026,7 +1026,7 @@ msgstr "Rezumat"
 
 #: templates/invoicing/formatters/html.html:210
 msgid "Base"
-msgstr "Baza"
+msgstr "Bază"
 
 #: templates/invoicing/formatters/html.html:227
 msgid "Not a VAT payer"
@@ -1046,4 +1046,4 @@ msgstr "reducere totală"
 
 #: templates/invoicing/formatters/html.html:269
 msgid "TOTAL DUE"
-msgstr "TOTAL DATORIE"
+msgstr "DATORIE TOTALĂ"

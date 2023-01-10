@@ -120,7 +120,7 @@ class Invoice(models.Model):
     # General information
     type = models.CharField(_(u'type'), max_length=64, choices=TYPE, default=TYPE.INVOICE)
     sequence = models.IntegerField(_(u'sequence'), db_index=True, blank=True)
-    number = models.CharField(_(u'number'), max_length=128, blank=True)
+    number = models.CharField(_(u'number'), db_index=True, max_length=128, blank=True)
     status = models.CharField(_(u'status'), choices=STATUS, max_length=64, default=STATUS.NEW)
     subtitle = models.CharField(_(u'subtitle'), max_length=255, blank=True)
     related_document = models.CharField(_(u'related document'), max_length=100, blank=True)

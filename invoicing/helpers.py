@@ -4,7 +4,12 @@ from django.core.validators import EMPTY_VALUES
 from django.db import transaction
 from django.db.models import Max
 from django.template import Template, Context
-from django.utils.translation import ugettext_lazy as _
+try:
+    # older Django
+    from django.utils.translation import ugettext_lazy as _
+except ImportError:
+    # Django >= 3
+    from django.utils.translation import gettext_lazy as _
 
 from invoicing.models import Invoice
 

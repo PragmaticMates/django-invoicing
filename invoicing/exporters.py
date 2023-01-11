@@ -135,9 +135,9 @@ class InvoicePdfDetailExporter(ExporterMixin):
         requests = []
         export_files = []
 
-        # print(self.get_queryset().count())
+        invoices = self.get_queryset()
 
-        for invoice in self.get_queryset():
+        for invoice in invoices:
             formatter = formatter_class(invoice)
             invoice_content = formatter.get_response().content
 
@@ -164,4 +164,11 @@ class InvoicePdfDetailExporter(ExporterMixin):
                 result = f.get('future').result()
                 export_files.append({'name': file_name + '.pdf', 'content': result.content})
 
-        output.write(compress(export_files).read())
+        if len(export_files) == 1:
+            # directly export 1 PDF file
+            file_data = export_files[0]
+            self.filename = file_data['name']
+            output.write(file_data['content'])
+        else:
+            # compress all invoices into single archive file
+            output.write(compress(export_files).read())

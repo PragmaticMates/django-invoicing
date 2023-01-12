@@ -1,3 +1,4 @@
+import binascii
 from collections import OrderedDict
 
 from invoicing.models import Invoice
@@ -128,18 +129,11 @@ class InvoiceXlsxListExporter(ExcelExporterMixin):
         return self.queryset
 
 
-# TODO: inherit from filterexporter mixin?
 class InvoicePdfDetailExporter(ExporterMixin):
-# class InvoicePdfDetailExporter(FilterExporterMixin, ExporterMixin):
-    # filter_class = InvoiceFilter
     queryset = Invoice.objects.all()
     export_format = Export.FORMAT_PDF
     export_context = Export.CONTEXT_DETAIL
     filename = _('invoices.zip')
-
-    # def get_whole_queryset(self, params):
-    #     return super().get_whole_queryset(params) \
-    #         .order_by('-pk').distinct()
 
     def get_queryset(self):
         return self.queryset
@@ -154,17 +148,40 @@ class InvoicePdfDetailExporter(ExporterMixin):
         requests = []
         export_files = []
 
-        for invoice in self.get_queryset():
+        invoices = self.get_queryset()
+
+        for invoice in invoices:
             formatter = formatter_class(invoice)
-            html_content = formatter.get_response().content
-            requests.append({'invoice': str(invoice), 'html_content': html_content})
+            invoice_content = formatter.get_response().content
 
-        session = sessions.FuturesSession(max_workers=3)
-        futures = [{'invoice': request.get('invoice'), 'future': session.post(print_api_url, data=request.get('html_content'))} for request in requests]
+            hex_4_bytes = binascii.hexlify(invoice_content)[0:8]
 
-        for f in futures:
-            file_name = f.get('invoice')
-            result = f.get('future').result()
-            export_files.append({'name': file_name + '.pdf', 'content': result.content})
+            # Look at the first 4 bytes of the file.
+            # PDF has "%PDF" (hex 25 50 44 46) and ZIP has hex 50 4B 03 04.
+            is_pdf = hex_4_bytes == b'25504446'
 
-        output.write(compress(export_files).read())
+            if is_pdf:
+                export_files.append({'name': str(invoice) + '.pdf', 'content': invoice_content})
+            else:
+                if print_api_url is None:
+                    raise NotImplementedError('Invoice content is not PDF and HTML_TO_PDF_API is not set.')
+                else:
+                    requests.append({'invoice': str(invoice), 'html_content': invoice_content})
+
+        if len(requests) > 0:
+            session = sessions.FuturesSession(max_workers=3)
+            futures = [{'invoice': request.get('invoice'), 'future': session.post(print_api_url, data=request.get('html_content'))} for request in requests]
+
+            for f in futures:
+                file_name = f.get('invoice')
+                result = f.get('future').result()
+                export_files.append({'name': file_name + '.pdf', 'content': result.content})
+
+        if len(export_files) == 1:
+            # directly export 1 PDF file
+            file_data = export_files[0]
+            self.filename = file_data['name']
+            output.write(file_data['content'])
+        else:
+            # compress all invoices into single archive file
+            output.write(compress(export_files).read())

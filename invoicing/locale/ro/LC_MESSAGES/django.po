@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-12 21:10+0100\n"
+"POT-Creation-Date: 2023-01-13 13:49+0100\n"
 "PO-Revision-Date: 2022-12-10 15:18+0000\n"
 "Last-Translator: Krisztina Mathe <krisztina.mathe@transportly.eu>\n"
 "Language-Team: Romanian <https://weblate.swida.sk/projects/django-invoicing/"
@@ -101,239 +101,239 @@ msgstr "Exportați în xlsx"
 msgid "Export to PDF"
 msgstr "Exportați în PDF"
 
-#: exporters.py:22
+#: exporters.py:23
 msgid "invoices.xlsx"
 msgstr "facturi.xlsx"
 
-#: exporters.py:28
+#: exporters.py:29
 msgid "Details"
 msgstr "Detalii"
 
-#: exporters.py:29 templates/invoicing/formatters/html.html:140
+#: exporters.py:30 templates/invoicing/formatters/html.html:140
 msgid "ID"
 msgstr "ID"
 
-#: exporters.py:30
+#: exporters.py:31
 msgid "Created"
 msgstr "Creat"
 
-#: exporters.py:31
+#: exporters.py:32
 msgid "Type"
 msgstr "Tip"
 
-#: exporters.py:32
+#: exporters.py:33
 msgid "Sequence"
 msgstr "Secvență"
 
-#: exporters.py:33
+#: exporters.py:34
 msgid "Number"
 msgstr "Număr"
 
-#: exporters.py:34
+#: exporters.py:35
 msgid "Status"
 msgstr "Stare"
 
-#: exporters.py:35
+#: exporters.py:36
 msgid "Subtitle"
 msgstr "Subtitrare"
 
-#: exporters.py:36
+#: exporters.py:37
 msgid "Language"
 msgstr "Limba"
 
-#: exporters.py:37 templates/invoicing/formatters/html.html:196
+#: exporters.py:38 templates/invoicing/formatters/html.html:196
 msgid "Note"
 msgstr "Notă"
 
-#: exporters.py:39
+#: exporters.py:40
 msgid "Dates"
 msgstr "Date"
 
-#: exporters.py:40 templates/invoicing/formatters/html.html:85
+#: exporters.py:41 templates/invoicing/formatters/html.html:85
 msgid "Issue date"
 msgstr "Data emiterii"
 
-#: exporters.py:41
+#: exporters.py:42
 msgid "Tax point date"
 msgstr "Data punctului fiscal"
 
-#: exporters.py:42 templates/invoicing/formatters/html.html:109
+#: exporters.py:43 templates/invoicing/formatters/html.html:109
 msgid "Due date"
 msgstr "Data scadentă"
 
-#: exporters.py:43
+#: exporters.py:44
 msgid "Sent (date)"
 msgstr "Trimis (data)"
 
-#: exporters.py:44
+#: exporters.py:45
 msgid "Date of payment"
 msgstr "Data plății"
 
-#: exporters.py:45
+#: exporters.py:46
 msgid "Payment term (days)"
 msgstr "Termenul de plată (zile)"
 
-#: exporters.py:46
+#: exporters.py:47
 msgid "Overdue (days)"
 msgstr "Restanțe (zile)"
 
-#: exporters.py:51
+#: exporters.py:52
 msgid "Payment"
 msgstr "Plata"
 
-#: exporters.py:52
+#: exporters.py:53
 msgid "Total"
 msgstr "Total"
 
-#: exporters.py:53 models.py:208 templates/invoicing/formatters/html.html:221
+#: exporters.py:54 models.py:208 templates/invoicing/formatters/html.html:221
 msgid "VAT"
 msgstr "TVA"
 
-#: exporters.py:54
+#: exporters.py:55
 msgid "Currency"
 msgstr "Valută"
 
-#: exporters.py:55
+#: exporters.py:56
 msgid "Credit"
 msgstr "Credit"
 
-#: exporters.py:56 templates/invoicing/formatters/html.html:121
+#: exporters.py:57 templates/invoicing/formatters/html.html:121
 msgid "Payment method"
 msgstr "Metoda de plată"
 
-#: exporters.py:57 templates/invoicing/formatters/html.html:122
+#: exporters.py:58 templates/invoicing/formatters/html.html:122
 msgid "Constant symbol"
 msgstr "Simbol constant"
 
-#: exporters.py:58 templates/invoicing/formatters/html.html:123
+#: exporters.py:59 templates/invoicing/formatters/html.html:123
 msgid "Variable symbol"
 msgstr "Simbol variabil"
 
-#: exporters.py:59 templates/invoicing/formatters/html.html:124
+#: exporters.py:60 templates/invoicing/formatters/html.html:124
 msgid "Specific symbol"
 msgstr "Simbol specific"
 
-#: exporters.py:60 templates/invoicing/formatters/html.html:125
+#: exporters.py:61 templates/invoicing/formatters/html.html:125
 msgid "Reference"
 msgstr "Referință"
 
-#: exporters.py:61
+#: exporters.py:62
 msgid "Bank name"
 msgstr "Numele băncii"
 
-#: exporters.py:66
+#: exporters.py:67
 msgid "IBAN"
 msgstr "IBAN"
 
-#: exporters.py:67
+#: exporters.py:68
 msgid "SWIFT/BIC"
 msgstr "SWIFT/BIC"
 
-#: exporters.py:69 templates/invoicing/formatters/html.html:38
+#: exporters.py:70 templates/invoicing/formatters/html.html:38
 msgid "Issuer"
 msgstr "Emitent"
 
-#: exporters.py:70
+#: exporters.py:71
 msgid "Supplier name"
 msgstr "Numele furnizorului"
 
-#: exporters.py:71
+#: exporters.py:72
 msgid "Supplier street"
 msgstr "Strada furnizorului"
 
-#: exporters.py:72
+#: exporters.py:73
 msgid "Supplier zip"
 msgstr "Furnizor zip"
 
-#: exporters.py:73
+#: exporters.py:74
 msgid "Supplier city"
 msgstr "Orașul furnizorului"
 
-#: exporters.py:74
+#: exporters.py:75
 msgid "Supplier country"
 msgstr "Țara furnizorului"
 
-#: exporters.py:75
+#: exporters.py:76
 msgid "Supplier reg. ID"
 msgstr "ID-ul de înregistrare al furnizorului"
 
-#: exporters.py:76
+#: exporters.py:77
 msgid "Supplier tax ID"
 msgstr "ID-ul fiscal al furnizorului"
 
-#: exporters.py:77
+#: exporters.py:78
 msgid "Supplier VAT ID"
 msgstr "Numărul de identificare TVA al furnizorului"
 
-#: exporters.py:78
+#: exporters.py:79
 msgid "Supplier additional info"
 msgstr "Informații suplimentare ale furnizorului"
 
-#: exporters.py:79
+#: exporters.py:80
 msgid "Issuer name"
 msgstr "Numele emitentului"
 
-#: exporters.py:80
+#: exporters.py:81
 msgid "Issuer email"
 msgstr "E-mailul emitentului"
 
-#: exporters.py:81
+#: exporters.py:82
 msgid "Issuer phone"
 msgstr "Telefonul emitentului"
 
-#: exporters.py:83 templates/invoicing/formatters/html.html:59
+#: exporters.py:84 templates/invoicing/formatters/html.html:59
 msgid "Customer"
 msgstr "Client"
 
-#: exporters.py:84
+#: exporters.py:85
 msgid "Customer name"
 msgstr "Numele clientului"
 
-#: exporters.py:85
+#: exporters.py:86
 msgid "Customer street"
 msgstr "Strada clienților"
 
-#: exporters.py:86
+#: exporters.py:87
 msgid "Customer zip"
 msgstr "Zip-ul clientului"
 
-#: exporters.py:87
+#: exporters.py:88
 msgid "Customer city"
 msgstr "Orașul clientului"
 
-#: exporters.py:88
+#: exporters.py:89
 msgid "Customer country"
 msgstr "Țara clientului"
 
-#: exporters.py:89
+#: exporters.py:90
 msgid "Customer reg. ID"
 msgstr "ID înregistrare client"
 
-#: exporters.py:90
+#: exporters.py:91
 msgid "Customer tax ID"
 msgstr "ID-ul fiscal al clientului"
 
-#: exporters.py:91
+#: exporters.py:92
 msgid "Customer VAT ID"
 msgstr "Codul de TVA al clientului"
 
-#: exporters.py:92
+#: exporters.py:93
 msgid "Customer additional info"
 msgstr "Informații suplimentare pentru clienți"
 
-#: exporters.py:93
+#: exporters.py:94
 msgid "Customer email"
 msgstr "E-mailul clientului"
 
-#: exporters.py:94
+#: exporters.py:95
 msgid "Customer phone"
 msgstr "Telefonul clientului"
 
-#: exporters.py:112
+#: exporters.py:113
 msgid "Invoices"
 msgstr "Facturi"
 
-#: exporters.py:125
+#: exporters.py:123
 msgid "invoices.zip"
 msgstr "facturi.zip"
 

@@ -3,10 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
+from django.utils.module_loading import import_string
 from django.views.generic import DetailView
 
 from invoicing.models import Invoice
-from invoicing.utils import import_name
 
 
 class InvoiceDetailView(DetailView):
@@ -19,7 +19,8 @@ class InvoiceDetailView(DetailView):
 
         invoice = get_object_or_404(self.model, pk=kwargs.get('pk', None))
 
+        # TODO: refactor
         invoicing_formatter = getattr(settings, 'INVOICING_FORMATTER', 'invoicing.formatters.html.BootstrapHTMLFormatter')
-        formatter_class = import_name(invoicing_formatter)
+        formatter_class = import_string(invoicing_formatter)
         formatter = formatter_class(invoice)
         return formatter.get_response()

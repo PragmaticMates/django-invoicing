@@ -36,7 +36,6 @@ except ImportError:
 from invoicing.querysets import InvoiceQuerySet, ItemQuerySet
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
-from invoicing.utils import import_name
 
 
 def default_supplier(attribute_lookup):
@@ -299,7 +298,7 @@ class Invoice(models.Model):
         taxation_policy = getattr(settings, 'INVOICING_TAXATION_POLICY', None)
 
         if taxation_policy is not None:
-            return import_name(taxation_policy)
+            return import_string(taxation_policy)
 
         # Check if supplier is from EU
         if self.supplier_country:

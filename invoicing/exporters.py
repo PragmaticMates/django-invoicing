@@ -15,8 +15,13 @@ from pragmatic.utils import compress
 # class InvoiceXlsxListExporter(FilterExporterMixin, ExcelExporterMixin):
 class InvoiceXlsxListExporter(ExcelExporterMixin):
     # filter_class = InvoiceFilter
+    model = Invoice
     queryset = None
     filename = _('invoices.xlsx')
+
+    @classmethod
+    def get_model(cls):
+        return cls.queryset.model if cls.queryset is not None else cls.model
 
     @staticmethod
     def selectable_fields():

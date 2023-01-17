@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-12 21:10+0100\n"
-"PO-Revision-Date: 2022-09-28 09:18+0000\n"
+"POT-Creation-Date: 2023-01-13 13:49+0100\n"
+"PO-Revision-Date: 2023-01-13 12:23+0000\n"
 "Last-Translator: Rafal Szczepanowicz <rafal@transportly.eu>\n"
 "Language-Team: Polish <https://weblate.swida.sk/projects/django-invoicing/"
 "app/pl/>\n"
@@ -96,329 +96,247 @@ msgstr "Wyślij do oprogramowania księgowego"
 
 #: admin.py:170
 msgid "Export to xlsx"
-msgstr ""
+msgstr "Eksport do xlsx"
 
 #: admin.py:188
 msgid "Export to PDF"
-msgstr ""
+msgstr "Eksport do PDF"
 
-#: exporters.py:22
-#, fuzzy
-#| msgid "invoices"
+#: exporters.py:23
 msgid "invoices.xlsx"
-msgstr "faktury"
+msgstr "faktury.xlsx"
 
-#: exporters.py:28
+#: exporters.py:29
 msgid "Details"
-msgstr ""
+msgstr "Szczegóły"
 
-#: exporters.py:29 templates/invoicing/formatters/html.html:140
+#: exporters.py:30 templates/invoicing/formatters/html.html:140
 msgid "ID"
 msgstr "ID"
 
-#: exporters.py:30
-#, fuzzy
-#| msgid "created"
-msgid "Created"
-msgstr "utworzone"
-
 #: exporters.py:31
-msgid "Type"
-msgstr ""
+msgid "Created"
+msgstr "Utworzone"
 
 #: exporters.py:32
-#, fuzzy
-#| msgid "sequence"
-msgid "Sequence"
-msgstr "sekwencja"
+msgid "Type"
+msgstr "Typ"
 
 #: exporters.py:33
-#, fuzzy
-#| msgid "number"
-msgid "Number"
-msgstr "numer"
+msgid "Sequence"
+msgstr "Sekwencja"
 
 #: exporters.py:34
-#, fuzzy
-#| msgid "status"
-msgid "Status"
-msgstr "status"
+msgid "Number"
+msgstr "Numer"
 
 #: exporters.py:35
-#, fuzzy
-#| msgid "subtitle"
-msgid "Subtitle"
-msgstr "podtytuł"
+msgid "Status"
+msgstr "Status"
 
 #: exporters.py:36
-#, fuzzy
-#| msgid "language"
-msgid "Language"
-msgstr "język"
+msgid "Subtitle"
+msgstr "Podtytuł"
 
-#: exporters.py:37 templates/invoicing/formatters/html.html:196
+#: exporters.py:37
+msgid "Language"
+msgstr "Język"
+
+#: exporters.py:38 templates/invoicing/formatters/html.html:196
 msgid "Note"
 msgstr "Uwagi"
 
-#: exporters.py:39
+#: exporters.py:40
 msgid "Dates"
-msgstr ""
+msgstr "Daty"
 
-#: exporters.py:40 templates/invoicing/formatters/html.html:85
+#: exporters.py:41 templates/invoicing/formatters/html.html:85
 msgid "Issue date"
 msgstr "Data wystawienia"
 
-#: exporters.py:41
-#, fuzzy
-#| msgid "tax point date"
+#: exporters.py:42
 msgid "Tax point date"
-msgstr "data obowiązku podatkowego"
+msgstr "Data obowiązku podatkowego"
 
-#: exporters.py:42 templates/invoicing/formatters/html.html:109
+#: exporters.py:43 templates/invoicing/formatters/html.html:109
 msgid "Due date"
 msgstr "Termin płatności"
 
-#: exporters.py:43
-#, fuzzy
-#| msgid "due date"
-msgid "Sent (date)"
-msgstr "termin płatności"
-
 #: exporters.py:44
-msgid "Date of payment"
-msgstr ""
+msgid "Sent (date)"
+msgstr "Wysłano (data)"
 
 #: exporters.py:45
-#, fuzzy
-#| msgid "payment term"
-msgid "Payment term (days)"
-msgstr "termin płatności"
+msgid "Date of payment"
+msgstr "Data płatności"
 
 #: exporters.py:46
-msgid "Overdue (days)"
-msgstr ""
+msgid "Payment term (days)"
+msgstr "Termin płatności (dni)"
 
-#: exporters.py:51
-#, fuzzy
-#| msgid "Payment method"
-msgid "Payment"
-msgstr "Metoda płatności"
+#: exporters.py:47
+msgid "Overdue (days)"
+msgstr "Po terminie (dni)"
 
 #: exporters.py:52
-#, fuzzy
-#| msgid "total"
-msgid "Total"
-msgstr "suma"
+msgid "Payment"
+msgstr "Płatność"
 
-#: exporters.py:53 models.py:208 templates/invoicing/formatters/html.html:221
+#: exporters.py:53
+msgid "Total"
+msgstr "Suma"
+
+#: exporters.py:54 models.py:208 templates/invoicing/formatters/html.html:221
 msgid "VAT"
 msgstr "VAT"
 
-#: exporters.py:54
-#, fuzzy
-#| msgid "currency"
-msgid "Currency"
-msgstr "waluta"
-
 #: exporters.py:55
-#, fuzzy
-#| msgid "credit"
-msgid "Credit"
-msgstr "kredyt"
+msgid "Currency"
+msgstr "Waluta"
 
-#: exporters.py:56 templates/invoicing/formatters/html.html:121
+#: exporters.py:56
+msgid "Credit"
+msgstr "Kredyt"
+
+#: exporters.py:57 templates/invoicing/formatters/html.html:121
 msgid "Payment method"
 msgstr "Metoda płatności"
 
-#: exporters.py:57 templates/invoicing/formatters/html.html:122
+#: exporters.py:58 templates/invoicing/formatters/html.html:122
 msgid "Constant symbol"
 msgstr "Stały symbol"
 
-#: exporters.py:58 templates/invoicing/formatters/html.html:123
+#: exporters.py:59 templates/invoicing/formatters/html.html:123
 msgid "Variable symbol"
 msgstr "Zmienny symbol"
 
-#: exporters.py:59 templates/invoicing/formatters/html.html:124
+#: exporters.py:60 templates/invoicing/formatters/html.html:124
 msgid "Specific symbol"
 msgstr "Specyficzny symbol"
 
-#: exporters.py:60 templates/invoicing/formatters/html.html:125
+#: exporters.py:61 templates/invoicing/formatters/html.html:125
 msgid "Reference"
 msgstr "Referencja"
 
-#: exporters.py:61
-#, fuzzy
-#| msgid "bank name"
+#: exporters.py:62
 msgid "Bank name"
-msgstr "nazwa banku"
-
-#: exporters.py:66
-msgid "IBAN"
-msgstr ""
+msgstr "Nazwa banku"
 
 #: exporters.py:67
-#, fuzzy
-#| msgid "SWIFT / BIC"
-msgid "SWIFT/BIC"
-msgstr "SWIFT / BIC"
+msgid "IBAN"
+msgstr "IBAN"
 
-#: exporters.py:69 templates/invoicing/formatters/html.html:38
+#: exporters.py:68
+msgid "SWIFT/BIC"
+msgstr "SWIFT/BIC"
+
+#: exporters.py:70 templates/invoicing/formatters/html.html:38
 msgid "Issuer"
 msgstr "Wystawca"
 
-#: exporters.py:70
-#, fuzzy
-#| msgid "supplier name"
-msgid "Supplier name"
-msgstr "nazwa dostawcy"
-
 #: exporters.py:71
-#, fuzzy
-#| msgid "Supplier details"
-msgid "Supplier street"
-msgstr "Dane dostawcy"
+msgid "Supplier name"
+msgstr "Nazwa dostawcy"
 
 #: exporters.py:72
-#, fuzzy
-#| msgid "Supplier"
-msgid "Supplier zip"
-msgstr "Dostawca"
+msgid "Supplier street"
+msgstr "Ulica dostawcy"
 
 #: exporters.py:73
-#, fuzzy
-#| msgid "supplier city"
-msgid "Supplier city"
-msgstr "miasto dostawcy"
+msgid "Supplier zip"
+msgstr "Kod pocztowy dostawcy"
 
 #: exporters.py:74
-#, fuzzy
-#| msgid "supplier country"
-msgid "Supplier country"
-msgstr "kraj dostawcy"
+msgid "Supplier city"
+msgstr "Miasto dostawcy"
 
 #: exporters.py:75
-#, fuzzy
-#| msgid "supplier Reg. No."
-msgid "Supplier reg. ID"
-msgstr "Numer KRS dostawcy"
+msgid "Supplier country"
+msgstr "Kraj dostawcy"
 
 #: exporters.py:76
-#, fuzzy
-#| msgid "Supplier details"
-msgid "Supplier tax ID"
-msgstr "Dane dostawcy"
+msgid "Supplier reg. ID"
+msgstr "REGON dostawcy"
 
 #: exporters.py:77
-#, fuzzy
-#| msgid "supplier VAT No."
-msgid "Supplier VAT ID"
-msgstr "Numer VAT dostawcy"
+msgid "Supplier tax ID"
+msgstr "NIP dostawcy"
 
 #: exporters.py:78
-#, fuzzy
-#| msgid "supplier additional information"
-msgid "Supplier additional info"
-msgstr "dodatkowe informacje o dostawcy"
+msgid "Supplier VAT ID"
+msgstr "VAT dostawcy"
 
 #: exporters.py:79
-#, fuzzy
-#| msgid "issuer name"
-msgid "Issuer name"
-msgstr "imię wystawcy"
+msgid "Supplier additional info"
+msgstr "Dodatkowe informacje o dostawcy"
 
 #: exporters.py:80
-#, fuzzy
-#| msgid "issuer email"
-msgid "Issuer email"
-msgstr "email wystawcy"
+msgid "Issuer name"
+msgstr "Imię wystawcy"
 
 #: exporters.py:81
-#, fuzzy
-#| msgid "issuer phone"
-msgid "Issuer phone"
-msgstr "telefon wystawcy"
+msgid "Issuer email"
+msgstr "Email wystawcy"
 
-#: exporters.py:83 templates/invoicing/formatters/html.html:59
+#: exporters.py:82
+msgid "Issuer phone"
+msgstr "Telefon wystawcy"
+
+#: exporters.py:84 templates/invoicing/formatters/html.html:59
 msgid "Customer"
 msgstr "Klient"
 
-#: exporters.py:84
-#, fuzzy
-#| msgid "customer name"
-msgid "Customer name"
-msgstr "nazwa klienta"
-
 #: exporters.py:85
-#, fuzzy
-#| msgid "Customer details"
-msgid "Customer street"
-msgstr "Dane klienta"
+msgid "Customer name"
+msgstr "Nazwa klienta"
 
 #: exporters.py:86
-#, fuzzy
-#| msgid "Customer"
-msgid "Customer zip"
-msgstr "Klient"
+msgid "Customer street"
+msgstr "Ulica klienta"
 
 #: exporters.py:87
-#, fuzzy
-#| msgid "customer city"
-msgid "Customer city"
-msgstr "miasto klienta"
+msgid "Customer zip"
+msgstr "Kod pocztowy klienta"
 
 #: exporters.py:88
-#, fuzzy
-#| msgid "customer country"
-msgid "Customer country"
-msgstr "kraj klienta"
+msgid "Customer city"
+msgstr "Miasto klienta"
 
 #: exporters.py:89
-#, fuzzy
-#| msgid "customer Reg. No."
-msgid "Customer reg. ID"
-msgstr "Numer KRS klienta"
+msgid "Customer country"
+msgstr "Kraj klienta"
 
 #: exporters.py:90
-#, fuzzy
-#| msgid "Customer details"
-msgid "Customer tax ID"
-msgstr "Dane klienta"
+msgid "Customer reg. ID"
+msgstr "REGON klienta"
 
 #: exporters.py:91
-#, fuzzy
-#| msgid "customer VAT No."
-msgid "Customer VAT ID"
-msgstr "Numer VAT klienta"
+msgid "Customer tax ID"
+msgstr "NIP klienta"
 
 #: exporters.py:92
-#, fuzzy
-#| msgid "customer additional information"
-msgid "Customer additional info"
-msgstr "dodatkowe informacje o kliencie"
+msgid "Customer VAT ID"
+msgstr "VAT klienta"
 
 #: exporters.py:93
-#, fuzzy
-#| msgid "customer email"
-msgid "Customer email"
-msgstr "email klienta"
+msgid "Customer additional info"
+msgstr "Dodatkowe info o kliencie"
 
 #: exporters.py:94
-#, fuzzy
-#| msgid "customer phone"
+msgid "Customer email"
+msgstr "Email klienta"
+
+#: exporters.py:95
 msgid "Customer phone"
-msgstr "numer telefonu klienta"
+msgstr "Numer telefonu klienta"
 
-#: exporters.py:112
-#, fuzzy
-#| msgid "Invoice"
+#: exporters.py:113
 msgid "Invoices"
-msgstr "Faktura"
+msgstr "Faktury"
 
-#: exporters.py:125
-#, fuzzy
-#| msgid "invoices"
+#: exporters.py:123
 msgid "invoices.zip"
-msgstr "faktury"
+msgstr "faktury.zip"
 
 #: helpers.py:52
 msgid "Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled"

@@ -35,6 +35,10 @@ class InvoiceXlsxListExporter(ExcelExporterMixin):
     def get_model(cls):
         return cls.queryset.model if cls.queryset is not None else cls.model
 
+    @classmethod
+    def get_app_and_model(cls):
+        return cls.get_model()._meta.label.split('.')
+
     @staticmethod
     def selectable_fields():
         # attribute, label, width, format (self.FORMATS), value

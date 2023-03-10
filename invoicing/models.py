@@ -12,6 +12,7 @@ from model_utils import Choices
 from model_utils.fields import MonitorField
 
 from django.conf import settings
+from invoicing import settings as invoicing_settings
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from django.db.models import Max, Sum
@@ -124,7 +125,7 @@ class Invoice(models.Model):
     subtitle = models.CharField(_(u'subtitle'), max_length=255, blank=True)
     related_document = models.CharField(_(u'related document'), max_length=100, blank=True)
     related_invoices = models.ManyToManyField(to='self', verbose_name=_(u'related invoices'), blank=True)
-    language = models.CharField(_(u'language'), max_length=10, choices=settings.LANGUAGES)
+    language = models.CharField(_(u'language'), max_length=10, choices=invoicing_settings.LANGUAGES)
     note = models.CharField(_(u'note'), max_length=255, blank=True, default=_(u'Thank you for using our services.'))
     date_issue = models.DateField(_(u'issue date'))
     date_tax_point = models.DateField(_(u'tax point date'), help_text=_(u'time of supply'))

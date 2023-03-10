@@ -3,6 +3,7 @@ import json
 from django.conf import settings
 
 
+LANGUAGES = getattr(settings, 'INVOICING_LANGUAGES', getattr(settings, 'LANGUAGES', []))
 ACCOUNTING_SOFTWARE = getattr(settings, 'INVOICING_ACCOUNTING_SOFTWARE', None)
 try:
     ACCOUNTING_SOFTWARE_API_DATA = json.loads(getattr(settings, 'INVOICING_ACCOUNTING_SOFTWARE_API_DATA', None))

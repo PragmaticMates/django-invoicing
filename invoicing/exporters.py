@@ -2,7 +2,19 @@ from collections import OrderedDict
 
 from invoicing.models import Invoice
 
-from django.utils.translation import ugettext_lazy as _, ugettext
+try:
+    # older Django
+    from django.utils.translation import ugettext_lazy as _
+except ImportError:
+    # Django >= 3
+    from django.utils.translation import gettext_lazy as _
+
+try:
+    # older Django
+    from django.utils.translation import ugettext
+except ImportError:
+    # Django >= 3
+    from django.utils.translation import gettext as ugettext
 
 from invoicing.utils import get_invoices_in_pdf
 

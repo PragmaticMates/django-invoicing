@@ -2,7 +2,12 @@ from django.contrib import admin, messages
 from django.db.models import F
 from django.db.models.functions import Coalesce
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+try:
+    # older Django
+    from django.utils.translation import ugettext_lazy as _
+except ImportError:
+    # Django >= 3
+    from django.utils.translation import gettext_lazy as _
 
 from invoicing.managers import get_accounting_software_manager
 from invoicing.models import Invoice, Item

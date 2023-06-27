@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from django.db.models import F
+from django.db.models import F, DecimalField
 from django.db.models.functions import Coalesce
 from django.utils.safestring import mark_safe
 try:
@@ -99,7 +99,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-        return self.model.objects.annotate(annotated_subtotal=F('total')-Coalesce(F('vat'), 0))
+        return self.model.objects.annotate(annotated_subtotal=F('total')-Coalesce(F('vat'), 0, output_field=DecimalField()))
 
     def annotated_subtotal(self, invoice):
         return invoice.annotated_subtotal

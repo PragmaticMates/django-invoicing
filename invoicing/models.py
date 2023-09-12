@@ -146,7 +146,8 @@ class Invoice(models.Model):
     # Payment details
     currency = models.CharField(_(u'currency'), max_length=10, choices=CURRENCY_CHOICES)
     credit = models.DecimalField(_(u'credit'), max_digits=10, decimal_places=2, default=0)
-    already_paid = models.DecimalField(_(u'already paid'), max_digits=10, decimal_places=2, default=0)
+    already_paid = models.DecimalField(_(u'already paid'), max_digits=10, decimal_places=2, default=0,
+        validators=[MinValueValidator(0)])
 
     payment_method = models.CharField(_(u'payment method'), choices=PAYMENT_METHOD, max_length=64)
     constant_symbol = models.CharField(_(u'constant symbol'), max_length=64, choices=CONSTANT_SYMBOL, blank=True)

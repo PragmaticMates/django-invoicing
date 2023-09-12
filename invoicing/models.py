@@ -146,7 +146,7 @@ class Invoice(models.Model):
     # Payment details
     currency = models.CharField(_(u'currency'), max_length=10, choices=CURRENCY_CHOICES)
     credit = models.DecimalField(_(u'credit'), max_digits=10, decimal_places=2, default=0)
-    #already_paid = models.DecimalField(_(u'already paid'), max_digits=10, decimal_places=2, default=0)
+    already_paid = models.DecimalField(_(u'already paid'), max_digits=10, decimal_places=2, default=0)
 
     payment_method = models.CharField(_(u'payment method'), choices=PAYMENT_METHOD, max_length=64)
     constant_symbol = models.CharField(_(u'constant symbol'), max_length=64, choices=CONSTANT_SYMBOL, blank=True)
@@ -462,6 +462,10 @@ class Invoice(models.Model):
     def total_without_discount(self):
         return Decimal(self.total) + self.discount
 
+    @property
+    def to_pay(self):
+        return self.total - self.already_paid
+
     def calculate_vat(self):
         if len(self.vat_summary) == 1 and self.vat_summary[0]['vat'] is None:
             return None
@@ -480,7 +484,6 @@ class Invoice(models.Model):
 
         #total *= Decimal((100 - Decimal(self.discount)) / 100)  # subtract discount amount
         total -= Decimal(self.credit)  # subtract credit
-        #total -= self.already_paid  # subtract already paid
         return round(total, 2)
 
     def create_copy(self, **kwargs):

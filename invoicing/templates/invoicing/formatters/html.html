@@ -266,11 +266,20 @@
                 <div class="col-md-12">
                     <div class="panel panel-danger">
                         <div class="panel-heading">
-                            <h3 class="panel-title">{% trans 'TOTAL DUE' %}</h3>
+                            <h3 class="panel-title">{% trans 'Total' %}</h3>
                         </div>
                         <div class="panel-body mb-4">
                             <!--{{ invoice.total_in_string }}-->
-                            <h1 class="text-right" style="margin:0px">{{ invoice.total|floatformat:"2" }} {{ invoice.currency }}</h1>
+
+                            {% if invoice.already_paid > 0 %}
+                                <strong>{% trans 'Sum' %}</strong>
+                                <h4 class="text-right" style="margin:0px">{{ invoice.total|floatformat:"2" }} {{ invoice.currency }}</h4>
+
+                                <strong>{% trans 'Already paid' %}</strong>
+                                <h4 class="text-right" style="margin:0px">-{{ invoice.already_paid|floatformat:"2" }} {{ invoice.currency }}</h4>
+                            {% endif %}
+                                <strong>{% trans 'Total due' %}</strong>
+                                <h1 class="text-right" style="margin:0px">{{ invoice.to_pay|floatformat:"2" }} {{ invoice.currency }}</h1>
                         </div>
                     </div>
                 </div>

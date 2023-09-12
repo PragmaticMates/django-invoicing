@@ -72,7 +72,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         }),
         (_(u'Payment details'), {
             'fields': (
-                'currency', 'credit', #'already_paid',
+                'currency', 'credit', 'already_paid',
                 ('payment_method', 'delivery_method'),
                 ('constant_symbol', 'variable_symbol', 'specific_symbol', 'reference'),
                 'bank_name', 'bank_country', 'bank_city', 'bank_street', 'bank_zip', 'bank_iban', 'bank_swift_bic'

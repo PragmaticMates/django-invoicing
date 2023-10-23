@@ -24,6 +24,9 @@ class InvoiceQuerySet(QuerySet):
     def valid(self):
         return self.exclude(status__in=[self.model.STATUS.RETURNED, self.model.STATUS.CANCELED, self.model.STATUS.CREDITED, self.model.STATUS.UNCOLLECTIBLE])
 
+    def accountable(self):
+        return self.exclude(type__in=[self.model.TYPE.PROFORMA, self.model.TYPE.ADVANCE])
+
     def collectible(self):
         return self.exclude(status=self.model.STATUS.UNCOLLECTIBLE)
 

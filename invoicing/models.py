@@ -447,7 +447,7 @@ class Invoice(models.Model):
 
     @property
     def total_without_discount(self):
-        return Decimal(self.total) + self.discount
+        return Decimal(self.total) + self.discount + Decimal(self.credit)
 
     @property
     def to_pay(self):

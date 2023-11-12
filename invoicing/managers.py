@@ -6,12 +6,7 @@ from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django_filters.constants import EMPTY_VALUES
 
-try:
-    # older Django
-    from django.utils.translation import ugettext_lazy as _
-except ImportError:
-    # Django >= 3
-    from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from invoicing import settings as invoicing_settings
 from invoicing.models import Invoice

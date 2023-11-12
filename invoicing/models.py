@@ -1,39 +1,25 @@
 from __future__ import division  # TODO: refactor
 
+from decimal import Decimal
+
+from django.conf import settings
+from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
+from django.db import models, transaction
+from django.db.models import JSONField, Max, Sum
+from django.urls import reverse
+from django.utils.timezone import now
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
+from django.utils.translation import gettext_lazy as _
 
-from decimal import Decimal
 from django_countries.fields import CountryField
-from django_iban.fields import IBANField, SWIFTBICField
 from djmoney.forms.widgets import CURRENCY_CHOICES
+from internationalflavor.iban.models import IBANField, BICField
 from internationalflavor.vat_number import VATNumberField
 from model_utils import Choices
 from model_utils.fields import MonitorField
 
-from django.conf import settings
 from invoicing import settings as invoicing_settings
-from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
-from django.db import models, transaction
-from django.db.models import Max, Sum
-
-try:
-    # Django 3.1
-    from django.db.models import JSONField
-except ImportError:
-    # older Django
-    from django.contrib.postgres.fields import JSONField
-
-from django.urls import reverse
-from django.utils.timezone import now
-
-try:
-    # older Django
-    from django.utils.translation import ugettext_lazy as _
-except ImportError:
-    # Django >= 3
-    from django.utils.translation import gettext_lazy as _
-
 from invoicing.querysets import InvoiceQuerySet, ItemQuerySet
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
@@ -165,7 +151,7 @@ class Invoice(models.Model):
     bank_city = models.CharField(_(u'bank city'), max_length=255, blank=True)
     bank_country = CountryField(_(u'bank country'), max_length=255, blank=True)
     bank_iban = IBANField(verbose_name=_(u'Account number (IBAN)'), default=None)
-    bank_swift_bic = SWIFTBICField(verbose_name=_(u'Bank SWIFT / BIC'), blank=True)
+    bank_swift_bic = BICField(verbose_name=_(u'Bank SWIFT / BIC'), blank=True)
 
     # Supplier details
     supplier_name = models.CharField(_(u'supplier name'), max_length=255, default=None)

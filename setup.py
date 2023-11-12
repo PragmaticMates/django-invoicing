@@ -16,8 +16,8 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=(
-        'django>=2.2', 'django-countries', 'django-iban', 'django-model-utils', 'django-money',
-        'django-internationalflavor'
+        'django>=4.2', 'django-countries', 'django-model-utils', 'django-money',
+        'django-localflavor', 'django-internationalflavor'
     ),
     classifiers=[
         'Programming Language :: Python',

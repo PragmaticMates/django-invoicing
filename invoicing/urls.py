@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from invoicing.views import InvoiceDetailView
 
@@ -6,5 +6,5 @@ from invoicing.views import InvoiceDetailView
 app_name = 'invoicing'
 
 urlpatterns = [
-    url(r'^invoice/detail/(?P<pk>[-\d]+)/$', InvoiceDetailView.as_view(), name='invoice_detail'),
+    re_path(r'^invoice/detail/(?P<pk>[-\d]+)/$', InvoiceDetailView.as_view(), name='invoice_detail'),
 ]

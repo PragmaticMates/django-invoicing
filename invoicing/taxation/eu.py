@@ -80,7 +80,7 @@ class EUTaxationPolicy(TaxationPolicy):
         return default_tax_rate
 
     @classmethod
-    def get_tax_rate(cls, vat_id, supplier_is_vat_payer, customer_country, supplier_country=None):
+    def get_tax_rate(cls, vat_id, customer_country, supplier_country=None, supplier_is_vat_payer=None):
 
         if supplier_is_vat_payer is False:
             # Supplier is not a vat payer

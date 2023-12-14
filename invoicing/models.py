@@ -277,8 +277,8 @@ class Invoice(models.Model):
 
         if self.taxation_policy:
             # There is taxation policy -> get tax rate
-            return self.taxation_policy.get_tax_rate(self.customer_vat_id, self.supplier_is_vat_payer,
-                                                     customer_country_code, supplier_country_code)
+            return self.taxation_policy.get_tax_rate(self.customer_vat_id, customer_country_code,
+                                                     supplier_country_code, self.supplier_is_vat_payer)
         else:
             # If there is not any special taxation policy, set default tax rate
             return TaxationPolicy.get_default_tax(supplier_country_code)

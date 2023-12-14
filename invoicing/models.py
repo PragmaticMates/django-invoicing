@@ -162,6 +162,7 @@ class Invoice(models.Model):
     supplier_registration_id = models.CharField(_(u'supplier Reg. No.'), max_length=255, blank=True)
     supplier_tax_id = models.CharField(_(u'supplier Tax No.'), max_length=255, blank=True)
     supplier_vat_id = VATNumberField(verbose_name=_(u'supplier VAT No.'), blank=True)
+    supplier_is_vat_payer = models.BooleanField(_(u'supplier is VAT payer'), blank=True, null=True, default=None)
     supplier_additional_info = JSONField(_(u'supplier additional information'),
         blank=True, null=True, default=None)  # for example www or legal matters
 
@@ -276,7 +277,8 @@ class Invoice(models.Model):
 
         if self.taxation_policy:
             # There is taxation policy -> get tax rate
-            return self.taxation_policy.get_tax_rate(self.customer_vat_id, customer_country_code, supplier_country_code)
+            return self.taxation_policy.get_tax_rate(self.customer_vat_id, customer_country_code,
+                                                     self.supplier_is_vat_payer, supplier_country_code)
         else:
             # If there is not any special taxation policy, set default tax rate
             return TaxationPolicy.get_default_tax(supplier_country_code)

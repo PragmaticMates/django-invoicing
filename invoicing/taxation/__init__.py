@@ -33,12 +33,14 @@ class TaxationPolicy(object):
         return supplier['country_code']
 
     @classmethod
-    def get_tax_rate(cls, vat_id, customer_country_code, supplier_country_code):
+    def get_tax_rate(cls, vat_id, customer_country_code, supplier_is_vat_payer, supplier_country_code):
         """
         Methods
 
         :param vat_id: customer vat id
-        :param country_code: customer country in ISO 2-letters format
+        :param customer_country_code: customer country in ISO 2-letters format
+        :param supplier_is_vat_payer: defines whether the supplier is a VAT payer or not.
+        :param supplier_country_code: supplier country in ISO 2-letters format
         :return: Decimal()
         """
         raise NotImplementedError('Method get_tax_rate should be implemented.')

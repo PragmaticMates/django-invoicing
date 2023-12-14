@@ -80,6 +80,10 @@ class EUTaxationPolicy(TaxationPolicy):
         return default_tax_rate
 
     @classmethod
+    def get_empty_tax_rate(cls, supplier_is_vat_payer):
+        return 0 if supplier_is_vat_payer else None
+
+    @classmethod
     def get_tax_rate(cls, vat_id, customer_country, supplier_country=None, supplier_is_vat_payer=None):
 
         if supplier_is_vat_payer is False:
@@ -108,7 +112,7 @@ class EUTaxationPolicy(TaxationPolicy):
             else:
                 # Customer (private person) is not from EU
                 # charge back
-                return None
+                return cls.get_empty_tax_rate(supplier_is_vat_payer)
 
         # Customer is company, we know country and VAT ID
 
@@ -120,7 +124,7 @@ class EUTaxationPolicy(TaxationPolicy):
         if not cls.is_in_EU(customer_country):
             # Company is not from EU
             # Charge back
-            return None
+            return cls.get_empty_tax_rate(supplier_is_vat_payer)
 
         # Company is from other EU country
         use_vies_validator = getattr(settings, 'INVOICING_USE_VIES_VALIDATOR', True)
@@ -128,7 +132,7 @@ class EUTaxationPolicy(TaxationPolicy):
         if not use_vies_validator:
             # trust VAT ID is correct
             # Charge back
-            return None
+            return cls.get_empty_tax_rate(supplier_is_vat_payer)
 
         try:
             # verify VAT ID in VIES
@@ -136,6 +140,6 @@ class EUTaxationPolicy(TaxationPolicy):
 
             # Company is registered in VIES
             # Charge back
-            return None
+            return cls.get_empty_tax_rate(supplier_is_vat_payer)
         except ValidationError:
             return cls.get_default_tax(supplier_country)

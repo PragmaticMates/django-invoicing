@@ -331,6 +331,7 @@ class Invoice(models.Model):
         self.supplier_registration_id = supplier.get('registration_id', '')
         self.supplier_tax_id = supplier.get('tax_id', '')
         self.supplier_vat_id = supplier.get('vat_id', '')
+        self.supplier_is_vat_payer = supplier.get('is_vat_payer', None)
         self.supplier_additional_info = supplier.get('additional_info', None)
 
         bank = supplier.get('bank')

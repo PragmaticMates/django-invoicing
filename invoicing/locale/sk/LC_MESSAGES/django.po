@@ -7,361 +7,359 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-12 04:20+0200\n"
-"PO-Revision-Date: 2023-01-13 12:23+0000\n"
-"Last-Translator: Peter Rusinak <peter.rusinak@transportly.eu>\n"
-"Language-Team: Slovak <https://weblate.swida.sk/projects/django-invoicing/"
-"app/sk/>\n"
+"POT-Creation-Date: 2023-12-15 15:53+0100\n"
+"PO-Revision-Date: 2023-12-15 15:53+0020\n"
+"Last-Translator: b'Erik Telepovsky <erik@pragmaticmates.com>'\n"
+"Language-Team: Slovak <https://weblate.swida.sk/projects/django-invoicing/app/sk/>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n "
-">= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
 "X-Generator: Weblate 4.9.1\n"
-"X-Translated-Using: django-rosetta 0.9.3\n"
+"X-Translated-Using: django-rosetta 0.9.0\n"
 
-#: admin.py:30
+#: admin.py:25
 msgid "overdue"
 msgstr "oneskorená"
 
-#: admin.py:35
+#: admin.py:30
 msgid "no"
 msgstr "nie"
 
-#: admin.py:36
+#: admin.py:31
 msgid "yes"
 msgstr "áno"
 
-#: admin.py:61
+#: admin.py:56
 msgid "General information"
 msgstr "Všeobecné informácie"
 
-#: admin.py:68
+#: admin.py:63
 msgid "Contact details"
 msgstr "Kontaktné informácie"
 
-#: admin.py:73
+#: admin.py:68
 msgid "Payment details"
 msgstr "Platobné informácie"
 
-#: admin.py:81
+#: admin.py:76
 msgid "Supplier details"
 msgstr "Dodávateľ"
 
-#: admin.py:88
+#: admin.py:84
 msgid "Customer details"
 msgstr "Odberateľ"
 
-#: admin.py:94
+#: admin.py:90
 msgid "Shipping details"
 msgstr "Doručovacie informácie"
 
-#: admin.py:106
+#: admin.py:102
 msgid "subtotal"
 msgstr "medzisúčet"
 
-#: admin.py:110
+#: admin.py:106
 msgid "supplier"
 msgstr "dodávateľ"
 
-#: admin.py:114
+#: admin.py:110
 msgid "customer"
 msgstr "odberateľ"
 
-#: admin.py:118
+#: admin.py:114
 msgid "payment term"
 msgstr "lehota splatnosti"
 
-#: admin.py:123
+#: admin.py:119
 msgid "is overdue"
 msgstr "je po splatnosti"
 
-#: admin.py:128
+#: admin.py:124
 msgid "is paid"
 msgstr "je uhradená"
 
-#: admin.py:134
+#: admin.py:130
 msgid "Missing specification of accounting software"
 msgstr "Chýba špecifikácia účtovného softvéru"
 
-#: admin.py:152 managers.py:139
+#: admin.py:148 managers.py:134
 #, python-format
 msgid "%d invoices sent to accounting software"
 msgstr "%d faktúr odoslaných do účtovného softvéru"
 
-#: admin.py:157
+#: admin.py:153
 msgid "Send to accounting software"
 msgstr "Odoslať do účtovného softvéru"
 
-#: admin.py:175
+#: admin.py:171
 msgid "Export to xlsx"
 msgstr "Exportovať do xlsx"
 
-#: admin.py:193
+#: admin.py:189
 msgid "Export to PDF"
 msgstr "Exportovať do PDF"
 
-#: exporters.py:32
+#: exporters.py:19
 msgid "invoices.xlsx"
 msgstr "faktury.xlsx"
 
-#: exporters.py:46
+#: exporters.py:33
 msgid "Details"
 msgstr "Podrobnosti"
 
-#: exporters.py:47 templates/invoicing/formatters/html.html:140
+#: exporters.py:34 templates/invoicing/formatters/html.html:140
 msgid "ID"
 msgstr "P.č."
 
-#: exporters.py:48
+#: exporters.py:35
 msgid "Created"
 msgstr "Vytvorené"
 
-#: exporters.py:49
+#: exporters.py:36
 msgid "Type"
 msgstr "Typ"
 
-#: exporters.py:50
+#: exporters.py:37
 msgid "Sequence"
 msgstr "Sekvencia"
 
-#: exporters.py:51
+#: exporters.py:38
 msgid "Number"
 msgstr "Číslo"
 
-#: exporters.py:52
+#: exporters.py:39
 msgid "Status"
 msgstr "Stav"
 
-#: exporters.py:53
+#: exporters.py:40
 msgid "Subtitle"
 msgstr "Podnadpis"
 
-#: exporters.py:54
+#: exporters.py:41
 msgid "Language"
 msgstr "Jazyk"
 
-#: exporters.py:55 templates/invoicing/formatters/html.html:196
+#: exporters.py:42 templates/invoicing/formatters/html.html:196
 msgid "Note"
 msgstr "Poznámka"
 
-#: exporters.py:57
+#: exporters.py:44
 msgid "Dates"
 msgstr "Dátumy"
 
-#: exporters.py:58 templates/invoicing/formatters/html.html:85
+#: exporters.py:45 templates/invoicing/formatters/html.html:85
 msgid "Issue date"
 msgstr "Dátum vystavenia"
 
-#: exporters.py:59
+#: exporters.py:46
 msgid "Tax point date"
 msgstr "Dátum vzniku daňovej povinnosti"
 
-#: exporters.py:60 templates/invoicing/formatters/html.html:109
+#: exporters.py:47 templates/invoicing/formatters/html.html:109
 msgid "Due date"
 msgstr "Dátum splatnosti"
 
-#: exporters.py:61
+#: exporters.py:48
 msgid "Sent (date)"
 msgstr "Odoslaná (dátum)"
 
-#: exporters.py:62
+#: exporters.py:49
 msgid "Date of payment"
 msgstr "Dátum platby"
 
-#: exporters.py:63
+#: exporters.py:50
 msgid "Payment term (days)"
 msgstr "Lehota splatnosti (dni)"
 
-#: exporters.py:64
+#: exporters.py:51
 msgid "Overdue (days)"
 msgstr "Po splatnosti (dni)"
 
-#: exporters.py:69
+#: exporters.py:56
 msgid "Payment"
 msgstr "Platba"
 
-#: exporters.py:70 templates/invoicing/formatters/html.html:269
+#: exporters.py:57 templates/invoicing/formatters/html.html:269
 msgid "Total"
 msgstr "Celkom"
 
-#: exporters.py:71 models.py:214 templates/invoicing/formatters/html.html:221
+#: exporters.py:58 models.py:202 templates/invoicing/formatters/html.html:221
 msgid "VAT"
 msgstr "DPH"
 
-#: exporters.py:72
+#: exporters.py:59
 msgid "Currency"
 msgstr "Mena"
 
-#: exporters.py:73
+#: exporters.py:60
 msgid "Credit"
 msgstr "Kredit"
 
-#: exporters.py:74 templates/invoicing/formatters/html.html:121
+#: exporters.py:61 templates/invoicing/formatters/html.html:121
 msgid "Payment method"
 msgstr "Spôsob platby"
 
-#: exporters.py:75 templates/invoicing/formatters/html.html:122
+#: exporters.py:62 templates/invoicing/formatters/html.html:122
 msgid "Constant symbol"
 msgstr "Konštantný symbol"
 
-#: exporters.py:76 templates/invoicing/formatters/html.html:123
+#: exporters.py:63 templates/invoicing/formatters/html.html:123
 msgid "Variable symbol"
 msgstr "Variabilný symbol"
 
-#: exporters.py:77 templates/invoicing/formatters/html.html:124
+#: exporters.py:64 templates/invoicing/formatters/html.html:124
 msgid "Specific symbol"
 msgstr "Špecifický symbol"
 
-#: exporters.py:78 templates/invoicing/formatters/html.html:125
+#: exporters.py:65 templates/invoicing/formatters/html.html:125
 msgid "Reference"
 msgstr "Referencia"
 
-#: exporters.py:79
+#: exporters.py:66
 msgid "Bank name"
 msgstr "Názov banky"
 
-#: exporters.py:84
+#: exporters.py:71
 msgid "IBAN"
 msgstr "IBAN"
 
-#: exporters.py:85
+#: exporters.py:72
 msgid "SWIFT/BIC"
 msgstr "SWIFT/BIC"
 
-#: exporters.py:87 templates/invoicing/formatters/html.html:38
+#: exporters.py:74 templates/invoicing/formatters/html.html:38
 msgid "Issuer"
 msgstr "Vystavil"
 
-#: exporters.py:88
+#: exporters.py:75
 msgid "Supplier name"
 msgstr "Meno dodávateľa"
 
-#: exporters.py:89
+#: exporters.py:76
 msgid "Supplier street"
 msgstr "Ulica dodávateľa"
 
-#: exporters.py:90
+#: exporters.py:77
 msgid "Supplier zip"
 msgstr "PSČ dodávateľa"
 
-#: exporters.py:91
+#: exporters.py:78
 msgid "Supplier city"
 msgstr "Mesto dodávateľa"
 
-#: exporters.py:92
+#: exporters.py:79
 msgid "Supplier country"
 msgstr "Krajina dodávateľa"
 
-#: exporters.py:93
+#: exporters.py:80
 msgid "Supplier reg. ID"
 msgstr "IČO dodávateľa"
 
-#: exporters.py:94
+#: exporters.py:81
 msgid "Supplier tax ID"
 msgstr "DIČ dodávateľa"
 
-#: exporters.py:95
+#: exporters.py:82
 msgid "Supplier VAT ID"
 msgstr "IČ DPH dodávateľa"
 
-#: exporters.py:96
+#: exporters.py:83
 msgid "Supplier additional info"
 msgstr "Ďalšie informácie o dodávateľovi"
 
-#: exporters.py:97
+#: exporters.py:84
 msgid "Issuer name"
 msgstr "Meno kontaktnej osoby"
 
-#: exporters.py:98
+#: exporters.py:85
 msgid "Issuer email"
 msgstr "Email kontaktnej osoby"
 
-#: exporters.py:99
+#: exporters.py:86
 msgid "Issuer phone"
 msgstr "Telefón kontaktnej osoby"
 
-#: exporters.py:101 templates/invoicing/formatters/html.html:59
+#: exporters.py:88 templates/invoicing/formatters/html.html:59
 msgid "Customer"
 msgstr "Odberateľ"
 
-#: exporters.py:102
+#: exporters.py:89
 msgid "Customer name"
 msgstr "Meno odberateľa"
 
-#: exporters.py:103
+#: exporters.py:90
 msgid "Customer street"
 msgstr "Ulica odberateľa"
 
-#: exporters.py:104
+#: exporters.py:91
 msgid "Customer zip"
 msgstr "PSČ odberateľa"
 
-#: exporters.py:105
+#: exporters.py:92
 msgid "Customer city"
 msgstr "Mesto odberateľa"
 
-#: exporters.py:106
+#: exporters.py:93
 msgid "Customer country"
 msgstr "Krajina odberateľa"
 
-#: exporters.py:107
+#: exporters.py:94
 msgid "Customer reg. ID"
 msgstr "IČO odberateľa"
 
-#: exporters.py:108
+#: exporters.py:95
 msgid "Customer tax ID"
 msgstr "DIČ odberateľa"
 
-#: exporters.py:109
+#: exporters.py:96
 msgid "Customer VAT ID"
 msgstr "IČ DPH odberateľa"
 
-#: exporters.py:110
+#: exporters.py:97
 msgid "Customer additional info"
 msgstr "Ďalšie informácie o odberateľovi"
 
-#: exporters.py:111
+#: exporters.py:98
 msgid "Customer email"
 msgstr "Email odberateľa"
 
-#: exporters.py:112
+#: exporters.py:99
 msgid "Customer phone"
 msgstr "Telefón odberateľa"
 
-#: exporters.py:130
+#: exporters.py:117
 msgid "Invoices"
 msgstr "Faktúry"
 
-#: exporters.py:140
+#: exporters.py:127
 msgid "invoices.zip"
 msgstr "faktury.zip"
 
-#: helpers.py:57
+#: helpers.py:52
 msgid "Invoice type is required when INVOICING_COUNTER_PER_TYPE is enabled"
 msgstr "Typ faktúry je požadovaný keď je povolené INVOICING_COUNTER_PER_TYPE"
 
-#: helpers.py:62
+#: helpers.py:57
 msgid "Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled"
 msgstr ""
 "Typ faktúry bol špecifikovaný ale INVOICING_COUNTER_PER_TYPE je zakázané"
 
-#: managers.py:32
+#: managers.py:27
 #, python-format
 msgid "Accounting software %s not implemented"
 msgstr "Účtovný softvér %s nie je implementovaný"
 
-#: managers.py:45
+#: managers.py:40
 msgid "Missing accounting software API key"
 msgstr "Chýba API kľúč účtovného softvéru"
 
-#: managers.py:123
+#: managers.py:118
 #, python-format
 msgid "Result code: %d. Message: %s (%s)"
 msgstr "Návratový kód: %d. Správa: %s (%s)"
 
-#: managers.py:134
+#: managers.py:129
 #, python-format
 msgid ""
 "%d invoices sent to accounting software [<a href=\"%s\" "
@@ -370,547 +368,552 @@ msgstr ""
 "%d faktúr odoslaných do účtovného softvéru [<a href=\"%s\" "
 "target=\"_blank\">Fetch</a>]"
 
-#: managers.py:147
+#: managers.py:142
 msgid "Missing accounting software API data"
 msgstr "Chýbajú API dáta účtovného softvéru"
 
-#: managers.py:164 templates/invoicing/formatters/html.html:24
+#: managers.py:159 templates/invoicing/formatters/html.html:24
 #: templates/invoicing/formatters/html.html:70
 msgid "Reg. No."
 msgstr "IČO"
 
-#: managers.py:169 templates/invoicing/formatters/html.html:25
+#: managers.py:164 templates/invoicing/formatters/html.html:25
 #: templates/invoicing/formatters/html.html:71
 msgid "Tax No."
 msgstr "DIČ"
 
-#: managers.py:174 templates/invoicing/formatters/html.html:26
+#: managers.py:169 templates/invoicing/formatters/html.html:26
 #: templates/invoicing/formatters/html.html:72
 msgid "VAT No."
 msgstr "IČ DPH"
 
-#: models.py:61
+#: models.py:47
 msgid "daily"
 msgstr "denne"
 
-#: models.py:62
+#: models.py:48
 msgid "monthly"
 msgstr "mesačne"
 
-#: models.py:63
+#: models.py:49
 msgid "yearly"
 msgstr "ročne"
 
-#: models.py:67
+#: models.py:53
 msgid "Invoice"
 msgstr "Faktúra"
 
-#: models.py:68
+#: models.py:54
 msgid "Advance invoice"
 msgstr "Zálohová faktúra"
 
-#: models.py:69
+#: models.py:55
 msgid "Proforma invoice"
 msgstr "Proforma faktúra"
 
-#: models.py:70
+#: models.py:56
 msgid "Credit note"
 msgstr "Dobropis"
 
-#: models.py:74
+#: models.py:60
 msgid "new"
 msgstr "nová"
 
-#: models.py:75
+#: models.py:61
 msgid "sent"
 msgstr "odoslaná"
 
-#: models.py:76
+#: models.py:62
 msgid "returned"
 msgstr "vrátená"
 
-#: models.py:77
+#: models.py:63
 msgid "canceled"
 msgstr "stornovaná"
 
-#: models.py:78
+#: models.py:64
 msgid "paid"
 msgstr "uhradená"
 
-#: models.py:79
+#: models.py:65
 msgid "credited"
 msgstr "dobropisovaná"
 
-#: models.py:80
+#: models.py:66
 msgid "uncollectible"
 msgstr "nevymožiteľná"
 
-#: models.py:84
+#: models.py:70
 msgid "bank transfer"
 msgstr "bankový prevod"
 
-#: models.py:85
+#: models.py:71
 msgid "cash"
 msgstr "hotovosť"
 
-#: models.py:86
+#: models.py:72
 msgid "cash on delivery"
 msgstr "dobierka"
 
-#: models.py:87
+#: models.py:73
 msgid "payment card"
 msgstr "platobná karta"
 
-#: models.py:91
+#: models.py:77
 msgid "personal pickup"
 msgstr "osobný odber"
 
-#: models.py:92
+#: models.py:78
 msgid "mailing"
 msgstr "poštová zásielka"
 
-#: models.py:93
+#: models.py:79
 msgid "digital"
 msgstr "digitálne"
 
-#: models.py:97
+#: models.py:83
 msgid ""
 "0001 - Payments for goods based on legal and executable decision from legal "
 "authority"
 msgstr "0001 - platby za t. na zákl. práv. a vykon. rozhodnutia pr. orgánu"
 
-#: models.py:98
+#: models.py:84
 msgid "0008 - Cashless payments for goods"
 msgstr "0008 - platby za tovar bezhotovostné"
 
-#: models.py:99
+#: models.py:85
 msgid "0038 - Cashless funds for wages"
 msgstr "0038 - bezhotovostné prostriedky na mzdy"
 
-#: models.py:100
+#: models.py:86
 msgid "0058 - Cashless penalty and delinquency charges"
 msgstr "0058 - bezhotovostné penále a poplatky z omeškania"
 
-#: models.py:101
+#: models.py:87
 msgid "0068 - Transfer of funds for wages and other personal costs"
 msgstr "0068 - prevody prostriedkov na mzdy a ostat. osobné náklady"
 
-#: models.py:102
+#: models.py:88
 msgid "0138 - Cashless deductions at source"
 msgstr "0138 - bezhotovostné zrážky z miezd"
 
-#: models.py:103
+#: models.py:89
 msgid "0168 - Cashless payments in loans"
 msgstr "0168 - bezhotovostné splátky úverov a pôžičiek"
 
-#: models.py:104
+#: models.py:90
 msgid "0178 - Sales from provided services"
 msgstr "0178 - tržby za poskytnuté služby"
 
-#: models.py:105
+#: models.py:91
 msgid "0298 - Other cashless transfers"
 msgstr "0298 - ostatné bezhotovostné prevody"
 
-#: models.py:106
+#: models.py:92
 msgid "0304 - Prior payments for services"
 msgstr "0304 - platby za služby prednostné"
 
-#: models.py:107
+#: models.py:93
 msgid "0308 - Cashless payments for services"
 msgstr "0308 - platby za služby bezhotovostné"
 
-#: models.py:108
+#: models.py:94
 msgid "0358 - Payments dedicated to payout through post offices"
 msgstr "0358 - platby určené na výplaty prostredníctvom pôšt"
 
-#: models.py:109
+#: models.py:95
 msgid "0379 - Other income, income from postal order"
 msgstr "0379 - ostatné príjmy, príjmy z pošt. poukážok"
 
-#: models.py:110
+#: models.py:96
 msgid "0498 - Payments in loans"
 msgstr "0498 - splátky úverov a pôžičiek"
 
-#: models.py:111
+#: models.py:97
 msgid "0558 - Cashless other financial payments"
 msgstr "0558 - bezhotovostné ostatné finančné platby"
 
-#: models.py:112
+#: models.py:98
 msgid "0934 - Benefits - prior payments"
 msgstr "0934 - dávky soc. zabezpečenia - prednostné platby"
 
-#: models.py:113
+#: models.py:99
 msgid "0968 - Other cashless transfers"
 msgstr "0968 - ostatné bezhotovostné prevody"
 
-#: models.py:114
+#: models.py:100
 msgid "1144 - Prior payment - advance"
 msgstr "1144 - platba prednostná - záloha"
 
-#: models.py:115
+#: models.py:101
 msgid "1148 - Payment - current advance"
 msgstr "1148 - platba - bežná záloha"
 
-#: models.py:116
+#: models.py:102
 msgid ""
 "1744 - Accounting of tax at income tax of physical body and corporate body"
 msgstr "1744 - vyúčtovanie dane u dane z príjmov FP a PO prednostné"
 
-#: models.py:117
+#: models.py:103
 msgid ""
 "1748 - Income tax of physical body and corporate body based on declared tax "
 "year"
 msgstr "1748 - vyúčt. dane za posl. zdaňov. obdob.(dan z prijmu FO a PO)"
 
-#: models.py:118
+#: models.py:104
 msgid "3118 - Insurance and empl. contrib. to insur. co. and the Labor Office"
 msgstr "3118 - poistné a príspevok zamestnávateľa do poisťovní a NÚP"
 
-#: models.py:119
+#: models.py:105
 msgid "3344 - Penalty from message - prior"
 msgstr "3344 - penále zo správy prednostné"
 
-#: models.py:120
+#: models.py:106
 msgid "3348 - Penalty from message"
 msgstr "3348 - penále zo správy"
 
-#: models.py:121
+#: models.py:107
 msgid "3354 - Insurance payments by insurance companies"
 msgstr "3554 - platby poistného poisťovniam"
 
-#: models.py:122
+#: models.py:108
 msgid "3558 - Cashless insurance payments by insurance companies"
 msgstr "3558 - bezhotovostné platby poistného poisťovniam"
 
-#: models.py:123
+#: models.py:109
 msgid "8147 - Payment (posted together with the instruction)"
 msgstr "8147 - platba (účtovaná súčasne s predpisom)"
 
-#: models.py:127
+#: models.py:113
 msgid "type"
 msgstr "typ"
 
-#: models.py:128
+#: models.py:114
 msgid "sequence"
 msgstr "sekvencia"
 
-#: models.py:129
+#: models.py:115
 msgid "number"
 msgstr "číslo"
 
-#: models.py:130
+#: models.py:116
 msgid "status"
 msgstr "stav"
 
-#: models.py:131
+#: models.py:117
 msgid "subtitle"
 msgstr "podnadpis"
 
-#: models.py:132
+#: models.py:118
 msgid "related document"
 msgstr "súvisiaci dokument"
 
-#: models.py:133
+#: models.py:119
 msgid "related invoices"
 msgstr "súvisiace faktúry"
 
-#: models.py:134
+#: models.py:120
 msgid "language"
 msgstr "jazyk"
 
-#: models.py:135
+#: models.py:121
 msgid "note"
 msgstr "poznámka"
 
-#: models.py:135
+#: models.py:121
 msgid "Thank you for using our services."
 msgstr "Ďakujeme za využitie našich služieb."
 
-#: models.py:136
+#: models.py:122
 msgid "issue date"
 msgstr "dátum vystavenia"
 
-#: models.py:137
+#: models.py:123
 msgid "tax point date"
 msgstr "dátum vzniku daňovej povinnosti"
 
-#: models.py:137
+#: models.py:123
 msgid "time of supply"
 msgstr "dátum dodania"
 
-#: models.py:138
+#: models.py:124
 msgid "due date"
 msgstr "dátum splatnosti"
 
-#: models.py:138
+#: models.py:124
 msgid "payment till"
 msgstr "uhradiť do"
 
-#: models.py:139
+#: models.py:125
 msgid "date sent"
 msgstr "dátum odoslania"
 
-#: models.py:141
+#: models.py:127
 msgid "date paid"
 msgstr "dátum úhrady"
 
-#: models.py:143
+#: models.py:129
 msgid "date reminder sent"
 msgstr "dátum odoslania upomienky"
 
-#: models.py:147
+#: models.py:133
 msgid "currency"
 msgstr "mena"
 
-#: models.py:148 templates/invoicing/formatters/html.html:245
+#: models.py:134 templates/invoicing/formatters/html.html:245
 msgid "credit"
 msgstr "kredit"
 
-#: models.py:149
+#: models.py:135
 msgid "already paid"
 msgstr "už uhradené"
 
-#: models.py:151
+#: models.py:138
 msgid "payment method"
 msgstr "platobná metóda"
 
-#: models.py:152
+#: models.py:139
 msgid "constant symbol"
 msgstr "konštantný symbol"
 
-#: models.py:153
+#: models.py:140
 msgid "variable symbol"
 msgstr "variabilný symbol"
 
-#: models.py:156
+#: models.py:143
 msgid "specific symbol"
 msgstr "špecifický symbol"
 
-#: models.py:159
+#: models.py:146
 msgid "reference"
 msgstr "referencia"
 
-#: models.py:161
+#: models.py:148
 msgid "bank name"
 msgstr "Názov banky"
 
-#: models.py:162
+#: models.py:149
 msgid "bank street and number"
 msgstr "ulica a číslo banky"
 
-#: models.py:163
+#: models.py:150
 msgid "bank ZIP"
 msgstr "PSČ banky"
 
-#: models.py:164
+#: models.py:151
 msgid "bank city"
 msgstr "mesto banky"
 
-#: models.py:165
+#: models.py:152
 msgid "bank country"
 msgstr "krajina banky"
 
-#: models.py:166
+#: models.py:153
 msgid "Account number (IBAN)"
 msgstr "Číslo účtu (IBAN)"
 
-#: models.py:167
+#: models.py:154
 msgid "Bank SWIFT / BIC"
 msgstr "SWIFT / BIC banky"
 
-#: models.py:170
+#: models.py:157
 msgid "supplier name"
 msgstr "meno dodávateľa"
 
-#: models.py:171
+#: models.py:158
 msgid "supplier street and number"
 msgstr "ulica a číslo dodávateľa"
 
-#: models.py:172
+#: models.py:159
 msgid "supplier ZIP"
 msgstr "PSČ dodávateľa"
 
-#: models.py:173
+#: models.py:160
 msgid "supplier city"
 msgstr "mesto dodávateľa"
 
-#: models.py:174
+#: models.py:161
 msgid "supplier country"
 msgstr "krajina dodávateľa"
 
-#: models.py:175
+#: models.py:162
 msgid "supplier Reg. No."
 msgstr "IČO dodávateľa"
 
-#: models.py:176
+#: models.py:163
 msgid "supplier Tax No."
 msgstr "DIČ dodávateľa"
 
-#: models.py:177
+#: models.py:164
 msgid "supplier VAT No."
 msgstr "IČ DPH dodávateľa"
 
-#: models.py:178
+#: models.py:165
+#| msgid "supplier VAT No."
+msgid "supplier is VAT payer"
+msgstr "dodávateľ je platca DPH"
+
+#: models.py:166
 msgid "supplier additional information"
 msgstr "dodatočné informácie dodávateľa"
 
-#: models.py:182
+#: models.py:170
 msgid "issuer name"
 msgstr "meno kontaktnej osoby"
 
-#: models.py:183
+#: models.py:171
 msgid "issuer email"
 msgstr "email kontaktnej osoby"
 
-#: models.py:184
+#: models.py:172
 msgid "issuer phone"
 msgstr "telefón kontaktnej osoby"
 
-#: models.py:187
+#: models.py:175
 msgid "customer name"
 msgstr "meno odberateľa"
 
-#: models.py:188
+#: models.py:176
 msgid "customer street and number"
 msgstr "ulica a číslo odberateľa"
 
-#: models.py:189
+#: models.py:177
 msgid "customer ZIP"
 msgstr "PSČ odberateľa"
 
-#: models.py:190
+#: models.py:178
 msgid "customer city"
 msgstr "mesto odberateľa"
 
-#: models.py:191
+#: models.py:179
 msgid "customer country"
 msgstr "krajina odberateľa"
 
-#: models.py:192
+#: models.py:180
 msgid "customer Reg. No."
 msgstr "IČO odberateľa"
 
-#: models.py:193
+#: models.py:181
 msgid "customer Tax No."
 msgstr "DIČ odberateľa"
 
-#: models.py:194
+#: models.py:182
 msgid "customer VAT No."
 msgstr "IČ DPH odberateľa"
 
-#: models.py:195
+#: models.py:183
 msgid "customer additional information"
 msgstr "dodatočné informácie odberateľa"
 
-#: models.py:197
+#: models.py:185
 msgid "customer email"
 msgstr "email odberateľa"
 
-#: models.py:198
+#: models.py:186
 msgid "customer phone"
 msgstr "telefón odberateľa"
 
-#: models.py:201
+#: models.py:189
 msgid "shipping name"
 msgstr "doručovacia adresa - meno"
 
-#: models.py:202
+#: models.py:190
 msgid "shipping street and number"
 msgstr "doručovacia adresa - ulica a číslo"
 
-#: models.py:203
+#: models.py:191
 msgid "shipping ZIP"
 msgstr "doručovacia adresa - PSČ"
 
-#: models.py:204
+#: models.py:192
 msgid "shipping city"
 msgstr "doručovacia adresa - mesto"
 
-#: models.py:205
+#: models.py:193
 msgid "shipping country"
 msgstr "doručovacia adresa - krajina"
 
-#: models.py:208
+#: models.py:196
 msgid "delivery method"
 msgstr "spôsob doručenia"
 
-#: models.py:212
+#: models.py:200
 msgid "total"
 msgstr "celkom"
 
-#: models.py:218
+#: models.py:206
 msgid "attachments"
 msgstr "prílohy"
 
-#: models.py:220 models.py:547
+#: models.py:208 models.py:537
 msgid "created"
 msgstr "vytvorené"
 
-#: models.py:221 models.py:548
+#: models.py:209 models.py:538
 msgid "modified"
 msgstr "upravené"
 
-#: models.py:226 models.py:535
+#: models.py:214 models.py:525
 msgid "invoice"
 msgstr "faktúra"
 
-#: models.py:227
+#: models.py:215
 msgid "invoices"
 msgstr "faktúry"
 
-#: models.py:531
+#: models.py:521
 msgid "pcs."
 msgstr "ks"
 
-#: models.py:532
+#: models.py:522
 msgid "hours"
 msgstr "hod."
 
-#: models.py:536
+#: models.py:526
 msgid "title"
 msgstr "názov"
 
-#: models.py:537
+#: models.py:527
 msgid "quantity"
 msgstr "počet"
 
-#: models.py:538
+#: models.py:528
 msgid "unit"
 msgstr "jednotka"
 
-#: models.py:539
+#: models.py:529
 msgid "unit price"
 msgstr "jednotková cena"
 
-#: models.py:540
+#: models.py:530
 msgid "discount (%)"
 msgstr "zľava (%)"
 
-#: models.py:541
+#: models.py:531
 msgid "tax rate (%)"
 msgstr "sadzba DPH (%)"
 
-#: models.py:541
+#: models.py:531
 msgid "VAT rate"
 msgstr "sadzba DPH"
 
-#: models.py:543
+#: models.py:533
 msgid "tag"
 msgstr "značka"
 
-#: models.py:545
+#: models.py:535
 msgid "weight"
 msgstr "váha"
 
-#: models.py:545
+#: models.py:535
 msgid "ordering"
 msgstr "poradie"
 
-#: models.py:553
+#: models.py:543
 msgid "item"
 msgstr "položka"
 
-#: models.py:554
+#: models.py:544
 msgid "items"
 msgstr "položky"
 
@@ -1047,10 +1050,8 @@ msgid "Already paid"
 msgstr "Už uhradené"
 
 #: templates/invoicing/formatters/html.html:281
-#, fuzzy
-#| msgid "Total"
 msgid "Total due"
-msgstr "Celkom"
+msgstr "Suma na úhradu"
 
 #~ msgid "TOTAL DUE"
 #~ msgstr "Suma na úhradu"

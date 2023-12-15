@@ -9,7 +9,7 @@ def get_invoices_in_pdf(invoices):
     # TODO: replace with invoicing_settings
     invoicing_formatter = getattr(settings, 'INVOICING_FORMATTER', 'invoicing.formatters.html.BootstrapHTMLFormatter')
     formatter_class = import_string(invoicing_formatter)
-    print_api_url = getattr(settings, 'HTML_TO_PDF_API', None)
+    print_api_url = getattr(settings, 'HTMLTOPDF_API_URL', None)
     requests = []
     export_files = []
 
@@ -27,7 +27,7 @@ def get_invoices_in_pdf(invoices):
             export_files.append({'name': str(invoice) + '.pdf', 'content': invoice_content})
         else:
             if print_api_url is None:
-                raise NotImplementedError('Invoice content is not PDF and HTML_TO_PDF_API is not set.')
+                raise NotImplementedError('Invoice content is not PDF and HTMLTOPDF_API_URL is not set.')
             else:
                 requests.append({'invoice': str(invoice), 'html_content': invoice_content})
 

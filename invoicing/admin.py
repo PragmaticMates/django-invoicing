@@ -76,7 +76,8 @@ class InvoiceAdmin(admin.ModelAdmin):
         (_(u'Supplier details'), {
             'fields': (
                 'supplier_name', 'supplier_street', 'supplier_zip', 'supplier_city', 'supplier_country',
-                'supplier_registration_id', 'supplier_tax_id', 'supplier_vat_id', 'supplier_additional_info'
+                'supplier_registration_id', 'supplier_tax_id', 'supplier_vat_id', 'supplier_is_vat_payer',
+                'supplier_additional_info'
 
             )
         }),

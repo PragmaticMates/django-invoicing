@@ -9,9 +9,13 @@ def get_invoices_in_pdf(invoices):
     # TODO: replace with invoicing_settings
     invoicing_formatter = getattr(settings, 'INVOICING_FORMATTER', 'invoicing.formatters.html.BootstrapHTMLFormatter')
     formatter_class = import_string(invoicing_formatter)
-    print_api_url = getattr(settings, 'HTMLTOPDF_API_URL', None)
+    htmltopdf_api_url = getattr(settings, 'HTMLTOPDF_API_URL', None)
+    printmyweb_url = getattr(settings, 'PRINTMYWEB_URL', None)
+    printmyweb_token = getattr(settings, 'PRINTMYWEB_TOKEN', None)
     requests = []
     export_files = []
+
+    print_api_url = htmltopdf_api_url or printmyweb_url
 
     for invoice in invoices:
         formatter = formatter_class(invoice)
@@ -27,14 +31,25 @@ def get_invoices_in_pdf(invoices):
             export_files.append({'name': str(invoice) + '.pdf', 'content': invoice_content})
         else:
             if print_api_url is None:
-                raise NotImplementedError('Invoice content is not PDF and HTMLTOPDF_API_URL is not set.')
+                raise NotImplementedError('Invoice content is not PDF and print_api_url is not set!')
             else:
                 requests.append({'invoice': str(invoice), 'html_content': invoice_content})
 
     if len(requests) > 0:
         session = sessions.FuturesSession(max_workers=3)
+
+        kwargs = {}
+        if printmyweb_token:
+            kwargs['headers'] = {
+                'api-key': printmyweb_token
+            }
+
         futures = [
-            {'invoice': request.get('invoice'), 'future': session.post(print_api_url, data=request.get('html_content'))}
+            {'invoice': request.get('invoice'), 'future': session.post(
+                url=print_api_url,
+                data=request.get('html_content'),
+                **kwargs
+            )}
             for request in requests]
 
         for f in futures:

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-13 13:49+0100\n"
-"PO-Revision-Date: 2023-01-13 12:23+0000\n"
+"PO-Revision-Date: 2024-04-19 11:14+0000\n"
 "Last-Translator: Rafal Szczepanowicz <rafal@transportly.eu>\n"
 "Language-Team: Polish <https://weblate.swida.sk/projects/django-invoicing/"
 "app/pl/>\n"
@@ -16,10 +16,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && "
-"(n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && "
+"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && ("
+"n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && "
 "n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
-"X-Generator: Weblate 4.9.1\n"
+"X-Generator: Weblate 5.4.2\n"
 
 #: admin.py:25
 msgid "overdue"
@@ -912,7 +912,7 @@ msgstr "kolejność"
 
 #: models.py:544
 msgid "item"
-msgstr "przedmiot"
+msgstr "usługa"
 
 #: models.py:545
 msgid "items"
@@ -1012,7 +1012,7 @@ msgstr "Kwota"
 
 #: templates/invoicing/formatters/html.html:154
 msgid "with taxes"
-msgstr "z podatkami"
+msgstr "brutto"
 
 #: templates/invoicing/formatters/html.html:186
 msgid "There are no invoice items."

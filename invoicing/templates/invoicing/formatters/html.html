@@ -203,7 +203,7 @@
         <div class="col-md-5">
             <h4>{% trans 'Summary' %}:</h4>
 
-            {% if invoice.supplier_vat_id %}
+            {% if invoice.supplier_vat_id or invoice.is_reverse_charge %}
                 <div class="row">
                     <div class="col-md-8">
                         <div class="panel panel-success">
@@ -217,7 +217,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        {% if not invoice.supplier_vat_id or invoice.vat or invoice.vat == 0 %}
+                        {% if not invoice.supplier_vat_id or invoice.vat or invoice.vat == 0 or invoice.is_reverse_charge %}
                             <div class="panel panel-warning">
                                 <div class="panel-heading">
                                     <h3 class="panel-title">{% trans 'VAT' %}</h3>
@@ -227,6 +227,8 @@
                                         {% trans 'Not a VAT payer' %}
                                     {% elif invoice.vat or invoice.vat == 0 %}
                                         {{ invoice.vat|floatformat:"2" }} {{ invoice.currency }}
+                                    {% elif invoice.is_reverse_charge %}
+                                        {% trans 'VAT Reverse Charge' %}
                                     {% endif %}
                                 </div>
                             </div>

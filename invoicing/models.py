@@ -372,9 +372,29 @@ class Invoice(models.Model):
             return True
 
         # VAT is 0, check if customer is from EU and from same country as supplier
-        is_EU_customer = EUTaxationPolicy.is_in_EU(self.customer_country.code) if self.customer_country else False
+        return self.is_EU_customer() and self.supplier_country != self.customer_country
 
-        return is_EU_customer and self.supplier_country != self.customer_country
+    def is_EU_customer(self):
+        return EUTaxationPolicy.is_in_EU(self.customer_country.code) if self.customer_country else False
+
+    def is_reverse_charge(self):
+        # Reverse charged invoices have to have supplier VAT ID set
+        if self.supplier_vat_id in EMPTY_VALUES:
+            return False
+
+        # there has to be at least one invoice item with None tax rate
+        if not self.item_set.filter(tax_rate=None).exists():
+            return False
+
+        # customer has to be from EU
+        if not self.is_EU_customer():
+            return False
+
+        # supplier and customer have to be from different countries
+        if self.supplier_country == self.customer_country:
+            return False
+
+        return True
 
     @property
     def vat_summary(self):

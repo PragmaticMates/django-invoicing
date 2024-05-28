@@ -162,7 +162,6 @@ class Invoice(models.Model):
     supplier_registration_id = models.CharField(_(u'supplier Reg. No.'), max_length=255, blank=True)
     supplier_tax_id = models.CharField(_(u'supplier Tax No.'), max_length=255, blank=True)
     supplier_vat_id = VATNumberField(verbose_name=_(u'supplier VAT No.'), blank=True)
-    supplier_is_vat_payer = models.BooleanField(_(u'supplier is VAT payer'), blank=True, null=True, default=None)
     supplier_additional_info = JSONField(_(u'supplier additional information'),
         blank=True, null=True, default=None)  # for example www or legal matters
 
@@ -272,14 +271,12 @@ class Invoice(models.Model):
         return formatter(self)
 
     def get_tax_rate(self):
-        customer_country_code = self.customer_country.code if self.customer_country else None
-        supplier_country_code = self.supplier_country.code if self.supplier_country else None
-
         if self.taxation_policy:
             # There is taxation policy -> get tax rate
-            return self.taxation_policy.get_tax_rate(self.customer_vat_id, customer_country_code,
-                                                     supplier_country_code, self.supplier_is_vat_payer)
+            return self.taxation_policy.get_tax_rate(self)
         else:
+            supplier_country_code = self.supplier_country.code if self.supplier_country else None
+
             # If there is not any special taxation policy, set default tax rate
             return TaxationPolicy.get_default_tax(supplier_country_code)
 
@@ -331,7 +328,6 @@ class Invoice(models.Model):
         self.supplier_registration_id = supplier.get('registration_id', '')
         self.supplier_tax_id = supplier.get('tax_id', '')
         self.supplier_vat_id = supplier.get('vat_id', '')
-        self.supplier_is_vat_payer = supplier.get('is_vat_payer', None)
         self.supplier_additional_info = supplier.get('additional_info', None)
 
         bank = supplier.get('bank')
@@ -574,9 +570,15 @@ class Item(models.Model):
         return round(self.subtotal + self.vat, 2)
 
     def save(self, **kwargs):
-        # If tax rate is not set while creating new invoice item, set it according billing details
-        if self.tax_rate in EMPTY_VALUES and self.pk is None:
-            self.tax_rate = self.invoice.get_tax_rate()
+        # TODO: move to validator
+        if self.tax_rate not in EMPTY_VALUES and self.invoice.supplier_vat_id in EMPTY_VALUES:
+            raise ValueError(f'Tax rate is {self.tax_rate}% but supplier VAT ID is not set. Invoice #{self.invoice.pk}, number {self.invoice.number}')
+
+        # TODO: find out if user explicitely set None as value or should be set automatically
+        # if self.tax_rate in EMPTY_VALUES and self.pk is None:
+            # If tax rate is not set while creating new invoice item, set it according billing details
+            # self.tax_rate = self.invoice.get_tax_rate()
+
         return super(Item, self).save(**kwargs)
 
 

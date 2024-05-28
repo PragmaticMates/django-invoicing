@@ -3,6 +3,9 @@
 from django.db import migrations, models
 
 
+def echo(*args, **kwargs):
+    print('This migration will be deleted in the next release. If you already applied previous version, drop supplier_is_vat_payer field manually!')
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,9 +13,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='invoice',
-            name='supplier_is_vat_payer',
-            field=models.BooleanField(blank=True, null=True, default=None)
-        ),
+        # TODO: DEPRECATED: previous version of migration adding new field
+        # migrations.AddField(
+        #     model_name='invoice',
+        #     name='supplier_is_vat_payer',
+        #     field=models.BooleanField(blank=True, null=True, default=None)
+        # ),
+        migrations.RunPython(echo, migrations.RunPython.noop)
     ]

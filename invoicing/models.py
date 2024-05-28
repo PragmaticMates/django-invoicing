@@ -378,7 +378,7 @@ class Invoice(models.Model):
     def is_EU_customer(self):
         return EUTaxationPolicy.is_in_EU(self.customer_country.code) if self.customer_country else False
 
-    def is_reverse_charge(self):
+    def is_reverse_charge(self, delivery_country=None):
         # Reverse charged invoices have to have supplier VAT ID set
         if self.supplier_vat_id in EMPTY_VALUES:
             return False
@@ -391,8 +391,10 @@ class Invoice(models.Model):
         if not self.is_EU_customer():
             return False
 
-        # supplier and customer have to be from different countries
-        if self.supplier_country == self.customer_country:
+        # supplier and delivery countries have to be different
+        country = delivery_country or self.customer_country
+
+        if self.supplier_country == country:
             return False
 
         return True

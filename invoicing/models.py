@@ -359,6 +359,7 @@ class Invoice(models.Model):
 
     # http://www.superfaktura.sk/blog/neplatca-dph-vzor-faktury/
     def is_supplier_vat_id_visible(self):
+        # TODO: deprecated method
         is_supplier_vat_id_visible = getattr(settings, 'INVOICING_IS_SUPPLIER_VAT_ID_VISIBLE', None)
 
         if is_supplier_vat_id_visible is not None:

@@ -349,7 +349,7 @@ class Invoice(models.Model):
         self.customer_tax_id = customer.get('tax_id', '')
         self.customer_vat_id = customer.get('vat_id', '')
         self.customer_additional_info = customer.get('additional_info', None)
-        
+
     def set_shipping_data(self, shipping):
         self.shipping_name = shipping.get('name', '')
         self.shipping_street = shipping.get('street', '')
@@ -378,32 +378,14 @@ class Invoice(models.Model):
     def is_EU_customer(self):
         return EUTaxationPolicy.is_in_EU(self.customer_country.code) if self.customer_country else False
 
-    def is_reverse_charge(self, delivery_country=None):
-        # Reverse charged invoices have to have supplier VAT ID set
-        if self.supplier_vat_id in EMPTY_VALUES:
-            return False
-
-        # there has to be at least one invoice item with None tax rate
-        if not self.item_set.filter(tax_rate=None).exists():
-            return False
-
-        # customer has to be from EU
-        if not self.is_EU_customer():
-            return False
-
-        # supplier and delivery countries have to be different
-        country = delivery_country or self.customer_country
-
-        if self.supplier_country == country:
-            return False
-
-        return True
+    def is_reverse_charge(self):
+        return self.taxation_policy.is_reverse_charge(self)
 
     @property
     def vat_summary(self):
-        #rates_and_sum = self.item_set.all().annotate(base=Sum(F('qty')*F('price_per_unit'))).values('tax_rate', 'base')
-        #rates_and_sum = self.item_set.all().values('tax_rate').annotate(Sum('price_per_unit'))
-        #rates_and_sum = self.item_set.all().values('tax_rate').annotate(Sum(F('qty')*F('price_per_unit')))
+        # rates_and_sum = self.item_set.all().annotate(base=Sum(F('qty')*F('price_per_unit'))).values('tax_rate', 'base')
+        # rates_and_sum = self.item_set.all().values('tax_rate').annotate(Sum('price_per_unit'))
+        # rates_and_sum = self.item_set.all().values('tax_rate').annotate(Sum(F('qty')*F('price_per_unit')))
 
         from django.db import connection
         cursor = connection.cursor()
@@ -464,7 +446,7 @@ class Invoice(models.Model):
 
     @property
     def discount_percentage(self):
-        percentage = 100*self.discount/self.total_without_discount
+        percentage = 100 * self.discount / self.total_without_discount
         return round(percentage, 2)
 
     @property
@@ -485,13 +467,11 @@ class Invoice(models.Model):
         return vat
 
     def calculate_total(self):
-        #total = self.subtotal + self.vat  # subtotal with vat
         total = 0
 
         for vat_rate in self.vat_summary:
             total += Decimal(vat_rate['base']) + Decimal(vat_rate['vat'] or 0)
 
-        #total *= Decimal((100 - Decimal(self.discount)) / 100)  # subtract discount amount
         total -= Decimal(self.credit)  # subtract credit
         return round(total, 2)
 
@@ -581,7 +561,7 @@ class Item(models.Model):
 
     @property
     def vat(self):
-        return round(self.subtotal * Decimal(self.tax_rate)/100 if self.tax_rate else 0, 2)
+        return round(self.subtotal * Decimal(self.tax_rate) / 100 if self.tax_rate else 0, 2)
 
     @property
     def unit_price_with_vat(self):
@@ -597,10 +577,10 @@ class Item(models.Model):
         if self.tax_rate not in EMPTY_VALUES and self.invoice.supplier_vat_id in EMPTY_VALUES:
             raise ValueError(f'Tax rate is {self.tax_rate}% but supplier VAT ID is not set. Invoice #{self.invoice.pk}, number {self.invoice.number}')
 
-        # TODO: find out if user explicitely set None as value or should be set automatically
+        # TODO: find out if user explicitly set None as value or should be set automatically
         # if self.tax_rate in EMPTY_VALUES and self.pk is None:
-            # If tax rate is not set while creating new invoice item, set it according billing details
-            # self.tax_rate = self.invoice.get_tax_rate()
+        # If tax rate is not set while creating new invoice item, set it according billing details
+        # self.tax_rate = self.invoice.get_tax_rate()
 
         return super(Item, self).save(**kwargs)
 

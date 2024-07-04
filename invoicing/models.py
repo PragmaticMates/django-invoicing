@@ -527,7 +527,8 @@ class Item(models.Model):
     unit = models.CharField(_(u'unit'), choices=UNITS, max_length=64, default=UNIT_PIECES)
     unit_price = models.DecimalField(_(u'unit price'), max_digits=10, decimal_places=2)
     discount = models.DecimalField(_(u'discount (%)'), max_digits=4, decimal_places=1, default=0)
-    tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1, help_text=_(u'VAT rate'),
+    tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1,
+        help_text=_(u'Enter amount or keep blank for no tax or reverse charge (if applicable)'),
         blank=True, null=True, default=None)
     tag = models.CharField(_(u'tag'), max_length=128,
         blank=True, null=True, default=None)

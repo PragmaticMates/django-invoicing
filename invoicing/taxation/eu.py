@@ -32,14 +32,14 @@ class EUTaxationPolicy(TaxationPolicy):
         'CY': Decimal(19),  # Cyprus
         'CZ': Decimal(21),  # Czech Republic
         'DK': Decimal(25),  # Denmark
-        'EE': Decimal(20),  # Estonia
+        'EE': Decimal(22),  # Estonia
         'FI': Decimal(24),  # Finland
         'FR': Decimal(20),  # France
         'DE': Decimal(19),  # Germany
         'GR': Decimal(24),  # Greece
         'HR': Decimal(25),  # Croatia
         'HU': Decimal(27),  # Hungary
-        'IE': Decimal(21),  # Ireland
+        'IE': Decimal(23),  # Ireland
         'IT': Decimal(22),  # Italy
         'LV': Decimal(21),  # Latvia
         'LT': Decimal(21),  # Lithuania
@@ -53,14 +53,11 @@ class EUTaxationPolicy(TaxationPolicy):
         'SI': Decimal(22),  # Slovenia
         'ES': Decimal(21),  # Spain
         'SE': Decimal(25),  # Sweden
-        'GB': Decimal(20),  # United Kingdom (Great Britain)
+        # 'GB': Decimal(20),  # United Kingdom (Great Britain)
     }
 
     @classmethod
     def is_in_EU(cls, country_code):
-        if country_code == 'GB':
-            return False
-
         return country_code.upper() in cls.EU_COUNTRIES_RATES.keys()
 
     @classmethod

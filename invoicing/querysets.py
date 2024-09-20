@@ -62,7 +62,7 @@ class InvoiceQuerySet(QuerySet):
         """
         cursor = connection.cursor()
         table = self.model._meta.db_table
-        cursor.execute("LOCK TABLE %s" % table)
+        cursor.execute("LOCK TABLE %s IN SHARE ROW EXCLUSIVE MODE" % table)
 
 
 class ItemQuerySet(QuerySet):

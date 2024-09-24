@@ -82,6 +82,11 @@ class EUTaxationPolicy(TaxationPolicy):
         # supplier and delivery countries have to be different
         place_of_supply = delivery_country or invoice.customer_country
 
+        # missing place of supply
+        if place_of_supply in EMPTY_VALUES:
+            return False
+
+        # same supplier country as place of supply
         if invoice.supplier_country == place_of_supply:
             return False
 

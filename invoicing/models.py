@@ -46,7 +46,8 @@ class Invoice(models.Model):
     COUNTER_PERIOD = Choices(
         ('DAILY', _('daily')),
         ('MONTHLY', _('monthly')),
-        ('YEARLY', _('yearly'))
+        ('YEARLY', _('yearly')),
+        ('ENDLESS', _('endless'))
     )
 
     TYPE = Choices(

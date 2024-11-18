@@ -36,5 +36,5 @@ class Config(AppConfig):
 
         invoice2 = Invoice(date_issue=date, sequence=sequence)
 
-        if number_formatter(invoice1) == number_formatter(invoice2):
+        if invoice1._get_number() == invoice2._get_number():
             raise ImproperlyConfigured("The INVOICING_NUMBER_FORMAT is incorrect for the current INVOICING_COUNTER_PERIOD")

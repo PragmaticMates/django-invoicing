@@ -47,7 +47,7 @@ class Invoice(models.Model):
         ('DAILY', _('daily')),
         ('MONTHLY', _('monthly')),
         ('YEARLY', _('yearly')),
-        ('ENDLESS', _('endless'))
+        ('INFINITE', _('infinite'))
     )
 
     TYPE = Choices(

@@ -31,7 +31,7 @@ class Config(AppConfig):
             date += relativedelta(months=1)
         elif counter_period == Invoice.COUNTER_PERIOD.YEARLY:
             date += relativedelta(years=1)
-        elif counter_period == Invoice.COUNTER_PERIOD.ENDLESS:
+        elif counter_period == Invoice.COUNTER_PERIOD.INFINITE:
             sequence += 1
 
         invoice2 = Invoice(date_issue=date, sequence=sequence)

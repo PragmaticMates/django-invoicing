@@ -42,8 +42,8 @@ def sequence_generator(type, important_date, number_prefix=None, counter_period=
         elif counter_period == Invoice.COUNTER_PERIOD.MONTHLY:
             related_invoices = related_invoices.filter(date_issue__year=important_date.year, date_issue__month=important_date.month)
 
-        elif counter_period != Invoice.COUNTER_PERIOD.ENDLESS:
-            raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: DAILY, MONTHLY, YEARLY, ENDLESS.")
+        elif counter_period != Invoice.COUNTER_PERIOD.INFINITE:
+            raise ImproperlyConfigured("INVOICING_COUNTER_PERIOD can be set only to these values: DAILY, MONTHLY, YEARLY, INFINITE.")
 
         invoice_counter_per_type = getattr(settings, 'INVOICING_COUNTER_PER_TYPE', False)
 

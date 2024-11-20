@@ -14,7 +14,6 @@ class Config(AppConfig):
 
     def ready(self):
         from invoicing.models import Invoice
-        from invoicing.helpers import number_formatter
         from django.conf import settings
         from django.core.exceptions import ImproperlyConfigured
         from django.utils.timezone import now

@@ -1,4 +1,8 @@
 from django.apps import AppConfig
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from django.utils.timezone import now
+from dateutil.relativedelta import relativedelta
 
 try:
     # older Django
@@ -14,10 +18,6 @@ class Config(AppConfig):
 
     def ready(self):
         from invoicing.models import Invoice
-        from django.conf import settings
-        from django.core.exceptions import ImproperlyConfigured
-        from django.utils.timezone import now
-        from dateutil.relativedelta import relativedelta
 
         counter_period = getattr(settings, "INVOICING_COUNTER_PERIOD")
         sequence = 1
@@ -34,6 +34,7 @@ class Config(AppConfig):
             sequence += 1
 
         invoice2 = Invoice(date_issue=date, sequence=sequence)
-
+        print('invoice1', invoice1)
+        print('invoice2', invoice2)
         if invoice1._get_number() == invoice2._get_number():
             raise ImproperlyConfigured("The INVOICING_NUMBER_FORMAT is incorrect for the current INVOICING_COUNTER_PERIOD")

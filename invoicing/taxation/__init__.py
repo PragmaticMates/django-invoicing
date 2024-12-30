@@ -14,7 +14,7 @@ class TaxationPolicy(object):
     """
 
     @classmethod
-    def get_default_tax(cls, country_code=None):
+    def get_default_tax(cls, country_code=None, tax_point_date=None):
         """
         Gets default tax rate.``
 

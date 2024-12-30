@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, ValidationError
@@ -49,11 +50,14 @@ class EUTaxationPolicy(TaxationPolicy):
         'PL': Decimal(23),  # Poland
         'PT': Decimal(23),  # Portugal
         'RO': Decimal(19),  # Romania
-        'SK': Decimal(20),  # Slovakia
+        'SK': [
+            {"from": date.min, "to": date(2024, 12, 31), "rate": Decimal(20)},
+            {"from": date(2025, 1, 1), "to": date.max, "rate": Decimal(23)},
+        ], # Slovakia
         'SI': Decimal(22),  # Slovenia
         'ES': Decimal(21),  # Spain
         'SE': Decimal(25),  # Sweden
-        # 'GB': Decimal(20),  # United Kingdom (Great Britain)
+        # 'GB': Decimal(20),  # United Kingdom (Great Britain) - not in EU since 1.2.2020
     }
 
     @classmethod
@@ -79,14 +83,14 @@ class EUTaxationPolicy(TaxationPolicy):
         if invoice.customer_vat_id in EMPTY_VALUES:
             return False
 
-        # supplier and delivery countries have to be different
+        # Place of supply is either delivery country or customer country
         place_of_supply = delivery_country or invoice.customer_country
 
         # missing place of supply
         if place_of_supply in EMPTY_VALUES:
             return False
 
-        # same supplier country as place of supply
+        # supplier and delivery countries have to be different
         if invoice.supplier_country == place_of_supply:
             return False
 
@@ -100,19 +104,25 @@ class EUTaxationPolicy(TaxationPolicy):
 
         return True
 
+    # TODO: rename to get_default_tax_rate
     @classmethod
-    def get_default_tax(cls, country_code=None):
+    def get_default_tax(cls, country_code=None, tax_point_date=None):
         """
         Gets default tax rate.``
 
+        :param country_code: The ISO country code
+        :param tax_point_date: The date of the tax point (date object)
         :return: Decimal()
         """
+        # Use the current time if tax_point_date is not provided
+        if tax_point_date is None:
+            tax_point_date = date.today()
 
-        default_tax_rate = super().get_default_tax(country_code)
+        default_tax_rate = super().get_default_tax(country_code, tax_point_date)
 
-        # tax rate by country
+        # If country code and tax point date are provided, fetch the rate
         if country_code and not hasattr(settings, 'INVOICING_TAX_RATE'):
-            return cls.EU_COUNTRIES_RATES.get(country_code, default_tax_rate)
+            return cls.get_rate_for_country(country_code, tax_point_date)
 
         return default_tax_rate
 
@@ -147,4 +157,30 @@ class EUTaxationPolicy(TaxationPolicy):
                 pass
 
         # return default tax
-        return cls.get_default_tax(supplier_country)
+        return cls.get_default_tax(supplier_country, invoice.date_tax_point)
+
+    @classmethod
+    def get_rate_for_country(cls, country_code, tax_point_date):
+        """
+        Gets the tax rate for a specific country and date.
+
+        :param country_code: ISO country code
+        :param tax_point_date: Date for which the tax rate applies (date object)
+        :return: Decimal
+        """
+        # Get default tax rate
+        default_tax_rate = super().get_default_tax(country_code, tax_point_date)
+
+        # Find rate definition for the country
+        rates = cls.EU_COUNTRIES_RATES.get(country_code, default_tax_rate)
+
+        # If rates are defined as a list (date-specific), determine the applicable rate
+        if isinstance(rates, list):
+            for rate_period in rates:
+                if rate_period["from"] <= tax_point_date <= rate_period["to"]:
+                    return rate_period["rate"]
+            # Fallback if no date range matches (unlikely if ranges are defined properly)
+            raise ValueError(f"No valid tax rate found for {country_code} on {tax_point_date}")
+
+        # If rates are not date-specific, return the flat rate
+        return rates

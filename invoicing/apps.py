@@ -19,7 +19,7 @@ class Config(AppConfig):
     def ready(self):
         from invoicing.models import Invoice
 
-        counter_period = getattr(settings, "INVOICING_COUNTER_PERIOD")
+        counter_period = getattr(settings, "INVOICING_COUNTER_PERIOD", Invoice.COUNTER_PERIOD.YEARLY)
         sequence = 1
         date = now()
         invoice1 = Invoice(date_issue=date, date_tax_point=date, sequence=sequence)

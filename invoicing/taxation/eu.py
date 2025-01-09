@@ -102,7 +102,7 @@ class EUTaxationPolicy(TaxationPolicy):
             supplier_vat_id=invoice.supplier_vat_id,
             supplier_country=invoice.supplier_country,
             customer_vat_id=invoice.customer_vat_id,
-            customer_country=delivery_country if delivery_country else invoice.customer_country,
+            customer_country=delivery_country or invoice.customer_country, # Place of supply is either delivery country or customer country
         )
 
     # TODO: rename to get_default_tax_rate
@@ -128,7 +128,7 @@ class EUTaxationPolicy(TaxationPolicy):
         return default_tax_rate
 
     @classmethod
-    def get_tax_rate_by_vat_id(cls, supplier_vat_id, supplier_country, customer_vat_id, customer_country):
+    def get_tax_rate_by_vat_id(cls, supplier_vat_id, supplier_country, customer_vat_id, customer_country, date_tax_point=None):
         if supplier_vat_id in EMPTY_VALUES:
             return None
 
@@ -157,7 +157,7 @@ class EUTaxationPolicy(TaxationPolicy):
                 pass
 
         # return default tax
-        return cls.get_default_tax(supplier_country, invoice.date_tax_point)
+        return cls.get_default_tax(supplier_country, date_tax_point)
 
     @classmethod
     def get_tax_rate(cls, invoice):
@@ -166,6 +166,7 @@ class EUTaxationPolicy(TaxationPolicy):
             supplier_country=invoice.supplier_country,
             customer_vat_id=invoice.customer_vat_id,
             customer_country=invoice.customer_country,
+            date_tax_point=invoice.date_tax_point,
         )
 
     @classmethod

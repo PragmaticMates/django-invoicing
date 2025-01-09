@@ -279,7 +279,7 @@ class Invoice(models.Model):
             supplier_country_code = self.supplier_country.code if self.supplier_country else None
 
             # If there is not any special taxation policy, set default tax rate
-            return TaxationPolicy.get_default_tax(supplier_country_code)
+            return TaxationPolicy.get_default_tax(supplier_country_code, self.date_tax_point)
 
     @property
     def taxation_policy(self):

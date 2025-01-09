@@ -19,10 +19,10 @@ class Config(AppConfig):
     def ready(self):
         from invoicing.models import Invoice
 
-        counter_period = getattr(settings, "INVOICING_COUNTER_PERIOD")
+        counter_period = getattr(settings, "INVOICING_COUNTER_PERIOD", Invoice.COUNTER_PERIOD.YEARLY)
         sequence = 1
         date = now()
-        invoice1 = Invoice(date_issue=date, sequence=sequence)
+        invoice1 = Invoice(date_issue=date, date_tax_point=date, sequence=sequence)
 
         if counter_period == Invoice.COUNTER_PERIOD.DAILY:
             date += relativedelta(days=1)
@@ -33,7 +33,7 @@ class Config(AppConfig):
         elif counter_period == Invoice.COUNTER_PERIOD.INFINITE:
             sequence += 1
 
-        invoice2 = Invoice(date_issue=date, sequence=sequence)
+        invoice2 = Invoice(date_issue=date, date_tax_point=date, sequence=sequence)
 
         if invoice1._get_number() == invoice2._get_number():
             raise ImproperlyConfigured("The INVOICING_NUMBER_FORMAT is incorrect for the current INVOICING_COUNTER_PERIOD")

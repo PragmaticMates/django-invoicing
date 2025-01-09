@@ -41,3 +41,20 @@ class TaxationPolicy(object):
         :return: Decimal()
         """
         raise NotImplementedError('Method get_tax_rate should be implemented.')
+
+    @classmethod
+    def get_tax_rate_by_vat_id(cls, supplier_vat_id, supplier_country, customer_vat_id, customer_country):
+        """
+        Methods
+
+        :param supplier_vat_id: supplier_vat_id
+        :param supplier_country: supplier_country
+        :param customer_vat_id: customer_vat_id
+        :param customer_country: customer_country
+        :return: Decimal()
+        """
+        raise NotImplementedError('Method get_tax_rate_by_vat_id should be implemented.')
+
+    @classmethod
+    def calculate_tax(cls, price, tax_rate):
+        return price * (tax_rate / 100) if tax_rate and price else 0

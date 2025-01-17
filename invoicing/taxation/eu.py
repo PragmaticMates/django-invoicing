@@ -65,19 +65,7 @@ class EUTaxationPolicy(TaxationPolicy):
         return country_code.upper() in cls.EU_COUNTRIES_RATES.keys()
 
     @classmethod
-    def is_reverse_charge_by_vat_id(cls, supplier_vat_id, supplier_country, customer_vat_id, customer_country):
-        if supplier_country:
-            supplier_country = supplier_country.code if hasattr(supplier_country, 'code') else supplier_country
-
-        if customer_country:
-            customer_country = customer_country.code if hasattr(customer_country, 'code') else customer_country
-
-        if supplier_country is None or customer_country is None:
-            return False
-
-        if not cls.is_in_EU(supplier_country):
-            return False
-
+    def is_reverse_charge(cls, supplier_vat_id, customer_vat_id, delivery_country=None):
         # Supplier VAT ID has to be set
         if supplier_vat_id in EMPTY_VALUES:
             return False
@@ -86,24 +74,27 @@ class EUTaxationPolicy(TaxationPolicy):
         if customer_vat_id in EMPTY_VALUES:
             return False
 
+        supplier_country = supplier_vat_id[:2]
+        customer_country = customer_vat_id[:2]
+
+        if supplier_country is None or customer_country is None:
+            return False
+
+        if not cls.is_in_EU(supplier_country):
+            return False
+
+        # Place of supply is either delivery country or customer country
+        place_of_supply = delivery_country or customer_country
+
+        # missing place of supply
+        if place_of_supply in EMPTY_VALUES:
+            return False
+
         # supplier and delivery countries have to be different
-        if supplier_country == customer_country:
+        if supplier_country == place_of_supply:
             return False
 
         return True
-
-
-    @classmethod
-    def is_reverse_charge(cls, invoice, delivery_country=None, check_items=True):
-        if check_items and invoice.item_set.exists() and not invoice.item_set.filter(tax_rate=None).exists():
-            return False
-
-        return cls.is_reverse_charge_by_vat_id(
-            supplier_vat_id=invoice.supplier_vat_id,
-            supplier_country=invoice.supplier_country,
-            customer_vat_id=invoice.customer_vat_id,
-            customer_country=delivery_country or invoice.customer_country, # Place of supply is either delivery country or customer country
-        )
 
     # TODO: rename to get_default_tax_rate
     @classmethod
@@ -128,12 +119,11 @@ class EUTaxationPolicy(TaxationPolicy):
         return default_tax_rate
 
     @classmethod
-    def get_tax_rate_by_vat_id(cls, supplier_vat_id, supplier_country, customer_vat_id, customer_country, date_tax_point=None):
+    def get_tax_rate(cls, supplier_vat_id, customer_vat_id, date_tax_point=None):
         if supplier_vat_id in EMPTY_VALUES:
             return None
 
-        if supplier_country:
-            supplier_country = supplier_country.code if hasattr(supplier_country, 'code') else supplier_country
+        supplier_country = supplier_vat_id[:2]
 
         if not supplier_country:
             supplier_country = cls.get_supplier_country_code()
@@ -142,7 +132,7 @@ class EUTaxationPolicy(TaxationPolicy):
             raise ImproperlyConfigured("EUTaxationPolicy requires that supplier country is in EU")
 
         # Reverse charge
-        if cls.is_reverse_charge_by_vat_id(supplier_vat_id, supplier_country, customer_vat_id, customer_country):
+        if cls.is_reverse_charge(supplier_vat_id, customer_vat_id):
             if not getattr(settings, 'INVOICING_USE_VIES_VALIDATOR', True):
                 return None
 
@@ -158,16 +148,6 @@ class EUTaxationPolicy(TaxationPolicy):
 
         # return default tax
         return cls.get_default_tax(supplier_country, date_tax_point)
-
-    @classmethod
-    def get_tax_rate(cls, invoice):
-        return cls.get_tax_rate_by_vat_id(
-            supplier_vat_id=invoice.supplier_vat_id,
-            supplier_country=invoice.supplier_country,
-            customer_vat_id=invoice.customer_vat_id,
-            customer_country=invoice.customer_country,
-            date_tax_point=invoice.date_tax_point,
-        )
 
     @classmethod
     def get_rate_for_country(cls, country_code, tax_point_date):

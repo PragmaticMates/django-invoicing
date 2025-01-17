@@ -274,7 +274,7 @@ class Invoice(models.Model):
     def get_tax_rate(self):
         if self.taxation_policy:
             # There is taxation policy -> get tax rate
-            return self.taxation_policy.get_tax_rate(self)
+            return self.taxation_policy.get_tax_rate_by_invoice(self)
         else:
             supplier_country_code = self.supplier_country.code if self.supplier_country else None
 
@@ -380,7 +380,10 @@ class Invoice(models.Model):
         return EUTaxationPolicy.is_in_EU(self.customer_country.code) if self.customer_country else False
 
     def is_reverse_charge(self):
-        return self.taxation_policy.is_reverse_charge(self)
+        if self.item_set.exists() and not self.item_set.filter(tax_rate=None).exists():
+            return False
+
+        return self.taxation_policy.is_reverse_charge(self.supplier_vat_id, self.customer_vat_id)
 
     @property
     def vat_summary(self):

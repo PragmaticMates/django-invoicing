@@ -33,28 +33,33 @@ class TaxationPolicy(object):
         return supplier['country_code']
 
     @classmethod
-    def get_tax_rate(cls, invoice):
+    def get_tax_rate(cls, supplier_vat_id, customer_vat_id):
+        """
+        Methods
+
+        :param supplier_vat_id: supplier vat id
+        :param customer_vat_id: customer vat id
+        :return: Decimal()
+        """
+        raise NotImplementedError('Method get_tax_rate should be implemented.')
+
+    @classmethod
+    def get_tax_rate_by_invoice(cls, invoice):
         """
         Methods
 
         :param invoice: invoice
         :return: Decimal()
         """
-        raise NotImplementedError('Method get_tax_rate should be implemented.')
-
-    @classmethod
-    def get_tax_rate_by_vat_id(cls, supplier_vat_id, supplier_country, customer_vat_id, customer_country):
-        """
-        Methods
-
-        :param supplier_vat_id: supplier_vat_id
-        :param supplier_country: supplier_country
-        :param customer_vat_id: customer_vat_id
-        :param customer_country: customer_country
-        :return: Decimal()
-        """
-        raise NotImplementedError('Method get_tax_rate_by_vat_id should be implemented.')
+        return cls.get_tax_rate(invoice.supplier_vat_id, invoice.customer_vat_id)
 
     @classmethod
     def calculate_tax(cls, price, tax_rate):
+        """
+        Methods
+
+        :param price: price
+        :param tax_rate: tax rate
+        :return: Decimal()
+        """
         return price * (tax_rate / 100) if tax_rate and price else 0

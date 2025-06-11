@@ -150,7 +150,7 @@ class Invoice(models.Model):
     bank_street = models.CharField(_(u'bank street and number'), max_length=255, blank=True)
     bank_zip = models.CharField(_(u'bank ZIP'), max_length=255, blank=True)
     bank_city = models.CharField(_(u'bank city'), max_length=255, blank=True)
-    bank_country = CountryField(_(u'bank country'), max_length=255, blank=True)
+    bank_country = CountryField(_(u'bank country'), max_length=2, blank=True)
     bank_iban = IBANField(verbose_name=_(u'Account number (IBAN)'), default=None)
     bank_swift_bic = BICField(verbose_name=_(u'Bank SWIFT / BIC'), blank=True)
 

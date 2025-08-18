@@ -1,4 +1,8 @@
-from collections import OrderedDict
+import uuid
+from collections import OrderedDict, defaultdict
+from decimal import Decimal, ROUND_HALF_UP
+
+from lxml import etree
 
 from invoicing.models import Invoice
 from invoicing.utils import get_invoices_in_pdf
@@ -143,3 +147,286 @@ class InvoicePdfDetailExporter(ExporterMixin):
         else:
             # compress all invoices into single archive file
             output.write(compress(export_files).read())
+
+
+class InvoiceISDOCXmlListExporter(ExporterMixin):
+    queryset = Invoice.objects.all()
+    filename = 'invoices_isdoc.zip'
+    export_format = "ISDOC"
+    export_context = Export.CONTEXT_LIST
+    ISDOC_DOCUMENT_TYPE_MAPPING = {
+        'INVOICE': '1',
+        'CREDIT_NOTE': '2',
+        'PROFORMA': '4',
+        'ADVANCE': '5',
+    }
+    PAYMENT_MEANS_MAP = {
+        'BANK_TRANSFER': '42',
+        'CASH': '10',
+        'CASH_ON_DELIVERY': '30',
+        'PAYMENT_CARD': '48',
+    }
+
+    def get_queryset(self):
+        return self.queryset
+
+    def export(self):
+        self.write_data(self.output)
+
+    @staticmethod
+    def get_invoice_orders(invoice):
+        return []
+
+    @staticmethod
+    def get_invoice_domestic_currency(invoice):
+        code = getattr(invoice.supplier_country, 'code', invoice.supplier_country)
+        return 'EUR' if code == 'SK' else 'CZK'
+
+    @staticmethod
+    def get_invoice_fx_rate(invoice):
+        return 1
+
+    def write_data(self, output):
+        export_files = []
+
+        for invoice in self.get_queryset():
+
+            root = etree.Element("Invoice", nsmap={None: "http://isdoc.cz/namespace/2013"}, version="6.0.1")
+
+            # Header
+            etree.SubElement(root, "DocumentType").text = self.ISDOC_DOCUMENT_TYPE_MAPPING.get(invoice.type, '1')
+            etree.SubElement(root, "ID").text = invoice.number
+            etree.SubElement(root, "UUID").text = str(uuid.uuid4())
+            etree.SubElement(root, "IssueDate").text = invoice.date_issue.isoformat()
+            etree.SubElement(root, "TaxPointDate").text = invoice.date_tax_point.isoformat()
+            etree.SubElement(root, "VATApplicable").text = "true" if invoice.type != Invoice.TYPE.PROFORMA else "false"
+            etree.SubElement(root, "ElectronicPossibilityAgreementReference").text = ""
+            etree.SubElement(root, "Note").text = invoice.note
+
+            # Currency handling
+            domestic_currency = self.get_invoice_domestic_currency(invoice)
+            etree.SubElement(root, "LocalCurrencyCode").text = domestic_currency
+            has_foreign_currency = invoice.currency != self.get_invoice_domestic_currency(invoice)
+
+            if has_foreign_currency:
+                etree.SubElement(root, "ForeignCurrencyCode").text = invoice.currency
+
+            fx_rate = self.get_invoice_fx_rate(invoice)
+            etree.SubElement(root, "CurrRate").text = str(fx_rate) if fx_rate and has_foreign_currency else "1"
+            etree.SubElement(root, "RefCurrRate").text = "1"
+
+            # Supplier
+            supplier = etree.SubElement(root, "AccountingSupplierParty")
+            party = etree.SubElement(supplier, "Party")
+
+            party_identification = etree.SubElement(party, "PartyIdentification")
+            etree.SubElement(party_identification, "ID").text = invoice.supplier_registration_id
+            etree.SubElement(etree.SubElement(party, "PartyName"), "Name").text = invoice.supplier_name
+
+            address = etree.SubElement(party, "PostalAddress")
+            etree.SubElement(address, "StreetName").text = invoice.supplier_street
+            etree.SubElement(address, "BuildingNumber").text = ""
+            etree.SubElement(address, "CityName").text = invoice.supplier_city
+            etree.SubElement(address, "PostalZone").text = invoice.supplier_zip
+
+            country = etree.SubElement(address, "Country")
+            etree.SubElement(country, "IdentificationCode").text = invoice.supplier_country.code
+            etree.SubElement(country, "Name").text = invoice.get_supplier_country_display()
+
+            tax = etree.SubElement(party, "PartyTaxScheme")
+            etree.SubElement(tax, "CompanyID").text = invoice.supplier_vat_id
+            etree.SubElement(tax, "TaxScheme").text = "VAT"
+
+            contact = etree.SubElement(party, "Contact")
+            etree.SubElement(contact, "Name").text = invoice.issuer_name
+            etree.SubElement(contact, "Telephone").text = invoice.issuer_phone
+            etree.SubElement(contact, "ElectronicMail").text = invoice.issuer_email
+
+            # Customer
+            customer = etree.SubElement(root, "AccountingCustomerParty")
+            party = etree.SubElement(customer, "Party")
+
+            party_identification = etree.SubElement(party, "PartyIdentification")
+            etree.SubElement(party_identification, "ID").text = invoice.customer_registration_id
+            etree.SubElement(etree.SubElement(party, "PartyName"), "Name").text = invoice.customer_name
+
+            address = etree.SubElement(party, "PostalAddress")
+            etree.SubElement(address, "StreetName").text = invoice.customer_street
+            etree.SubElement(address, "BuildingNumber").text = ""
+            etree.SubElement(address, "CityName").text = invoice.customer_city
+            etree.SubElement(address, "PostalZone").text = invoice.customer_zip
+
+            country = etree.SubElement(address, "Country")
+            etree.SubElement(country, "IdentificationCode").text = invoice.customer_country.code
+            etree.SubElement(country, "Name").text = invoice.get_customer_country_display()
+
+            tax = etree.SubElement(party, "PartyTaxScheme")
+            etree.SubElement(tax, "CompanyID").text = invoice.customer_vat_id
+            etree.SubElement(tax, "TaxScheme").text = "VAT"
+
+            contact = etree.SubElement(party, "Contact")
+            etree.SubElement(contact, "Telephone").text = invoice.customer_phone
+            etree.SubElement(contact, "ElectronicMail").text = invoice.customer_email
+
+            # Order references
+            order_references = etree.SubElement(root, "OrderReferences")
+
+            for order in self.get_invoice_orders(invoice):
+                order_reference = etree.SubElement(order_references, "OrderReference")
+                etree.SubElement(order_reference, "SalesOrderID").text = str(order.id)
+
+            def format_money(value):
+                """Return a string with 2-decimal formatting using Decimal for stable rounding."""
+                if value is None:
+                    value = Decimal('0')
+                    # ensure Decimal for stable rounding/formatting
+                if not isinstance(value, Decimal):
+                    try:
+                        value= Decimal(str(value))
+                    except Exception:
+                        return str(value)
+                return str(value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+
+            # Compute amounts
+            def to_domestic_currency(amount):
+                """Return string of amount in domestic currency with 2 decimals."""
+                if amount in (None, ''):
+                    return format_money(0)
+                if has_foreign_currency and fx_rate:
+                    return format_money(Decimal(str(amount)) * fx_rate)
+                return format_money(amount)
+
+            def add_amount_element(parent_element, tag, amount, foreign_currency_first=True):
+                """
+                Write <tag> (domestic) and, if foreign is used, <tag>Curr (foreign).
+                - If foreign_currency_first=True, write Curr first (to match cases where your XML shows Curr first).
+                """
+                if has_foreign_currency and foreign_currency_first:
+                    etree.SubElement(parent_element, f"{tag}Curr").text = format_money(amount)
+                etree.SubElement(parent_element, tag).text = to_domestic_currency(amount)
+
+                if has_foreign_currency and not foreign_currency_first:
+                     etree.SubElement(parent_element, f"{tag}Curr").text = format_money(amount)
+
+
+            # Invoice lines
+            lines = etree.SubElement(root, "InvoiceLines")
+            for idx, item in enumerate(invoice.item_set.all(), start=1):
+                line = etree.SubElement(lines, "InvoiceLine")
+                etree.SubElement(line, "ID").text = str(idx)
+                etree.SubElement(line, "InvoicedQuantity", unitCode=item.get_unit_display()).text = str(item.quantity)
+
+                # Curr first in your examples for line extension amounts
+                add_amount_element(line, "LineExtensionAmount", item.subtotal)
+
+                if item.discount:
+                    etree.SubElement(line, "LineExtensionAmountBeforeDiscount").text =  to_domestic_currency(item.subtotal_without_discount)
+
+                add_amount_element(line, "LineExtensionAmountTaxInclusive", item.total)
+
+                if item.discount:
+                    etree.SubElement(line, "LineExtensionAmountTaxInclusiveBeforeDiscount").text =  to_domestic_currency(item.total_without_discount)
+
+                etree.SubElement(line, "LineExtensionTaxAmount").text = to_domestic_currency(item.vat)
+                etree.SubElement(line, "UnitPrice").text = to_domestic_currency(item.unit_price)
+                etree.SubElement(line, "UnitPriceTaxInclusive").text = to_domestic_currency(item.unit_price_with_vat)
+
+                tax_category = etree.SubElement(line, "ClassifiedTaxCategory")
+                etree.SubElement(tax_category, "Percent").text = str(item.tax_rate or 0)
+                etree.SubElement(tax_category, "VATCalculationMethod").text = "1"
+                etree.SubElement(tax_category, "VATApplicable").text = "true" if invoice.vat and invoice.vat > 0 else "false"
+
+                item_elem = etree.SubElement(line, "Item")
+                etree.SubElement(item_elem, "Description").text = item.title
+
+            # Tax Total (grouped by item tax_rate)
+            tax_total = etree.SubElement(root, "TaxTotal")
+
+            # Group items by tax_rate (None -> 0)
+            items_grouped_by_tax_rate = defaultdict(lambda: {
+                "taxable_amount_foreign": Decimal("0"),
+                "tax_amount_foreign": Decimal("0"),
+                "tax_inclusive_amount_foreign": Decimal("0"),
+            })
+
+            for item in invoice.item_set.all():
+                tax_rate = Decimal(str(item.tax_rate if item.tax_rate is not None else 0))
+
+                items_grouped_by_tax_rate[tax_rate]["taxable_amount_foreign"] += item.subtotal or Decimal("0")
+                items_grouped_by_tax_rate[tax_rate]["tax_amount_foreign"] += item.vat or Decimal("0")
+                items_grouped_by_tax_rate[tax_rate]["tax_inclusive_amount_foreign"] += item.total or Decimal("0")
+
+            # totals for <TaxTotal>/<TaxAmount>
+            total_tax_amount_domestic_sum = Decimal("0")
+            total_tax_amount_foreign_sum = Decimal("0")
+
+            # stable ordering of subtotals by tax_rate
+            for tax_rate in sorted(items_grouped_by_tax_rate.keys()):
+                bucket = items_grouped_by_tax_rate[tax_rate]
+                taxable_amount_foreign = bucket["taxable_amount_foreign"]
+                tax_amount_foreign = bucket["tax_amount_foreign"]
+                tax_inclusive_amount_foreign = bucket["tax_inclusive_amount_foreign"]
+
+                tax_subtotal = etree.SubElement(tax_total, "TaxSubTotal")
+
+                add_amount_element(tax_subtotal, "TaxableAmount", taxable_amount_foreign)
+                add_amount_element(tax_subtotal, "TaxAmount", tax_amount_foreign)
+                add_amount_element(tax_subtotal, "TaxInclusiveAmount", tax_inclusive_amount_foreign)
+
+                # TODO: AlreadyClaimed -> 0 for now
+                add_amount_element(tax_subtotal, "AlreadyClaimedTaxableAmount", 0)
+                add_amount_element(tax_subtotal, "AlreadyClaimedTaxAmount", 0)
+                add_amount_element(tax_subtotal, "AlreadyClaimedTaxInclusiveAmount", 0)
+
+                # Difference* → repeat current period values
+                add_amount_element(tax_subtotal, "DifferenceTaxableAmount", taxable_amount_foreign)
+                add_amount_element(tax_subtotal, "DifferenceTaxAmount", tax_amount_foreign)
+                add_amount_element(tax_subtotal, "DifferenceTaxInclusiveAmount", tax_inclusive_amount_foreign)
+
+                tax_category = etree.SubElement(tax_subtotal, "TaxCategory")
+                etree.SubElement(tax_category, "Percent").text = str(tax_rate)
+                etree.SubElement(tax_category, "VATApplicable").text = "true" if invoice.vat and invoice.vat > 0 else "false"
+
+                total_tax_amount_domestic_sum += Decimal(to_domestic_currency(tax_amount_foreign))
+                total_tax_amount_foreign_sum += tax_amount_foreign
+
+            add_amount_element(tax_total, "TaxAmount", total_tax_amount_foreign_sum)
+
+
+            # Totals
+            total = etree.SubElement(root, "LegalMonetaryTotal")
+
+            add_amount_element(total, "TaxExclusiveAmount", invoice.subtotal, foreign_currency_first=False)
+            add_amount_element(total, "TaxInclusiveAmount", invoice.total, foreign_currency_first=False)
+            add_amount_element(total, "AlreadyClaimedTaxExclusiveAmount", 0, foreign_currency_first=False)
+
+            add_amount_element(total, "AlreadyClaimedTaxInclusiveAmount", invoice.already_paid, foreign_currency_first=False)
+            add_amount_element(total, "DifferenceTaxExclusiveAmount", invoice.subtotal, foreign_currency_first=False)
+            add_amount_element(total, "DifferenceTaxInclusiveAmount", invoice.to_pay, foreign_currency_first=False)
+
+            add_amount_element(total, "PayableRoundingAmount", 0, foreign_currency_first=False)
+            add_amount_element(total, "PaidDepositsAmount", invoice.already_paid, foreign_currency_first=False)
+            add_amount_element(total, "PayableAmount", invoice.to_pay, foreign_currency_first=False)
+
+            # Payment details
+            payment_means = etree.SubElement(root, "PaymentMeans")
+            payment = etree.SubElement(payment_means, "Payment")
+            etree.SubElement(payment, "PaidAmount").text = str(invoice.total)
+            etree.SubElement(payment, "PaymentMeansCode").text = self.PAYMENT_MEANS_MAP.get(invoice.payment_method, "42")
+
+            details = etree.SubElement(payment, "Details")
+            etree.SubElement(details, "PaymentDueDate").text = invoice.date_due.isoformat()
+            etree.SubElement(details, "ID").text = ""
+            etree.SubElement(details, "BankCode").text = ""
+            etree.SubElement(details, "Name").text = invoice.bank_name
+            etree.SubElement(details, "IBAN").text = invoice.bank_iban or ""
+            etree.SubElement(details, "BIC").text = invoice.bank_swift_bic
+            etree.SubElement(details, "VariableSymbol").text = str(invoice.variable_symbol or "")
+            etree.SubElement(details, "ConstantSymbol").text = str(invoice.constant_symbol)
+            etree.SubElement(details, "SpecificSymbol").text = str(invoice.specific_symbol or "")
+
+            # Convert to binary and store
+            xml_bytes = etree.tostring(root, pretty_print=True, xml_declaration=True, encoding="utf-8")
+            export_files.append({"name": f"{invoice.number}.{self.export_format}", "content": xml_bytes})
+
+        output.write(compress(export_files).read())

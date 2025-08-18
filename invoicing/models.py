@@ -560,6 +560,10 @@ class Item(models.Model):
         return round(Decimal(subtotal) * Decimal((100 - self.discount) / 100), 2)
 
     @property
+    def subtotal_without_discount(self):
+        return round(self.unit_price * self.quantity, 2)
+
+    @property
     def discount_amount(self):
         subtotal = round(self.unit_price_with_vat * self.quantity, 2)
         return round(Decimal(subtotal) * Decimal(self.discount / 100), 2)
@@ -569,6 +573,10 @@ class Item(models.Model):
         return round(self.subtotal * Decimal(self.tax_rate) / 100 if self.tax_rate else 0, 2)
 
     @property
+    def vat_without_discount(self):
+        return round(self.subtotal_without_discount * Decimal(self.tax_rate) / 100 if self.tax_rate else 0, 2)
+
+    @property
     def unit_price_with_vat(self):
         tax_rate = self.tax_rate if self.tax_rate else 0
         return round(Decimal(self.unit_price) * Decimal((100 + tax_rate) / 100), 2)
@@ -576,6 +584,10 @@ class Item(models.Model):
     @property
     def total(self):
         return round(self.subtotal + self.vat, 2)
+
+    @property
+    def total_without_discount(self):
+        return round(self.subtotal_without_discount + self.vat_without_discount, 2)
 
     def save(self, **kwargs):
         # TODO: move to validator

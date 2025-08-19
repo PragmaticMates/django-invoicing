@@ -333,7 +333,7 @@ class InvoiceISDOCXmlListExporter(ExporterMixin):
 
                 tax_category = etree.SubElement(line, "ClassifiedTaxCategory")
                 etree.SubElement(tax_category, "Percent").text = str(item.tax_rate or 0)
-                etree.SubElement(tax_category, "VATCalculationMethod").text = "1"
+                etree.SubElement(tax_category, "VATCalculationMethod").text = "1" # "Method - From the top"
                 etree.SubElement(tax_category, "VATApplicable").text = "true" if invoice.vat and invoice.vat > 0 else "false"
 
                 item_elem = etree.SubElement(line, "Item")
@@ -386,12 +386,12 @@ class InvoiceISDOCXmlListExporter(ExporterMixin):
                 tax_category = etree.SubElement(tax_subtotal, "TaxCategory")
                 etree.SubElement(tax_category, "Percent").text = str(tax_rate)
                 etree.SubElement(tax_category, "VATApplicable").text = "true" if invoice.vat and invoice.vat > 0 else "false"
+                etree.SubElement(tax_category, "LocalReverseChargeFlag").text = "true" if tax_rate and tax_rate > 0 and invoice.is_reverse_charge() else "false"
 
                 total_tax_amount_domestic_sum += Decimal(to_domestic_currency(tax_amount_foreign))
                 total_tax_amount_foreign_sum += tax_amount_foreign
 
             add_amount_element(tax_total, "TaxAmount", total_tax_amount_foreign_sum)
-
 
             # Totals
             total = etree.SubElement(root, "LegalMonetaryTotal")

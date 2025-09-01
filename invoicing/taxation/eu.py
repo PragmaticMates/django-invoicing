@@ -150,6 +150,19 @@ class EUTaxationPolicy(TaxationPolicy):
         return cls.get_default_tax(supplier_country, date_tax_point)
 
     @classmethod
+    def get_tax_rate_by_invoice(cls, invoice):
+        """
+        Methods
+
+        :param invoice: invoice
+        :return: Decimal()
+        """
+        if not cls.is_in_EU(invoice.customer_country.code) and invoice.customer_tax_id not in EMPTY_VALUES:
+            return 0
+
+        return cls.get_tax_rate(invoice.supplier_vat_id, invoice.customer_vat_id, invoice.date_tax_point)
+
+    @classmethod
     def get_rate_for_country(cls, country_code, tax_point_date):
         """
         Gets the tax rate for a specific country and date.

@@ -270,11 +270,14 @@ class InvoiceISDOCXmlListExporter(ExporterMixin):
             etree.SubElement(contact, "ElectronicMail").text = invoice.customer_email
 
             # Order references
-            order_references = etree.SubElement(root, "OrderReferences")
+            invoice_orders = self.get_invoice_orders(invoice)
 
-            for order in self.get_invoice_orders(invoice):
-                order_reference = etree.SubElement(order_references, "OrderReference")
-                etree.SubElement(order_reference, "SalesOrderID").text = str(order.id)
+            if invoice_orders:
+                order_references = etree.SubElement(root, "OrderReferences")
+
+                for order in self.get_invoice_orders(invoice):
+                    order_reference = etree.SubElement(order_references, "OrderReference")
+                    etree.SubElement(order_reference, "SalesOrderID").text = str(order.id)
 
             def format_money(value):
                 """Return a string with 2-decimal formatting using Decimal for stable rounding."""
@@ -372,9 +375,6 @@ class InvoiceISDOCXmlListExporter(ExporterMixin):
                 #   2 = calculated from gross (rare, retail POS)
                 etree.SubElement(tax_category, "VATCalculationMethod").text = "1" # "Method - From the top"
                 etree.SubElement(tax_category, "VATApplicable").text = "true" if vat_applicable else "false" # VATApplicable depending on classification
-
-                if local_reverse_charge:
-                    etree.SubElement(tax_category, "LocalReverseChargeFlag").text = "true" # LocalReverseChargeFlag only for reverse charge
 
                 item_elem = etree.SubElement(line, "Item")
                 etree.SubElement(item_elem, "Description").text = item.title

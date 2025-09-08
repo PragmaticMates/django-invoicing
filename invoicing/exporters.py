@@ -6,6 +6,7 @@ from lxml import etree
 
 from invoicing.models import Invoice
 from invoicing.utils import get_invoices_in_pdf
+from invoicing.taxation.eu import EUTaxationPolicy
 
 from django.utils.translation import gettext_lazy as _, gettext
 
@@ -308,6 +309,36 @@ class InvoiceISDOCXmlListExporter(ExporterMixin):
                 if has_foreign_currency and not foreign_currency_first:
                      etree.SubElement(parent_element, f"{tag}Curr").text = format_money(amount)
 
+            def classify_tax_for_item(invoice_item):
+                """
+                Return a tuple:
+                    (percent_decimal, vat_applicable_bool, local_reverse_charge_flag_bool)
+
+                Rules:
+                - Reverse charge: VATApplicable = false, Percent = actual tax rate (or 0), LocalReverseChargeFlag = true
+                - Exempt supply: tax_rate is None → Percent = 0, VATApplicable = false, LocalReverseChargeFlag = false
+                - Zero-rated supply: tax_rate == 0 → Percent = 0, VATApplicable = true, LocalReverseChargeFlag = false
+                - Standard VAT: tax_rate > 0 → Percent = tax_rate, VATApplicable = true, LocalReverseChargeFlag = false
+                """
+                tax_rate_decimal = Decimal(str(invoice_item.tax_rate)) if invoice_item.tax_rate is not None else Decimal("0")
+                is_item_reverse_charge = invoice_item.tax_rate is None and invoice.is_reverse_charge()
+
+                # Domestic reverse charge – supplier does not charge VAT
+                if is_item_reverse_charge:
+                    if issubclass(invoice.taxation_policy, EUTaxationPolicy):
+                        tax_rate_decimal = invoice.taxation_policy.get_rate_for_country(invoice.supplier_country.code, invoice.date_tax_point)
+                    return tax_rate_decimal, False, True
+
+                # Exempt supply (no VAT)
+                if invoice_item.tax_rate is None:
+                    return Decimal("0"), False, False
+
+                # Zero-rated supply
+                if Decimal(str(invoice_item.tax_rate)) == Decimal("0"):
+                    return Decimal("0"), True, False
+
+                # Standard taxable rate
+                return tax_rate_decimal, True, False
 
             # Invoice lines
             lines = etree.SubElement(root, "InvoiceLines")
@@ -331,10 +362,19 @@ class InvoiceISDOCXmlListExporter(ExporterMixin):
                 etree.SubElement(line, "UnitPrice").text = to_domestic_currency(item.unit_price)
                 etree.SubElement(line, "UnitPriceTaxInclusive").text = to_domestic_currency(item.unit_price_with_vat)
 
+                tax_rate_percent, vat_applicable, local_reverse_charge = classify_tax_for_item(item)
+
                 tax_category = etree.SubElement(line, "ClassifiedTaxCategory")
-                etree.SubElement(tax_category, "Percent").text = str(item.tax_rate or 0)
+                etree.SubElement(tax_category, "Percent").text = str(tax_rate_percent) # Percent must always be present
+
+                # VATCalculationMethod:
+                #   1 = calculated from net (standard method),
+                #   2 = calculated from gross (rare, retail POS)
                 etree.SubElement(tax_category, "VATCalculationMethod").text = "1" # "Method - From the top"
-                etree.SubElement(tax_category, "VATApplicable").text = "true" if invoice.vat and invoice.vat > 0 else "false"
+                etree.SubElement(tax_category, "VATApplicable").text = "true" if vat_applicable else "false" # VATApplicable depending on classification
+
+                if local_reverse_charge:
+                    etree.SubElement(tax_category, "LocalReverseChargeFlag").text = "true" # LocalReverseChargeFlag only for reverse charge
 
                 item_elem = etree.SubElement(line, "Item")
                 etree.SubElement(item_elem, "Description").text = item.title
@@ -342,27 +382,31 @@ class InvoiceISDOCXmlListExporter(ExporterMixin):
             # Tax Total (grouped by item tax_rate)
             tax_total = etree.SubElement(root, "TaxTotal")
 
-            # Group items by tax_rate (None -> 0)
-            items_grouped_by_tax_rate = defaultdict(lambda: {
+            # Group items by (Percent, VATApplicable, LocalReverseChargeFlag)
+            items_grouped_by_tax_key = defaultdict(lambda: {
                 "taxable_amount_foreign": Decimal("0"),
                 "tax_amount_foreign": Decimal("0"),
                 "tax_inclusive_amount_foreign": Decimal("0"),
             })
 
             for item in invoice.item_set.all():
-                tax_rate = Decimal(str(item.tax_rate if item.tax_rate is not None else 0))
+                tax_rate_percent, vat_applicable, local_reverse_charge = classify_tax_for_item(item)
+                tax_key = (tax_rate_percent, vat_applicable, local_reverse_charge)
 
-                items_grouped_by_tax_rate[tax_rate]["taxable_amount_foreign"] += item.subtotal or Decimal("0")
-                items_grouped_by_tax_rate[tax_rate]["tax_amount_foreign"] += item.vat or Decimal("0")
-                items_grouped_by_tax_rate[tax_rate]["tax_inclusive_amount_foreign"] += item.total or Decimal("0")
+                items_grouped_by_tax_key[tax_key]["taxable_amount_foreign"] += Decimal(str(item.subtotal or 0))
+                items_grouped_by_tax_key[tax_key]["tax_amount_foreign"] += Decimal(str(item.vat or 0))
+                items_grouped_by_tax_key[tax_key]["tax_inclusive_amount_foreign"] += Decimal(str(item.total or 0))
 
             # totals for <TaxTotal>/<TaxAmount>
             total_tax_amount_domestic_sum = Decimal("0")
             total_tax_amount_foreign_sum = Decimal("0")
 
-            # stable ordering of subtotals by tax_rate
-            for tax_rate in sorted(items_grouped_by_tax_rate.keys()):
-                bucket = items_grouped_by_tax_rate[tax_rate]
+            # Keep stable ordering of subtotals: first by Percent, then VATApplicable, then LocalReverseChargeFlag
+            for (tax_rate_percent, vat_applicable, local_reverse_charge) in sorted(
+                    items_grouped_by_tax_key.keys(),
+                    key=lambda k: (k[0], k[1], k[2])
+            ):
+                bucket = items_grouped_by_tax_key[(tax_rate_percent, vat_applicable, local_reverse_charge)]
                 taxable_amount_foreign = bucket["taxable_amount_foreign"]
                 tax_amount_foreign = bucket["tax_amount_foreign"]
                 tax_inclusive_amount_foreign = bucket["tax_inclusive_amount_foreign"]
@@ -384,9 +428,11 @@ class InvoiceISDOCXmlListExporter(ExporterMixin):
                 add_amount_element(tax_subtotal, "DifferenceTaxInclusiveAmount", tax_inclusive_amount_foreign)
 
                 tax_category = etree.SubElement(tax_subtotal, "TaxCategory")
-                etree.SubElement(tax_category, "Percent").text = str(tax_rate)
-                etree.SubElement(tax_category, "VATApplicable").text = "true" if invoice.vat and invoice.vat > 0 else "false"
-                etree.SubElement(tax_category, "LocalReverseChargeFlag").text = "true" if tax_rate and tax_rate > 0 and invoice.is_reverse_charge() else "false"
+                etree.SubElement(tax_category, "Percent").text = str(tax_rate_percent)
+                etree.SubElement(tax_category, "VATApplicable").text = "true" if vat_applicable else "false"
+
+                if local_reverse_charge:
+                    etree.SubElement(tax_category, "LocalReverseChargeFlag").text = "true"
 
                 total_tax_amount_domestic_sum += Decimal(to_domestic_currency(tax_amount_foreign))
                 total_tax_amount_foreign_sum += tax_amount_foreign

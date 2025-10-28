@@ -565,6 +565,10 @@ class Item(models.Model):
         return round(Decimal(subtotal) * Decimal((100 - self.discount) / 100), 2)
 
     @property
+    def subtotal_without_discount(self):
+        return round(self.unit_price * self.quantity, 2)
+
+    @property
     def discount_amount(self):
         subtotal = round(self.unit_price_with_vat * self.quantity, 2)
         return round(Decimal(subtotal) * Decimal(self.discount / 100), 2)

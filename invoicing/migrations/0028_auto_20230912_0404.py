@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='invoice',
             name='related_invoices',
-            field=models.ManyToManyField(blank=True, related_name='_invoice_related_invoices_+', to='invoicing.Invoice'),
+            field=models.ManyToManyField(blank=True, to='invoicing.Invoice'),
         ),
         migrations.AlterField(
             model_name='invoice',

@@ -42,7 +42,7 @@ class OverdueFilter(admin.SimpleListFilter):
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     ordering = ['-date_issue', '-sequence']
-    actions = ['send_to_accounting_software', 'export', 'export_to_pdf']
+    actions = ['recalculate_tax', 'send_to_accounting_software', 'export', 'export_to_pdf']
     list_display = ['pk', 'type', 'number', 'status',
                     'supplier_info', 'customer_info',
                     'annotated_subtotal', 'vat', 'total',
@@ -122,6 +122,10 @@ class InvoiceAdmin(admin.ModelAdmin):
         return invoice.status == Invoice.STATUS.PAID
     is_paid.boolean = True
     is_paid.short_description = _(u'is paid')
+
+    def recalculate_tax(self, request, queryset):
+        for invoice in queryset:
+            invoice.recalculate_tax()
 
     def send_to_accounting_software(self, request, queryset):
         manager = get_accounting_software_manager()

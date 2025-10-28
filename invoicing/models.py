@@ -150,7 +150,7 @@ class Invoice(models.Model):
     bank_street = models.CharField(_(u'bank street and number'), max_length=255, blank=True)
     bank_zip = models.CharField(_(u'bank ZIP'), max_length=255, blank=True)
     bank_city = models.CharField(_(u'bank city'), max_length=255, blank=True)
-    bank_country = CountryField(_(u'bank country'), max_length=255, blank=True)
+    bank_country = CountryField(_(u'bank country'), max_length=2, blank=True)
     bank_iban = IBANField(verbose_name=_(u'Account number (IBAN)'), default=None)
     bank_swift_bic = BICField(verbose_name=_(u'Bank SWIFT / BIC'), blank=True)
 
@@ -479,6 +479,11 @@ class Invoice(models.Model):
         total -= Decimal(self.credit)  # subtract credit
         return round(total, 2)
 
+    def recalculate_tax(self):
+        for item in self.item_set.all():
+            item.calculate_tax()
+            item.save()
+
     def create_copy(self, **kwargs):
         # prepare new instance data
         from django.forms import model_to_dict
@@ -560,10 +565,6 @@ class Item(models.Model):
         return round(Decimal(subtotal) * Decimal((100 - self.discount) / 100), 2)
 
     @property
-    def subtotal_without_discount(self):
-        return round(self.unit_price * self.quantity, 2)
-
-    @property
     def discount_amount(self):
         subtotal = round(self.unit_price_with_vat * self.quantity, 2)
         return round(Decimal(subtotal) * Decimal(self.discount / 100), 2)
@@ -589,12 +590,16 @@ class Item(models.Model):
     def total_without_discount(self):
         return round(self.subtotal_without_discount + self.vat_without_discount, 2)
 
+    def calculate_tax(self):
+        self.tax_rate = self.invoice.get_tax_rate()
+
     def save(self, **kwargs):
         # TODO: move to validator
         if self.tax_rate not in EMPTY_VALUES and self.invoice.supplier_vat_id in EMPTY_VALUES:
             raise ValueError(f'Tax rate is {self.tax_rate}% but supplier VAT ID is not set. Invoice #{self.invoice.pk}, number {self.invoice.number}')
 
         # TODO: find out if user explicitly set None as value or should be set automatically
+        # self.calculate_tax()
         # if self.tax_rate in EMPTY_VALUES and self.pk is None:
         # If tax rate is not set while creating new invoice item, set it according billing details
         # self.tax_rate = self.invoice.get_tax_rate()

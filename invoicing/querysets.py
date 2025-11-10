@@ -47,6 +47,12 @@ class InvoiceQuerySet(QuerySet):
                     .filter(count__gt=1)
                     .values_list('number', flat=True))
 
+    def incoming(self):
+        return self.filter(origin=self.model.ORIGINS.INCOMING)
+
+    def outgoing(self):
+        return self.filter(origin=self.model.ORIGINS.OUTGOING)
+
     def lock(self):
         """ Lock table.
 

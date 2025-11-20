@@ -117,14 +117,14 @@ class Invoice(models.Model):
 
     # General information
     origin = models.CharField(_(u'origin'), max_length=8, choices=ORIGIN, default=ORIGIN.OUTGOING)
-    type = models.CharField(_(u'type'), max_length=64, choices=TYPE, default=TYPE.INVOICE)
+    type = models.CharField(_(u'type'), max_length=11, choices=TYPE, default=TYPE.INVOICE)
     sequence = models.IntegerField(_(u'sequence'), db_index=True, blank=True)
     number = models.CharField(_(u'number'), max_length=128, blank=True)
-    status = models.CharField(_(u'status'), choices=STATUS, max_length=64, default=STATUS.NEW)
+    status = models.CharField(_(u'status'), choices=STATUS, max_length=13, default=STATUS.NEW)
     subtitle = models.CharField(_(u'subtitle'), max_length=255, blank=True)
     related_document = models.CharField(_(u'related document'), max_length=100, blank=True)
     related_invoices = models.ManyToManyField(to='self', verbose_name=_(u'related invoices'), blank=True)
-    language = models.CharField(_(u'language'), max_length=10, choices=invoicing_settings.LANGUAGES)
+    language = models.CharField(_(u'language'), max_length=2, choices=invoicing_settings.LANGUAGES)
     note = models.CharField(_(u'note'), max_length=255, blank=True, default=_(u'Thank you for using our services.'))
     date_issue = models.DateField(_(u'issue date'))
     date_tax_point = models.DateField(_(u'tax point date'), help_text=_(u'time of supply'))
@@ -137,13 +137,13 @@ class Invoice(models.Model):
                                               blank=True, null=True, default=None)
 
     # Payment details
-    currency = models.CharField(_(u'currency'), max_length=10, choices=CURRENCY_CHOICES)
+    currency = models.CharField(_(u'currency'), max_length=3, choices=CURRENCY_CHOICES)
     credit = models.DecimalField(_(u'credit'), max_digits=10, decimal_places=2, default=0)
     already_paid = models.DecimalField(_(u'already paid'), max_digits=10, decimal_places=2, default=0,
         validators=[MinValueValidator(0)])
 
-    payment_method = models.CharField(_(u'payment method'), choices=PAYMENT_METHOD, max_length=64)
-    constant_symbol = models.CharField(_(u'constant symbol'), max_length=64, choices=CONSTANT_SYMBOL, blank=True)
+    payment_method = models.CharField(_(u'payment method'), choices=PAYMENT_METHOD, max_length=16)
+    constant_symbol = models.CharField(_(u'constant symbol'), max_length=4, choices=CONSTANT_SYMBOL, blank=True)
     variable_symbol = models.PositiveIntegerField(_(u'variable symbol'),
         validators=[MinValueValidator(0), MaxValueValidator(9999999999)],
         blank=True, null=True, default=None)
@@ -199,7 +199,7 @@ class Invoice(models.Model):
     shipping_country = CountryField(_(u'shipping country'), blank=True)
 
     # Delivery details
-    delivery_method = models.CharField(_(u'delivery method'), choices=DELIVERY_METHOD, max_length=64,
+    delivery_method = models.CharField(_(u'delivery method'), choices=DELIVERY_METHOD, max_length=15,
         default=DELIVERY_METHOD.PERSONAL_PICKUP)
 
     # sums (auto calculated fields)
@@ -539,7 +539,7 @@ class Item(models.Model):
     invoice = models.ForeignKey(Invoice, verbose_name=_(u'invoice'), on_delete=models.CASCADE)
     title = models.TextField(_(u'title'))
     quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1)
-    unit = models.CharField(_(u'unit'), choices=UNITS, max_length=64, default=UNIT_PIECES)
+    unit = models.CharField(_(u'unit'), choices=UNITS, max_length=6, default=UNIT_PIECES)
     unit_price = models.DecimalField(_(u'unit price'), max_digits=10, decimal_places=2)
     discount = models.DecimalField(_(u'discount (%)'), max_digits=4, decimal_places=1, default=0)
     tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1,

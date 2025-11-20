@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='invoice',
             name='origin',
-            field=models.CharField(choices=[('INCOMING', 'incoming invoice'), ('OUTGOING', 'outgoing invoice')], default='OUTGOING', max_length=9, verbose_name='origin'),
+            field=models.CharField(choices=[('INCOMING', 'incoming invoice'), ('OUTGOING', 'outgoing invoice')], db_index=True, default='OUTGOING', max_length=9, verbose_name='origin'),
         ),
     ]

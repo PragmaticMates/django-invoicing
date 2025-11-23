@@ -1,7 +1,6 @@
 from __future__ import division  # TODO: refactor
 
 from decimal import Decimal
-from typing_extensions import deprecated
 
 from django.conf import settings
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
@@ -24,6 +23,7 @@ from invoicing import settings as invoicing_settings
 from invoicing.querysets import InvoiceQuerySet, ItemQuerySet
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
+from invoicing.utils import deprecated
 
 
 def default_supplier(attribute_lookup):

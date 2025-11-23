@@ -1,3 +1,6 @@
+import functools
+import warnings
+
 import binascii
 
 from django.conf import settings
@@ -58,3 +61,18 @@ def get_invoices_in_pdf(invoices):
             export_files.append({'name': file_name + '.pdf', 'content': result.content})
 
     return export_files
+
+
+def deprecated(func):
+    """This decorator can be used to mark functions or properties as deprecated."""
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        warnings.warn(
+            f"{func.__name__} is deprecated and will be removed in a future version.",
+            category=DeprecationWarning,
+            stacklevel=2
+        )
+        return func(*args, **kwargs)
+
+    return wrapper

@@ -1,7 +1,7 @@
 from __future__ import division  # TODO: refactor
 
 from decimal import Decimal
-from warnings import deprecated
+from typing_extensions import deprecated
 
 from django.conf import settings
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator

@@ -1,6 +1,7 @@
 from __future__ import division  # TODO: refactor
 
 from decimal import Decimal
+from warnings import deprecated
 
 from django.conf import settings
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
@@ -450,12 +451,17 @@ class Invoice(models.Model):
 
     @property
     def discount_percentage(self):
-        percentage = 100 * self.discount / self.total_without_discount
+        percentage = 100 * self.discount / self.total_before_discount
         return round(percentage, 2)
 
     @property
-    def total_without_discount(self):
+    def total_before_discount(self):
         return Decimal(self.total) + self.discount + Decimal(self.credit)
+
+    @deprecated
+    @property
+    def total_without_discount(self):
+        return self.total_before_discount
 
     @property
     def to_pay(self):
@@ -565,7 +571,7 @@ class Item(models.Model):
         return round(Decimal(subtotal) * Decimal((100 - self.discount) / 100), 2)
 
     @property
-    def subtotal_without_discount(self):
+    def subtotal_before_discount(self):
         return round(self.unit_price * self.quantity, 2)
 
     @property
@@ -578,8 +584,8 @@ class Item(models.Model):
         return round(self.subtotal * Decimal(self.tax_rate) / 100 if self.tax_rate else 0, 2)
 
     @property
-    def vat_without_discount(self):
-        return round(self.subtotal_without_discount * Decimal(self.tax_rate) / 100 if self.tax_rate else 0, 2)
+    def vat_before_discount(self):
+        return round(self.subtotal_before_discount * Decimal(self.tax_rate) / 100 if self.tax_rate else 0, 2)
 
     @property
     def unit_price_with_vat(self):
@@ -591,8 +597,8 @@ class Item(models.Model):
         return round(self.subtotal + self.vat, 2)
 
     @property
-    def total_without_discount(self):
-        return round(self.subtotal_without_discount + self.vat_without_discount, 2)
+    def total_before_discount(self):
+        return round(self.subtotal_before_discount + self.vat_before_discount, 2)
 
     def calculate_tax(self):
         self.tax_rate = self.invoice.get_tax_rate()

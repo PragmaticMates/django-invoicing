@@ -7,8 +7,9 @@ from django.db import migrations, models
 def unset_supplier_vat(*args, **kwargs):
     print("Removing supplier VAT ID from invoices where it shouldn't be set")
     Invoice = apps.get_model("invoicing", "Invoice")
+    invoices = Invoice.objects.exclude(supplier_vat_id='').only('id', 'number', 'vat', 'supplier_vat_id', 'customer_country', 'supplier_country')
 
-    for invoice in Invoice.objects.exclude(supplier_vat_id=''):
+    for invoice in invoices:
         if not invoice.is_supplier_vat_id_visible():
             print(f'#{invoice.id}, number {invoice.number}, supplier VAT ID = {invoice.supplier_vat_id}')
             invoice.supplier_vat_id = ''

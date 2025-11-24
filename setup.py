@@ -19,6 +19,9 @@ setup(
         'django>=4.2', 'django-countries', 'django-model-utils', 'django-money',
         'django-localflavor', 'django-internationalflavor'
     ),
+    extras_require={
+        'exporters': ['django-outputs'],  # optional umbrella for all exporters
+    },
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.5',

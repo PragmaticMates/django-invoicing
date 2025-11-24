@@ -251,7 +251,7 @@
                                     {% if invoice.has_discount %}
                                         <div class="col-md-12 text-right">
                                             <strong>{% trans 'price before discount' %}:</strong>
-                                            {{ invoice.total_without_discount|floatformat:"2" }} {{ invoice.currency }}
+                                            {{ invoice.total_before_discount|floatformat:"2" }} {{ invoice.currency }}
                                         </div>
                                         <div class="col-md-12 text-right">
                                             <strong>{% trans 'total discount' %}:</strong>

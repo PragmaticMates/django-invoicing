@@ -1,5 +1,6 @@
 import functools
 import warnings
+from decimal import Decimal
 
 import binascii
 
@@ -76,3 +77,17 @@ def deprecated(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+def format_decimal(value, decimal_places=2):
+    """Format decimal value with specified number of decimal places."""
+    if value is None:
+        return format_decimal(0, decimal_places)
+    if isinstance(value, str):
+        try:
+            value = Decimal(value)
+        except (ValueError, TypeError):
+            return format_decimal(0, decimal_places)
+    try:
+        return "{:.{places}f}".format(float(value), places=decimal_places)
+    except (ValueError, TypeError):
+        return format_decimal(0, decimal_places)

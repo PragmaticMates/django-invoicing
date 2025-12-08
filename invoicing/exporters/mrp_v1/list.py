@@ -21,7 +21,14 @@ class InvoiceXmlMrpListExporter(ExporterMixin):
         self.write_data(self.output)
 
     def get_vat_type(self, invoice):
-        return ""
+        return ''
+
+    def get_customer_number(self, invoice):
+        return '0'
+
+    # predkontacia
+    def get_advance_notice(self, invoice):
+        return '11'
 
     def get_message_body(self, count):
         template = loader.get_template("outputs/export_message_body.html")
@@ -113,12 +120,14 @@ class InvoiceFakvyXmlMrpExporter(InvoiceXmlMrpListExporter):
             # idfak.text = '1'  # rather ?
 
             # < udpredkont > 11 < / udpredkont >
-            udpredkont = etree.SubElement(fields, "udpredkont")
-            udpredkont.text = '11'  # TODO: configurable
+            if self.get_advance_notice(invoice) not in EMPTY_VALUES:
+                udpredkont = etree.SubElement(fields, "udpredkont")
+                udpredkont.text = self.get_advance_notice(invoice)
 
             # < cislo_zak > 0 < / cislo_zak >
-            cislo_zak = etree.SubElement(fields, "cislo_zak")
-            cislo_zak.text = '0'
+            if self.get_customer_number(invoice) not in EMPTY_VALUES:
+                cislo_zak = etree.SubElement(fields, "cislo_zak")
+                cislo_zak.text = self.get_customer_number(invoice)
 
             # < cislo > 201811543 < / cislo >
             cislo = etree.SubElement(fields, "cislo")
@@ -363,10 +372,10 @@ class InvoiceFakvypolXmlMrpExporter(InvoiceXmlMrpListExporter):
                     idfak = etree.SubElement(fields, "idfak")
                     idfak.text = str(invoice.id)
 
-                    # TODO: cislo_zak missing in bidding
                     # < cislo_zak > 0 < / cislo_zak >
-                    cislo_zak = etree.SubElement(fields, "cislo_zak")
-                    cislo_zak.text = '0'
+                    if self.get_customer_number(invoice) not in EMPTY_VALUES:
+                        cislo_zak = etree.SubElement(fields, "cislo_zak")
+                        cislo_zak.text = self.get_customer_number(invoice)
 
                     # < text > Unloading
                     # Place: ES - Paterna < / text >

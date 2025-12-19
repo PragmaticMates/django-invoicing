@@ -91,3 +91,32 @@ def format_decimal(value, decimal_places=2):
         return "{:.{places}f}".format(float(value), places=decimal_places)
     except (ValueError, TypeError):
         return format_decimal(0, decimal_places)
+
+
+def get_task_decorator(queue=None):
+    """
+    Import task decorator based on INVOICING_TASK_BACKEND setting.
+
+    Default: 'django.tasks.task' (Django 6.0+)
+    Examples: 'django_rq.job', 'celery.shared_task'
+
+    Args:
+        queue: Queue name for backends that support it (e.g. django_rq)
+
+    Raises ImportError if the module is not installed.
+    """
+    task_backend = getattr(settings, 'INVOICING_TASK_BACKEND', 'django.tasks.task')
+
+    try:
+        decorator = import_string(task_backend)
+    except ImportError as e:
+        raise ImportError(
+            f"Task backend '{task_backend}' is not installed. "
+            f"Install the required package or set INVOICING_TASK_BACKEND to a valid decorator path."
+        ) from e
+
+    # django_rq.job requires queue name as first argument
+    if task_backend == 'django_rq.job' and queue:
+        return decorator(queue)
+
+    return decorator

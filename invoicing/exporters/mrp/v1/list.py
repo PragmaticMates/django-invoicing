@@ -2,6 +2,7 @@ import re
 from decimal import Decimal
 
 from django.core.validators import EMPTY_VALUES
+from django.template import loader
 
 from invoicing.managers import get_invoice_details_manager
 from invoicing.models import Invoice
@@ -20,6 +21,10 @@ class InvoiceXmlMrpListExporter(ExporterMixin):
 
     def export(self):
         self.write_data(self.output)
+
+    def get_message_body(self, count):
+        template = loader.get_template('outputs/export_message_body.html')
+        return template.render({'count': count, 'filtered_values': None})
 
 
 class InvoiceFakvyXmlMrpExporter(InvoiceXmlMrpListExporter):

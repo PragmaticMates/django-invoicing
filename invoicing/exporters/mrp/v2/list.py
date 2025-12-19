@@ -1,6 +1,7 @@
 import os
 
 from django.core.validators import EMPTY_VALUES
+from django.template import loader
 from lxml import etree
 
 from invoicing.managers import get_invoice_details_manager
@@ -24,6 +25,10 @@ class InvoiceMrpExporterMixin(ExporterMixin):
     def get_whole_queryset(self, params):
         return super().get_whole_queryset(params) \
             .order_by('-pk').distinct()
+
+    def get_message_body(self, count):
+        template = loader.get_template("outputs/export_message_body.html")
+        return template.render({"count": count, "filtered_values": None})
 
     def export(self):
         self.write_data(self.output)
@@ -121,9 +126,12 @@ class InvoiceMrpExporterMixin(ExporterMixin):
             etree.SubElement(invoice_elem, "CurrencyCode").text = invoice.currency or ""
             etree.SubElement(invoice_elem, "ValuesWithTax").text = "T" if invoice.type in ['INVOICE', 'ADVANCE'] else "F"
 
+            # TaxCode is required - always include it, default to "0" if not available
             vat_type = get_invoice_details_manager().vat_type(invoice)
             if vat_type not in EMPTY_VALUES:
                 etree.SubElement(invoice_elem, "TaxCode").text = str(vat_type)
+            else:
+                etree.SubElement(invoice_elem, "TaxCode").text = "0"
 
             etree.SubElement(invoice_elem, "DocType").text = "" if invoice.type == 'INVOICE' else \
                 "D" if invoice.type == 'CREDIT_NOTE' else "X" if invoice.type == 'ADVANCE' else "P"
@@ -202,7 +210,12 @@ class InvoiceMrpExporterMixin(ExporterMixin):
 
             for vat_sum in invoice.vat_summary:
                 sv = etree.SubElement(sum_values, "SumValue")
-                etree.SubElement(sv, "TaxCode").text = str(getattr(invoice, 'vat_type', 0))
+                # Use the same vat_type logic as in header
+                sum_vat_type = get_invoice_details_manager().vat_type(invoice)
+                if sum_vat_type not in EMPTY_VALUES:
+                    etree.SubElement(sv, "TaxCode").text = str(sum_vat_type)
+                else:
+                    etree.SubElement(sv, "TaxCode").text = "0"
                 etree.SubElement(sv, "TaxType").text = "1"  # or as per code: 1=base, 2=reduced etc.
                 etree.SubElement(sv, "TaxPercent").text = format_decimal(vat_sum.get('rate') or 0, 2)
                 etree.SubElement(sv, "CurrencyCode").text = invoice.currency or ""

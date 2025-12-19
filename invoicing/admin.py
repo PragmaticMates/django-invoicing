@@ -4,6 +4,8 @@ from django.db.models.functions import Coalesce
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from invoicing.exporters.mrp.v1.tasks import mail_exported_invoices_mrp_v1
+from invoicing.exporters.tasks import mail_exported_invoices
 from invoicing.managers import get_accounting_software_manager
 from invoicing.models import Invoice, Item
 
@@ -42,13 +44,13 @@ class OverdueFilter(admin.SimpleListFilter):
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     ordering = ['-date_issue', '-sequence']
-    actions = ['recalculate_tax', 'send_to_accounting_software', 'export', 'export_to_pdf']
+    actions = ['recalculate_tax', 'send_to_accounting_software']
     list_display = ['pk', 'type', 'number', 'status',
                     'supplier_info', 'customer_info',
                     'annotated_subtotal', 'vat', 'total',
                     'currency', 'date_issue', 'payment_term_days', 'is_overdue_boolean', 'is_paid']
     list_editable = ['status']
-    list_filter = ['type', 'status', 'payment_method', 'delivery_method', OverdueFilter, 'language', 'currency']
+    list_filter = ['origin', 'type', 'status', 'payment_method', 'delivery_method', OverdueFilter, 'language', 'currency']
     search_fields = ['number', 'subtitle', 'note', 'supplier_name', 'customer_name', 'shipping_name']
     inlines = (ItemInline, )
     autocomplete_fields = ('related_invoices',)
@@ -93,6 +95,40 @@ class InvoiceAdmin(admin.ModelAdmin):
             )
         })
     )
+
+    def get_actions(self, request):
+        """
+        Return only explicitly listed actions plus all export-related actions.
+        """
+        actions = super().get_actions(request)
+
+        # Keep only actions explicitly listed on the ModelAdmin
+        explicit = set(self.actions or [])
+        actions = {
+            name: action for name, action in actions.items()
+            if name in explicit
+        }
+
+        # Add export actions explicitly
+        export_actions = {
+            'export_xlsx': (InvoiceAdmin.export_xlsx, 'export_xlsx', self.export_xlsx.short_description),
+            'export_pdf': (InvoiceAdmin.export_pdf, 'export_pdf', self.export_pdf.short_description),
+            'export_isdoc': (InvoiceAdmin.export_isdoc, 'export_isdoc', self.export_isdoc.short_description),
+            'export_mrp_v1': (InvoiceAdmin.export_mrp_v1, 'export_mrp_v1', self.export_mrp_v1.short_description),
+            'export_mrp_v2_outgoing': (
+                InvoiceAdmin.export_mrp_v2_outgoing,
+                'export_mrp_v2_outgoing',
+                self.export_mrp_v2_outgoing.short_description
+            ),
+            'export_mrp_v2_incoming': (
+                InvoiceAdmin.export_mrp_v2_incoming,
+                'export_mrp_v2_incoming',
+                self.export_mrp_v2_incoming.short_description
+            ),
+        }
+
+        actions.update(export_actions)
+        return actions
 
     def get_queryset(self, request):
         return self.model.objects.annotate(annotated_subtotal=F('total')-Coalesce(F('vat'), 0, output_field=DecimalField()))
@@ -156,38 +192,63 @@ class InvoiceAdmin(admin.ModelAdmin):
 
     send_to_accounting_software.short_description = _('Send to accounting software')
 
-    def export(self, request, queryset):
+    def _export_and_email(self, request, queryset, exporter_class):
+        """
+        Common export logic for email-based exports.
+        
+        Args:
+            request: The HTTP request object
+            queryset: The queryset of invoices to export
+            exporter_class: The exporter class to use
+        """
+        creator_id = request.user.id
+        recipients_ids = [creator_id]
+        invoice_ids = queryset.values_list("id", flat=True)
+
+        mail_exported_invoices.delay(
+            exporter_class, creator_id, recipients_ids, invoice_ids, exporter_class.filename
+        )
+
+        messages.success(request, _('Export %d invoices sent to email') % queryset.count())
+
+    def export_xlsx(self, request, queryset):
         from invoicing.exporters import InvoiceXlsxListExporter
+        self._export_and_email(request, queryset, InvoiceXlsxListExporter)
 
-        # init exporter
-        exporter = InvoiceXlsxListExporter(
-            user=request.user,
-            recipients=[request.user],
-            selected_fields=None
-        )
+    export_xlsx.short_description = _('Export to xlsx')
 
-        # set queryset
-        exporter.queryset = queryset
-
-        # export to file
-        return exporter.export_to_response()
-
-    export.short_description = _('Export to xlsx')
-
-    def export_to_pdf(self, request, queryset):
+    def export_pdf(self, request, queryset):
         from invoicing.exporters import InvoicePdfDetailExporter
+        self._export_and_email(request, queryset, InvoicePdfDetailExporter)
 
-        # init exporter
-        exporter = InvoicePdfDetailExporter(
-            user=request.user,
-            recipients=[request.user],
-            selected_fields=None
+    export_pdf.short_description = _('Export to PDF')
+
+    def export_isdoc(self, request, queryset):
+        from invoicing.exporters import InvoiceISDOCXmlListExporter
+        self._export_and_email(request, queryset, InvoiceISDOCXmlListExporter)
+
+    export_isdoc.short_description = _('Export to ISDOC (XML)')
+
+    def export_mrp_v2_outgoing(self, request, queryset):
+        from invoicing.exporters.mrp.v2.list import OutgoingInvoiceMrpExporter
+        self._export_and_email(request, queryset, OutgoingInvoiceMrpExporter)
+
+    export_mrp_v2_outgoing.short_description = _('Export to MRP v2 (outgoing)')
+
+    def export_mrp_v2_incoming(self, request, queryset):
+        from invoicing.exporters.mrp.v2.list import IncomingInvoiceMrpExporter
+        self._export_and_email(request, queryset, IncomingInvoiceMrpExporter)
+
+    export_mrp_v2_incoming.short_description = _('Export to MRP v2 (incoming)')
+
+    def export_mrp_v1(self, request, queryset):
+        """Legacy MRP XML export (v1) - returns direct response instead of email."""
+        creator_id = request.user.id
+        recipients_ids = [creator_id]
+        invoice_ids = queryset.values_list("id", flat=True)
+
+        mail_exported_invoices_mrp_v1.delay(
+            creator_id, recipients_ids, invoice_ids, 'MRP_export.zip'
         )
 
-        # set queryset
-        exporter.queryset = queryset
-
-        # export to file
-        return exporter.export_to_response()
-
-    export_to_pdf.short_description = _('Export to PDF')
+    export_mrp_v1.short_description = _('Export to MRP v1 (XML)')

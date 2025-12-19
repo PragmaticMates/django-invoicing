@@ -2,3 +2,4 @@ include LICENSE
 include README.rst
 recursive-include invoicing/templates *
 recursive-include invoicing/locale *
+recursive-include invoicing/exporters/mrp/xsd *.xsd

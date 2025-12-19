@@ -268,3 +268,35 @@ class Profit365Manager(AccountingSoftwareManager):
             })
 
         return results
+
+def get_invoice_details_manager():
+    if invoicing_settings.INVOICE_DETAILS_MANAGER is not None:
+        return import_string(invoicing_settings.INVOICE_DETAILS_MANAGER)()
+
+    return import_string('invoicing.managers.InvoiceDetailsManager')()
+
+
+class InvoiceDetailsManager(object):
+    @staticmethod
+    def vat_type(invoice):
+        return ''
+
+    # cislo zakaznika
+    @staticmethod
+    def customer_number(invoice):
+        return ''
+
+    # predkontacia
+    @staticmethod
+    def advance_notice(invoice):
+        return ''
+
+    # kod plnenia
+    @staticmethod
+    def fulfillment_code(invoice):
+        return ''
+
+    # stredisko
+    @staticmethod
+    def center(invoice):
+        return ''

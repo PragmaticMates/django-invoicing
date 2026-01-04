@@ -1,15 +1,21 @@
 import json
+import logging
+from datetime import datetime
 
 import requests
+from django.http import JsonResponse
 from django.utils import translation
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django_filters.constants import EMPTY_VALUES
 
 from django.utils.translation import gettext_lazy as _
+from lxml import etree
 
 from invoicing import settings as invoicing_settings
 from invoicing.models import Invoice
+
+logger = logging.getLogger(__name__)
 
 
 def get_accounting_software_manager():
@@ -23,6 +29,9 @@ def get_accounting_software_manager():
 
         if invoicing_settings.ACCOUNTING_SOFTWARE == 'PROFIT365':
             return Profit365Manager()
+
+        if invoicing_settings.ACCOUNTING_SOFTWARE == 'MRP':
+            return MRPManager()
 
         return NotImplementedError(_('Accounting software %s not implemented') % invoicing_settings.ACCOUNTING_SOFTWARE)
 
@@ -268,6 +277,258 @@ class Profit365Manager(AccountingSoftwareManager):
             })
 
         return results
+
+class MRPManager(AccountingSoftwareManager):
+    # Constants
+    COMMAND_INCOMING = "IMPFP0"
+    COMMAND_OUTGOING = "IMPFV0"
+    XML_ENCODING = 'Windows-1250'
+    REQUEST_TIMEOUT = 30
+
+    def __init__(self):
+        if invoicing_settings.ACCOUNTING_SOFTWARE_MRP_API_URL in EMPTY_VALUES:
+            raise EnvironmentError(_('Missing MRP API url'))
+
+    
+    def send_to_accounting_software(self, request: object, queryset: object) -> JsonResponse:
+        """
+        Handle POST request to send invoices to MRP server.
+        
+        Args:
+            request: Django request object with user attribute
+            queryset: QuerySet of Invoice objects to export
+            
+        Returns:
+            JsonResponse with success status and response data
+        """
+        # Input validation
+        if queryset is None or not queryset.exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'No invoices selected for export'
+            }, status=400)
+        
+        try:
+            user = request.user
+            logger.info(f"Sending {queryset.count()} invoices to MRP server (one invoice per request)")
+            
+            # MRP autonomous mode handles only one invoice per request
+            # Process each invoice separately and collect results
+            results = []
+            for invoice in queryset:
+                result = self._send_single_invoice(invoice, user)
+                results.append(result)
+            
+            # Return summary of all processed invoices
+            return JsonResponse({
+                'success': True,
+                'message': f'Processed {len(results)} invoice(s)',
+                'results': results,
+                'total_count': len(results),
+                'success_count': sum(1 for r in results if r['status'] == 'success'),
+                'error_count': sum(1 for r in results if r['status'] == 'error')
+            })
+
+        except Exception as e:
+            logger.exception(f"Unexpected error in send_to_accounting_software: {e}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Unexpected error: {str(e)}'
+            }, status=500)
+
+    def _send_single_invoice(self, invoice, user):
+        """
+        Send a single invoice to MRP server.
+        
+        Args:
+            invoice: Single Invoice object
+            user: request user
+            
+        Returns:
+            dict: Result with invoice_number, request_id, status, and optional error
+        """
+        # Create queryset with single invoice
+        single_queryset = Invoice.objects.filter(pk=invoice.pk)
+        request_id = None
+        
+        try:
+            # Create envelope for this single invoice
+            xml_string, request_id = self._create_mrp_envelope(single_queryset, user)
+            logger.debug(f"Created MRP envelope for invoice {invoice.number} with request_id: {request_id}")
+
+            headers = {
+                'Content-Type': f'application/xml; charset={self.XML_ENCODING}'
+            }
+            url = invoicing_settings.ACCOUNTING_SOFTWARE_MRP_API_URL
+
+            logger.debug(f"Sending invoice {invoice.number} to MRP server: {url}")
+            response = requests.post(
+                url,
+                data=xml_string,
+                headers=headers,
+                timeout=self.REQUEST_TIMEOUT
+            )
+            response.raise_for_status()
+            logger.info(f"Received response for invoice {invoice.number}: {response.status_code}")
+
+            # Parse and check response
+            response_xml = self._parse_response_xml(response)
+            error_info = self._extract_xml_errors(response_xml, request_id)
+            if error_info:
+                logger.error(f"Invoice {invoice.number} failed: {error_info['error']}")
+                return self._error_result(
+                    invoice,
+                    request_id,
+                    error_info['error'],
+                    error_info.get('error_code'),
+                    error_info.get('error_class')
+                )
+            
+            # Success
+            logger.info(f"Successfully sent invoice {invoice.number} to MRP server (request_id: {request_id})")
+            return {
+                'invoice_number': invoice.number,
+                'request_id': request_id,
+                'status': 'success',
+                'status_code': response.status_code
+            }
+            
+        except requests.exceptions.Timeout as e:
+            logger.error(f"Timeout when sending invoice {invoice.number}: {e}")
+            return self._error_result(
+                invoice,
+                request_id,
+                f'Request timeout: The MRP server did not respond within {self.REQUEST_TIMEOUT} seconds'
+            )
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request error when sending invoice {invoice.number}: {e}")
+            return self._error_result(invoice, request_id, f'Network error: {str(e)}')
+        except Exception as e:
+            logger.exception(f"Unexpected error when sending invoice {invoice.number}: {e}")
+            return self._error_result(invoice, request_id, f'Unexpected error: {str(e)}')
+
+
+    def _create_mrp_envelope(self, queryset, user):
+        """
+        Create mrpEnvelope XML structure with MRP data.
+
+        Final structure:
+        <mrpEnvelope>
+          <body>
+            <mrpRequest>
+              <request command="IMPFV0" requestId="...">
+              </request>
+              <data>
+                <MRPKSData version="2.0">...</MRPKSData>
+              </data>
+            </mrpRequest>
+          </body>
+        </mrpEnvelope>
+        
+        Args:
+            queryset: QuerySet of Invoice objects (must contain exactly one invoice)
+            user: request user
+            
+        Returns:
+            tuple: (xml_string, request_id)
+            
+        Raises:
+            ValueError: If queryset is empty
+        """
+        first_invoice = queryset.first()
+        invoice_origin = first_invoice.origin
+        
+        envelope = etree.Element("mrpEnvelope")
+        body = etree.SubElement(envelope, "body")
+
+        mrp_request = etree.SubElement(body, "mrpRequest")
+        request_id = f"import-{int(datetime.now().timestamp())}"
+        command = self.COMMAND_INCOMING if invoice_origin == Invoice.ORIGIN.INCOMING else self.COMMAND_OUTGOING
+        request_elem = etree.SubElement(
+            mrp_request,
+            "request",
+            command=command,
+            requestId=request_id,
+        )
+
+        # Create exporter and generate MRP data
+        exporter = self._create_exporter(queryset, invoice_origin, user)
+        mrp_data = exporter.get_mrp_data_element()
+
+        # data is a sibling of request, both inside mrpRequest
+        data_elem = etree.SubElement(mrp_request, "data")
+        data_elem.append(mrp_data)
+
+        xml_string = etree.tostring(
+            envelope, pretty_print=True, xml_declaration=True, encoding=self.XML_ENCODING
+        )
+        return xml_string, request_id
+
+    def _create_exporter(self, invoices, invoice_origin, user):
+        """Create and configure the appropriate MRP exporter."""
+        from invoicing.exporters.mrp.v2.list import OutgoingInvoiceMrpExporter, IncomingInvoiceMrpExporter
+        exporter_class = OutgoingInvoiceMrpExporter if invoice_origin == Invoice.ORIGIN.OUTGOING else IncomingInvoiceMrpExporter
+
+        exporter = exporter_class(
+            user=user,
+            recipients=[user]
+        )
+        exporter.queryset = invoices
+        return exporter
+
+    def _error_result(self, invoice, request_id, error_message, error_code=None, error_class=None):
+        """Helper method to create error result dictionary."""
+        result = {
+            'invoice_number': invoice.number,
+            'request_id': request_id,
+            'status': 'error',
+            'error': error_message
+        }
+        if error_code is not None:
+            result['error_code'] = error_code
+        if error_class is not None:
+            result['error_class'] = error_class
+        return result
+
+    def _extract_xml_errors(self, response_xml, request_id):
+        """
+        Extract error information from XML response.
+        
+        Args:
+            response_xml: Parsed XML response or None
+            request_id: Request ID for logging
+            
+        Returns:
+            dict: Error info with 'error', 'error_code', 'error_class' keys, or None if no error
+        """
+        if response_xml is None:
+            return None
+        
+        error_elem = response_xml.find('.//error')
+        if error_elem is None:
+            return None
+        
+        error_code = error_elem.get('errorCode', '')
+        error_class = error_elem.get('errorClass', '')
+        error_message_elem = error_elem.find('errorMessage')
+        error_message = error_message_elem.text if error_message_elem is not None else 'Unknown error'
+        
+        logger.error(f"MRP server returned error (request_id: {request_id}): {error_message}")
+        return {
+            'error': error_message,
+            'error_code': error_code,
+            'error_class': error_class
+        }
+
+    def _parse_response_xml(self, response):
+        """Parse XML from response if available, return None otherwise."""
+        try:
+            if response.headers.get('Content-Type', '').startswith('application/xml') or \
+                    response.content.strip().startswith(b'<'):
+                return etree.fromstring(response.content)
+        except (etree.XMLSyntaxError, etree.ParseError, ValueError) as e:
+            logger.warning(f"Failed to parse response XML: {e}")
+        return None
 
 def get_invoice_details_manager():
     if invoicing_settings.INVOICE_DETAILS_MANAGER is not None:

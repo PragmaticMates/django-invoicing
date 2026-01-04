@@ -122,7 +122,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
 
             # ==== HEADER ====
             etree.SubElement(invoice_elem, "DocumentNumber").text = str(invoice.number[:10] or "")
-            etree.SubElement(invoice_elem, "IssueDate").text = invoice.date_issue.strftime("%Y-%m-%d")
+            etree.SubElement(invoice_elem, "IssueDate").text = invoice.date_issue.isoformat()
             etree.SubElement(invoice_elem, "CurrencyCode").text = invoice.currency or ""
             etree.SubElement(invoice_elem, "ValuesWithTax").text = "T" if invoice.type in ['INVOICE', 'ADVANCE'] else "F"
 
@@ -135,12 +135,11 @@ class InvoiceMrpExporterMixin(ExporterMixin):
 
             etree.SubElement(invoice_elem, "DocType").text = "" if invoice.type == 'INVOICE' else \
                 "D" if invoice.type == 'CREDIT_NOTE' else "X" if invoice.type == 'ADVANCE' else "P"
-            etree.SubElement(invoice_elem, "BaseTaxRateAmount").text = format_decimal(invoice.total or 0)
+            etree.SubElement(invoice_elem, "BaseTaxRateAmount").text = format_decimal(invoice.subtotal or 0)
             etree.SubElement(invoice_elem, "BaseTaxRateTax").text = format_decimal(invoice.vat or 0)
-            etree.SubElement(invoice_elem, "TotalWithTaxCurr").text = format_decimal(invoice.total or 0)
-            etree.SubElement(invoice_elem, "TaxPointDate").text = invoice.date_tax_point.strftime("%Y-%m-%d")
-            etree.SubElement(invoice_elem, "DeliveryDate").text = invoice.date_issue.strftime("%Y-%m-%d")
-            etree.SubElement(invoice_elem, "PaymentDueDate").text = invoice.date_due.strftime("%Y-%m-%d")
+            etree.SubElement(invoice_elem, "TaxPointDate").text = invoice.date_tax_point.isoformat()
+            etree.SubElement(invoice_elem, "DeliveryDate").text = invoice.date_issue.isoformat()
+            etree.SubElement(invoice_elem, "PaymentDueDate").text = invoice.date_due.isoformat()
 
             advance_notice = get_invoice_details_manager().advance_notice(invoice)
             if advance_notice not in EMPTY_VALUES:
@@ -196,13 +195,9 @@ class InvoiceMrpExporterMixin(ExporterMixin):
                 etree.SubElement(item_elem, "Quantity").text = str(round(item.quantity, 6))
                 etree.SubElement(item_elem, "UnitCode").text = ""
                 etree.SubElement(item_elem, "UnitPrice").text = str(round(item.unit_price, 6))
-                etree.SubElement(item_elem, "DiscountPercent").text = format_decimal(item.discount, 2)
-                # Discount amount (not UnitDiscount) - total discount for the item
-                if item.discount and item.discount > 0:
-                    discount_amount = (item.unit_price * item.quantity) * (item.discount / 100)
-                    etree.SubElement(item_elem, "Discount").text = format_decimal(discount_amount)
                 etree.SubElement(item_elem, "TaxPercent").text = format_decimal(item.tax_rate if item.tax_rate else 0, 2)
                 etree.SubElement(item_elem, "TaxAmount").text = format_decimal(item.vat, 2)
+                etree.SubElement(item_elem, "DiscountPercent").text = format_decimal(item.discount, 2)
                 etree.SubElement(item_elem, "TotalWeight").text = str(item.weight if item.weight is not None else 0)
 
             # ==== SUMS (SumValues) ====
@@ -237,7 +232,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
                     else "2" if invoice.payment_method in ("CASH", "CASH_ON_DELIVERY")
                     else "0"
                 )
-                etree.SubElement(pay_elem, "PaymentDate").text = invoice.date_paid.strftime("%Y-%m-%d")
+                etree.SubElement(pay_elem, "PaymentDate").text = invoice.date_paid.isoformat()
                 etree.SubElement(pay_elem, "Amount").text = format_decimal(invoice.already_paid)
                 etree.SubElement(pay_elem, "CurrencyCode").text = invoice.currency or ""
 

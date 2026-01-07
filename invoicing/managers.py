@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 
 import requests
+from django.core.mail import EmailMultiAlternatives
 from django.http import JsonResponse
 from django.utils import translation
 from django.utils.module_loading import import_string
@@ -318,8 +319,11 @@ class MRPManager(AccountingSoftwareManager):
             for invoice in queryset:
                 result = self._send_single_invoice(invoice, user)
                 results.append(result)
+
+            # Send email summary to user
+            self._send_export_summary_email(user, results)
             
-            # Return summary of all processed invoices
+            # Return summary of all processed invoices as JSON
             return JsonResponse({
                 'success': True,
                 'message': f'Processed {len(results)} invoice(s)',
@@ -387,10 +391,10 @@ class MRPManager(AccountingSoftwareManager):
             # Success
             logger.info(f"Successfully sent invoice {invoice.number} to MRP server (request_id: {request_id})")
             return {
-                'invoice_number': invoice.number,
-                'request_id': request_id,
+                'invoice_number': str(invoice.number),
+                'request_id': str(request_id),
                 'status': 'success',
-                'status_code': response.status_code
+                'status_code': int(response.status_code)
             }
             
         except requests.exceptions.Timeout as e:
@@ -476,18 +480,64 @@ class MRPManager(AccountingSoftwareManager):
         exporter.queryset = invoices
         return exporter
 
+    def _send_export_summary_email(self, user, results):
+        """
+        Send email summary of MRP export results to the user.
+
+        Args:
+            user: User object to send email to
+            results: List of result dictionaries from invoice processing
+        """
+        # Build plain-text email body with results
+        lines = [
+            str(_('MRP export of invoices')),
+            "",
+            f"{_('Total invoices processed')}: {len(results)}",
+            f"{_('Successful')}: {sum(1 for r in results if r['status'] == 'success')}",
+            f"{_('Errors')}: {sum(1 for r in results if r['status'] == 'error')}",
+            "",
+            str(_('Details:')),
+        ]
+
+        for r in results:
+            invoice_number = r.get('invoice_number')
+            status = r.get('status')
+            error = r.get('error')
+
+            status_text = _('Success') if status == 'success' else _('Error')
+            # Bullet line with invoice number and localized status
+            lines.append(f"  • {invoice_number} - {status_text}")
+
+            # Add error message on next indented line if present
+            if status == 'error' and error:
+                error_clean = ' '.join(str(error).strip().split())
+                lines.append(f"    {error_clean}")
+
+        email_body = "\n".join(lines)
+
+        # Send email to user if email is available
+        creator_email = getattr(user, "email", None)
+        if creator_email:
+            subject = _('MRP export of invoices')
+            message = EmailMultiAlternatives(
+                subject=subject,
+                body=email_body,
+                to=[creator_email],
+            )
+            message.send(fail_silently=False)
+
     def _error_result(self, invoice, request_id, error_message, error_code=None, error_class=None):
         """Helper method to create error result dictionary."""
         result = {
-            'invoice_number': invoice.number,
-            'request_id': request_id,
+            'invoice_number': str(invoice.number),
+            'request_id': str(request_id) if request_id is not None else None,
             'status': 'error',
-            'error': error_message
+            'error': str(error_message)
         }
         if error_code is not None:
-            result['error_code'] = error_code
+            result['error_code'] = str(error_code)
         if error_class is not None:
-            result['error_class'] = error_class
+            result['error_class'] = str(error_class)
         return result
 
     def _extract_xml_errors(self, response_xml, request_id):

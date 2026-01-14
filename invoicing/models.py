@@ -20,7 +20,7 @@ from model_utils import Choices
 from model_utils.fields import MonitorField
 
 from invoicing import settings as invoicing_settings
-from invoicing.querysets import InvoiceQuerySet, ItemQuerySet
+from invoicing.querysets import InvoiceQuerySet, ItemQuerySet, InvoiceExportQuerySet
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
 from invoicing.utils import deprecated
@@ -621,6 +621,40 @@ class Item(models.Model):
         # self.tax_rate = self.invoice.get_tax_rate()
 
         return super(Item, self).save(**kwargs)
+
+
+class InvoiceExport(models.Model):
+    RESULT = Choices(
+        ('SUCCESS', _('success')),
+        ('FAIL', _('fail')),
+    )
+
+    invoice = models.ForeignKey(Invoice, verbose_name=_(u'invoice'), on_delete=models.CASCADE, related_name='exports')
+    export_id = models.CharField(_('export id'), max_length=100, db_index=True, help_text=_('Groups exports from the same operation'))
+    manager_path = models.CharField(_('manager path'), max_length=255, blank=True, default='')
+    method_path = models.CharField(_('method path'), max_length=255, blank=True, default='')
+    result = models.CharField(_('result'), choices=RESULT, max_length=7)
+    detail = models.TextField(_('detail'), blank=True, default='')
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('creator'), on_delete=models.PROTECT,
+                                related_name="%(class)s_where_creator", blank=True, null=True, default=None)
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    modified = models.DateTimeField(_('modified'), auto_now=True)
+    objects = InvoiceExportQuerySet.as_manager()
+
+    class Meta:
+        db_table = 'invoicing_invoice_exports'
+        verbose_name = _(u'invoice export')
+        verbose_name_plural = _(u'invoice exports')
+        ordering = ('-created',)
+        default_permissions = ('list', 'view', 'add', 'change', 'delete')
+        indexes = [
+            models.Index(fields=['export_id', 'result'], name='inv_export_id_result_idx'),
+            models.Index(fields=['manager_path', 'created'], name='inv_export_mgr_created_idx'),
+            models.Index(fields=['result', 'created'], name='inv_export_result_created_idx'),
+        ]
+
+    def __str__(self):
+        return f'Export {self.invoice.number} - {self.get_result_display()} ({self.created})'
 
 
 from .signals import *

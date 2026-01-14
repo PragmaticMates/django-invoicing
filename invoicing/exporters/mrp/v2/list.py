@@ -116,6 +116,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         """
         mrp_data = etree.Element("MRPKSData", version="2.0")
         incoming_invoices = etree.SubElement(mrp_data, self.get_invoice_root_element())
+        invoice_details_manager = get_invoice_details_manager()
 
         for invoice in self.get_queryset():
             invoice_elem = etree.SubElement(incoming_invoices, "Invoice")
@@ -127,7 +128,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
             etree.SubElement(invoice_elem, "ValuesWithTax").text = "T" if invoice.type in ['INVOICE', 'ADVANCE'] else "F"
 
             # TaxCode is required - always include it, default to "0" if not available
-            vat_type = get_invoice_details_manager().vat_type(invoice)
+            vat_type = invoice_details_manager.vat_type(invoice)
             if vat_type not in EMPTY_VALUES:
                 etree.SubElement(invoice_elem, "TaxCode").text = str(vat_type)
             else:
@@ -141,7 +142,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
             etree.SubElement(invoice_elem, "DeliveryDate").text = invoice.date_issue.isoformat()
             etree.SubElement(invoice_elem, "PaymentDueDate").text = invoice.date_due.isoformat()
 
-            advance_notice = get_invoice_details_manager().advance_notice(invoice)
+            advance_notice = invoice_details_manager.advance_notice(invoice)
             if advance_notice not in EMPTY_VALUES:
                 etree.SubElement(invoice_elem, "DoubleEntryBookkeepingCode").text = advance_notice
 
@@ -206,7 +207,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
             for vat_sum in invoice.vat_summary:
                 sv = etree.SubElement(sum_values, "SumValue")
                 # Use the same vat_type logic as in header
-                sum_vat_type = get_invoice_details_manager().vat_type(invoice)
+                sum_vat_type = invoice_details_manager.vat_type(invoice)
                 if sum_vat_type not in EMPTY_VALUES:
                     etree.SubElement(sv, "TaxCode").text = str(sum_vat_type)
                 else:

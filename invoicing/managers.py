@@ -1,55 +1,139 @@
 import json
 import logging
-from datetime import datetime
 
 import requests
-from django.core.mail import EmailMultiAlternatives
-from django.http import JsonResponse
+from django.contrib import messages
 from django.utils import translation
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django_filters.constants import EMPTY_VALUES
 
 from django.utils.translation import gettext_lazy as _
-from lxml import etree
 
 from invoicing import settings as invoicing_settings
-from invoicing.models import Invoice
+from invoicing.signals import invoices_exported
+from invoicing.utils import generate_export_id
 
 logger = logging.getLogger(__name__)
 
 
-def get_accounting_software_manager():
-    if invoicing_settings.ACCOUNTING_SOFTWARE_MANAGER is not None:
-        return import_string(invoicing_settings.ACCOUNTING_SOFTWARE_MANAGER)()
+def get_invoice_details_manager():
+    invoice_details_manager_class = invoicing_settings.INVOICING_MANAGERS['DETAILS'].get('MANAGER_CLASS', None)
+    if invoice_details_manager_class is not None:
+        return import_string(invoice_details_manager_class)()
 
-    if invoicing_settings.ACCOUNTING_SOFTWARE not in EMPTY_VALUES:
-        # TODO: use title()
-        if invoicing_settings.ACCOUNTING_SOFTWARE == 'IKROS':
-            return IKrosManager()
-
-        if invoicing_settings.ACCOUNTING_SOFTWARE == 'PROFIT365':
-            return Profit365Manager()
-
-        if invoicing_settings.ACCOUNTING_SOFTWARE == 'MRP':
-            return MRPManager()
-
-        return NotImplementedError(_('Accounting software %s not implemented') % invoicing_settings.ACCOUNTING_SOFTWARE)
-
-    return None
+    raise EnvironmentError(_('Missing MANAGER_CLASS for invoice details manager'))
 
 
-class AccountingSoftwareManager(object):
-    def send_to_accounting_software(self, request, queryset):
+class InvoiceExportMixin(object):
+
+    def _execute_export_and_send_email(self, request, queryset, exporter_class, manager_class, method_name, export_prefix=''):
+        """
+        Common export logic for email-based exports.
+
+        Args:
+            request: The HTTP request object
+            queryset: The queryset of invoices to export
+            exporter_class: The exporter class to use
+            manager_class: The manager class initiating the export
+            method_name: Name of the manager method (e.g., 'export_pdf')
+            export_prefix: Prefix for export_id generation (default: 'admin')
+        """
+        from invoicing.exporters.tasks import mail_exported_invoices
+
+        logger.info(
+            f"User {request.user} (ID: {request.user.id}) executing {method_name} export with {queryset.count()} invoice(s)",
+            extra={
+                'user_id': request.user.id,
+                'manager': manager_class.__name__,
+                'method': method_name,
+                'invoice_count': queryset.count(),
+                'export_prefix': export_prefix
+            }
+        )
+        creator_id = request.user.id
+        recipients_ids = [creator_id]
+        invoice_ids = list(queryset.values_list("id", flat=True))
+
+        mail_exported_invoices.delay(
+            exporter_class, creator_id, recipients_ids, invoice_ids, export_prefix, exporter_class.filename, manager_class, method_name, request.GET
+        )
+
+        messages.success(request, _('Export of %d invoice(s) queued and will be sent to email') % queryset.count())
+
+class InvoiceExportApiMixin(object):
+    manager_name = ""
+
+    def __init__(self):
+        if self.manager_settings.get('API_URL', None) in EMPTY_VALUES:
+            raise EnvironmentError(_('Missing invoicing manager API url'), self.manager_name)
+
+    def export_via_api(self, request, queryset, export_prefix=""):
         raise NotImplementedError()
 
+    @property
+    def manager_settings(self):
+        """Get the settings for this manager from INVOICING_MANAGERS config."""
+        return invoicing_settings.INVOICING_MANAGERS.get(self.manager_name, None)
 
-class IKrosManager(AccountingSoftwareManager):
+
+class PdfExportManager(InvoiceExportMixin):
+    manager_name = 'PDF'
+
+    def export_pdf(self, request, queryset, export_prefix='', exporter_class=None):
+        if exporter_class in EMPTY_VALUES:
+            from invoicing.exporters import InvoicePdfDetailExporter
+            exporter_class = InvoicePdfDetailExporter
+
+        self._execute_export_and_send_email(
+            request, queryset, exporter_class, PdfExportManager,
+            method_name='export_pdf', export_prefix=export_prefix
+        )
+
+    export_pdf.short_description = _('Export to PDF')
+
+
+class XlsxExportManager(InvoiceExportMixin):
+    manager_name = 'XLSX'
+
+    def export_xlsx(self, request, queryset, export_prefix='', exporter_class=None):
+        if exporter_class in EMPTY_VALUES:
+            from invoicing.exporters import InvoiceXlsxListExporter
+            exporter_class = InvoiceXlsxListExporter
+
+        self._execute_export_and_send_email(
+            request, queryset, exporter_class, XlsxExportManager,
+            method_name='export_xlsx', export_prefix=export_prefix
+        )
+
+    export_xlsx.short_description = _('Export to xlsx')
+
+
+class ISDOCManager(InvoiceExportMixin):
+    manager_name = 'ISDOC'
+
+    def export_isdoc(self, request, queryset, export_prefix='', exporter_class=None):
+        if exporter_class in EMPTY_VALUES:
+            from invoicing.exporters import InvoiceISDOCXmlListExporter
+            exporter_class = InvoiceISDOCXmlListExporter
+
+        self._execute_export_and_send_email(
+            request, queryset, exporter_class, ISDOCManager,
+            method_name='export_isdoc', export_prefix=export_prefix
+        )
+
+    export_isdoc.short_description = _('Export to ISDOC (XML)')
+
+
+class IKrosManager(InvoiceExportApiMixin):
+    manager_name = 'IKROS'
+
     def __init__(self):
-        if invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA in EMPTY_VALUES:
-            raise EnvironmentError(_('Missing accounting software API key'))
+        super().__init__()
+        if self.manager_settings.get('API_KEY', None) in EMPTY_VALUES:
+            raise EnvironmentError(_('Missing invoicing manager API key'), self.manager_name)
 
-    def send_to_accounting_software(self, request, queryset):
+    def export_via_api(self, request, queryset, export_prefix=""):
         invoices_data = []
 
         for invoice in queryset:
@@ -100,6 +184,7 @@ class IKrosManager(AccountingSoftwareManager):
 
                 invoice_data['items'].append(item_data)
 
+            from invoicing.models import Invoice
             if invoice.status == Invoice.STATUS.CANCELED:
                 invoice_data['closingText'] = 'STORNO'
 
@@ -110,50 +195,93 @@ class IKrosManager(AccountingSoftwareManager):
 
             invoices_data.append(invoice_data)
 
-        # pprint(invoices_data)  # TODO: logging
-        payload = json.dumps(invoices_data)
+        logger.info("IKROS payload invoices data: %s", invoices_data)
+        export_id = generate_export_id(export_prefix)
+        try:
+            payload = json.dumps(invoices_data)
 
-        url = invoicing_settings.ACCOUNTING_SOFTWARE_IKROS_API_URL
-        api_key = invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA['apiKey']
-        headers = {
-            'Authorization': 'Bearer ' + str(api_key),
-            'Content-Type': 'application/json'
-        }
-        r = requests.post(url=url, data=payload, headers=headers)
-        data = r.json()
+            url = self.manager_settings['API_URL']
+            api_key = self.manager_settings['API_KEY']
+            headers = {
+                'Authorization': 'Bearer ' + str(api_key),
+                'Content-Type': 'application/json'
+            }
+            r = requests.post(url=url, data=payload, headers=headers)
+            data = r.json()
 
-        # pprint(data)  # TODO: logging
+            logger.info("IKROS response data: %s", data)
 
-        if data.get('message', None) is not None:
-            raise Exception(_('Result code: %d. Message: %s (%s)') % (
-                data.get('code', data.get('resultCode')),
-                data['message'],
-                data.get('errorType', '-')
-            ))
+            if data.get('message', None) is not None:
+                error_msg = _('Result code: %d. Message: %s (%s)') % (
+                    data.get('code', data.get('resultCode')),
+                    data['message'],
+                    data.get('errorType', '-')
+                )
+                messages.error(request, error_msg)
+                raise Exception(error_msg)
 
-        if 'documents' in data:
-            if len(data['documents']) > 0:
-                download_url = data['documents'][0]['downloadUrl']
-                # requests.get(download_url)
-
-                return mark_safe(_('%d invoices sent to accounting software [<a href="%s" target="_blank">Fetch</a>]') % (
-                    queryset.count(),
-                    download_url
-                ))
-            else:
-                return _('%d invoices sent to accounting software') % (
-                    queryset.count(),
+            if 'documents' in data:
+                # Batch export succeeded - trigger signal
+                from invoicing.models import InvoiceExport
+                
+                invoices_exported.send(
+                    sender=self.__class__,
+                    invoices=queryset,
+                    method='export_via_api',
+                    export_id=export_id,
+                    result=InvoiceExport.RESULT.SUCCESS,
+                    creator=request.user
                 )
 
+                if len(data['documents']) > 0:
+                    download_url = data['documents'][0]['downloadUrl']
+                    # requests.get(download_url)
 
-class Profit365Manager(AccountingSoftwareManager):
+                    result = mark_safe(_('%d invoices sent to IKROS accounting software [<a href="%s" target="_blank">Fetch</a>]') % (
+                        queryset.count(),
+                        download_url
+                    ))
+                else:
+                    result = _('%d invoices sent to IKROS accounting software') % (
+                        queryset.count(),
+                    )
+                messages.success(request, result)
+                return result
+
+        except Exception as e:
+            # Batch export failed - trigger signal with failure
+            from invoicing.models import InvoiceExport
+            
+            invoices_exported.send(
+                sender=self.__class__,
+                invoices=queryset,
+                method='export_via_api',
+                export_id=export_id,
+                result=InvoiceExport.RESULT.FAIL,
+                detail=str(e),
+                creator=request.user
+            )
+            messages.error(request, str(e))
+            return str(e)
+
+    export_via_api.short_description = _('Export to IKROS (API)')
+
+
+class Profit365Manager(InvoiceExportApiMixin):
+    manager_name = 'PROFIT365'
+
     def __init__(self):
-        if invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA in EMPTY_VALUES:
-            raise EnvironmentError(_('Missing accounting software API data'))
+        super().__init__()
+        if self.manager_settings.get('API_DATA', None) in EMPTY_VALUES:
+            raise EnvironmentError(_('Missing invoicing manager API data'), self.manager_name)
 
-    def send_to_accounting_software(self, request, queryset):
+    def export_via_api(self, request, queryset, export_prefix=""):
+        from invoicing.models import Invoice
+
+        export_id = generate_export_id(export_prefix),
         results = []
 
+        logger.info(f"Sending {queryset.count()} invoices to Profit365 server (one invoice per request)")
         for invoice in queryset:
             with translation.override(invoice.language):
                 partnerAddress = [
@@ -183,7 +311,7 @@ class Profit365Manager(AccountingSoftwareManager):
 
                 invoice_data = {
                     "recordNumber": invoice.number,
-                    "bankAccountId": invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA['bankAccountId'],
+                    "bankAccountId": self.manager_settings['API_DATA']['bankAccountId'],
                     # "ordnerID": "VYF",  # TODO: setting
                     # "warehouseID": "TODO", # TODO: setting
                     # "partnerDetail": "Firma s.r.o.\r\nLesná 123\r\nBratislava\r\nIČO: test",
@@ -252,24 +380,43 @@ class Profit365Manager(AccountingSoftwareManager):
                 #     invoice_data['items'][0]['discountValue'] = str(invoice.credit * -1)  # TODO: substract VAT
                     ## invoice_data['items'][0]['discountValueWithVat'] = str(invoice.credit * -1)
 
-            # pprint(invoice_data)  # TODO: logging
             payload = json.dumps(invoice_data)
 
-            url = invoicing_settings.ACCOUNTING_SOFTWARE_PROFIT365_API_URL
+            url = self.manager_settings['API_URL']
             headers = {
-                'Authorization': invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA['Authorization'],
-                'ClientID': invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA['ClientID'],
-                'ClientSecret': invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA['ClientSecret'],
+                'Authorization': self.manager_settings['API_DATA']['Authorization'],
+                'ClientID': self.manager_settings['API_DATA']['ClientID'],
+                'ClientSecret': self.manager_settings['API_DATA']['ClientSecret'],
                 'Content-Type': 'application/json'
             }
-            if 'CompanyID' in invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA:
-                headers['CompanyID'] = invoicing_settings.ACCOUNTING_SOFTWARE_API_DATA
+            if 'CompanyID' in self.manager_settings['API_DATA']:
+                headers['CompanyID'] = self.manager_settings['API_DATA']['CompanyID']
 
+            logger.debug(f"Profit365: Created payload {payload} for invoice {invoice.number}")
             r = requests.post(url=f'{url}/sales/invoices', data=payload, headers=headers)
 
-            # if r.status_code == 200:
-            #     data = r.json()
-                # pprint(data)
+            from invoicing.models import InvoiceExport
+            if r.status_code == 200:
+                logger.info(f"Received success response for invoice {invoice.number}: {r.status_code}")
+                invoices_exported.send(
+                    sender=self.__class__,
+                    invoices=[invoice],
+                    method='export_via_api',
+                    export_id=export_id,
+                    result=InvoiceExport.RESULT.SUCCESS,
+                    creator=request.user
+                )
+            else:
+                logger.error(f"Received error response for invoice {invoice.number}: {r.status_code} {r.reason}")
+                invoices_exported.send(
+                    sender=self.__class__,
+                    invoices=[invoice],
+                    method='export_via_api',
+                    export_id=export_id,
+                    result=InvoiceExport.RESULT.FAIL,
+                    detail=r.reason,
+                    creator=request.user
+                )
 
             results.append({
                 'invoice': invoice.number,
@@ -277,315 +424,110 @@ class Profit365Manager(AccountingSoftwareManager):
                 'reason': r.reason
             })
 
+        # Show messages for results
+        success_count = 0
+        for r in results:
+            if r['status_code'] == 200:
+                success_count += 1
+            else:
+                messages.error(request, f"[{r['invoice']}]: {r['status_code']} ({r['reason']})")
+
+        if success_count > 0:
+            messages.success(request, _('%d invoices sent to Profit365 accounting software') % success_count)
+
         return results
 
-class MRPManager(AccountingSoftwareManager):
-    # Constants
-    COMMAND_INCOMING = "IMPFP0"
-    COMMAND_OUTGOING = "IMPFV0"
-    XML_ENCODING = 'Windows-1250'
-    REQUEST_TIMEOUT = 30
+    export_via_api.short_description = _('Export to Profit365 (API)')
 
-    def __init__(self):
-        if invoicing_settings.ACCOUNTING_SOFTWARE_MRP_API_URL in EMPTY_VALUES:
-            raise EnvironmentError(_('Missing MRP API url'))
+class MRPManager(InvoiceExportMixin, InvoiceExportApiMixin):
+    manager_name = 'MRP'
 
-    
-    def send_to_accounting_software(self, request: object, queryset: object) -> JsonResponse:
+    def export_mrp_v2(self, request, queryset, export_prefix='', exporter_class=None):
+        if exporter_class in EMPTY_VALUES:
+            from invoicing.models import Invoice
+
+            if queryset.exists():
+                if queryset.first().origin == Invoice.ORIGIN.INCOMING:
+                    from invoicing.exporters.mrp.v2.list import IncomingInvoiceMrpExporter
+                    exporter_class = IncomingInvoiceMrpExporter
+                else:
+                    from invoicing.exporters.mrp.v2.list import OutgoingInvoiceMrpExporter
+                    exporter_class = OutgoingInvoiceMrpExporter
+            else:
+                messages.info(request, _('No invoice to export selected'))
+                return
+
+        self._execute_export_and_send_email(
+            request, queryset, exporter_class, MRPManager,
+            method_name='export_mrp_v2', export_prefix=export_prefix
+        )
+
+    export_mrp_v2.short_description = _('Export to MRP v2')
+
+    def export_mrp_v1(self, request, queryset, export_prefix=''):
+        """Legacy MRP XML export (v1) - returns direct response instead of email."""
+        from invoicing.exporters.mrp.v1.tasks import mail_exported_invoices_mrp_v1
+
+        logger.info(
+            f"User {request.user} (ID: {request.user.id}) executing MRP v1 export with {queryset.count()} invoice(s)",
+            extra={
+                'user_id': request.user.id,
+                'manager': 'MRPManager',
+                'method': 'export_mrp_v1',
+                'invoice_count': queryset.count(),
+                'export_prefix': export_prefix
+            }
+        )
+        creator_id = request.user.id
+        recipients_ids = [creator_id]
+        invoice_ids = list(queryset.values_list("id", flat=True))
+
+        mail_exported_invoices_mrp_v1.delay(
+            creator_id, recipients_ids, invoice_ids, export_prefix, 'MRP_export.zip', request.GET
+        )
+
+        messages.success(request, _('Export of %d invoice(s) queued and will be sent to email') % queryset.count())
+
+    export_mrp_v1.short_description = _('Export to MRP v1 (XML)')
+
+
+    def export_via_api(self, request, queryset, export_prefix=''):
         """
         Handle POST request to send invoices to MRP server.
         
         Args:
             request: Django request object with user attribute
             queryset: QuerySet of Invoice objects to export
+            export_prefix: Export prefix for export_id 
             
         Returns:
             JsonResponse with success status and response data
         """
         # Input validation
         if queryset is None or not queryset.exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'No invoices selected for export'
-            }, status=400)
-        
-        try:
-            user = request.user
-            logger.info(f"Sending {queryset.count()} invoices to MRP server (one invoice per request)")
-            
-            # MRP autonomous mode handles only one invoice per request
-            # Process each invoice separately and collect results
-            results = []
-            for invoice in queryset:
-                result = self._send_single_invoice(invoice, user)
-                results.append(result)
+            messages.error(request, _('No invoices selected for export'))
+            return
 
-            # Send email summary to user
-            self._send_export_summary_email(user, results)
-            
-            # Return summary of all processed invoices as JSON
-            return JsonResponse({
-                'success': True,
-                'message': f'Processed {len(results)} invoice(s)',
-                'results': results,
-                'total_count': len(results),
-                'success_count': sum(1 for r in results if r['status'] == 'success'),
-                'error_count': sum(1 for r in results if r['status'] == 'error')
-            })
-
-        except Exception as e:
-            logger.exception(f"Unexpected error in send_to_accounting_software: {e}")
-            return JsonResponse({
-                'success': False,
-                'error': f'Unexpected error: {str(e)}'
-            }, status=500)
-
-    def _send_single_invoice(self, invoice, user):
-        """
-        Send a single invoice to MRP server.
-        
-        Args:
-            invoice: Single Invoice object
-            user: request user
-            
-        Returns:
-            dict: Result with invoice_number, request_id, status, and optional error
-        """
-        # Create queryset with single invoice
-        single_queryset = Invoice.objects.filter(pk=invoice.pk)
-        request_id = None
-        
-        try:
-            # Create envelope for this single invoice
-            xml_string, request_id = self._create_mrp_envelope(single_queryset, user)
-            logger.debug(f"Created MRP envelope for invoice {invoice.number} with request_id: {request_id}")
-
-            headers = {
-                'Content-Type': f'application/xml; charset={self.XML_ENCODING}'
+        logger.info(
+            f"User {request.user} (ID: {request.user.id}) queuing MRP API export for {queryset.count()} invoice(s)",
+            extra={
+                'user_id': request.user.id,
+                'manager': 'MRPManager',
+                'method': 'export_via_api',
+                'invoice_count': queryset.count(),
+                'export_prefix': export_prefix
             }
-            url = invoicing_settings.ACCOUNTING_SOFTWARE_MRP_API_URL
-
-            logger.debug(f"Sending invoice {invoice.number} to MRP server: {url}")
-            response = requests.post(
-                url,
-                data=xml_string,
-                headers=headers,
-                timeout=self.REQUEST_TIMEOUT
-            )
-            response.raise_for_status()
-            logger.info(f"Received response for invoice {invoice.number}: {response.status_code}")
-
-            # Parse and check response
-            response_xml = self._parse_response_xml(response)
-            error_info = self._extract_xml_errors(response_xml, request_id)
-            if error_info:
-                logger.error(f"Invoice {invoice.number} failed: {error_info['error']}")
-                return self._error_result(
-                    invoice,
-                    request_id,
-                    error_info['error'],
-                    error_info.get('error_code'),
-                    error_info.get('error_class')
-                )
-            
-            # Success
-            logger.info(f"Successfully sent invoice {invoice.number} to MRP server (request_id: {request_id})")
-            return {
-                'invoice_number': str(invoice.number),
-                'request_id': str(request_id),
-                'status': 'success',
-                'status_code': int(response.status_code)
-            }
-            
-        except requests.exceptions.Timeout as e:
-            logger.error(f"Timeout when sending invoice {invoice.number}: {e}")
-            return self._error_result(
-                invoice,
-                request_id,
-                f'Request timeout: The MRP server did not respond within {self.REQUEST_TIMEOUT} seconds'
-            )
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request error when sending invoice {invoice.number}: {e}")
-            return self._error_result(invoice, request_id, f'Network error: {str(e)}')
-        except Exception as e:
-            logger.exception(f"Unexpected error when sending invoice {invoice.number}: {e}")
-            return self._error_result(invoice, request_id, f'Unexpected error: {str(e)}')
-
-
-    def _create_mrp_envelope(self, queryset, user):
-        """
-        Create mrpEnvelope XML structure with MRP data.
-
-        Final structure:
-        <mrpEnvelope>
-          <body>
-            <mrpRequest>
-              <request command="IMPFV0" requestId="...">
-              </request>
-              <data>
-                <MRPKSData version="2.0">...</MRPKSData>
-              </data>
-            </mrpRequest>
-          </body>
-        </mrpEnvelope>
-        
-        Args:
-            queryset: QuerySet of Invoice objects (must contain exactly one invoice)
-            user: request user
-            
-        Returns:
-            tuple: (xml_string, request_id)
-            
-        Raises:
-            ValueError: If queryset is empty
-        """
-        first_invoice = queryset.first()
-        invoice_origin = first_invoice.origin
-        
-        envelope = etree.Element("mrpEnvelope")
-        body = etree.SubElement(envelope, "body")
-
-        mrp_request = etree.SubElement(body, "mrpRequest")
-        request_id = f"import-{int(datetime.now().timestamp())}"
-        command = self.COMMAND_INCOMING if invoice_origin == Invoice.ORIGIN.INCOMING else self.COMMAND_OUTGOING
-        request_elem = etree.SubElement(
-            mrp_request,
-            "request",
-            command=command,
-            requestId=request_id,
         )
 
-        # Create exporter and generate MRP data
-        exporter = self._create_exporter(queryset, invoice_origin, user)
-        mrp_data = exporter.get_mrp_data_element()
+        creator_id = request.user.id
+        invoice_ids = list(queryset.values_list("id", flat=True))
 
-        # data is a sibling of request, both inside mrpRequest
-        data_elem = etree.SubElement(mrp_request, "data")
-        data_elem.append(mrp_data)
+        from invoicing.exporters.mrp.v2.tasks import send_invoices_to_mrp
+        send_invoices_to_mrp.delay(creator_id, invoice_ids, export_prefix)
 
-        xml_string = etree.tostring(
-            envelope, pretty_print=True, xml_declaration=True, encoding=self.XML_ENCODING
-        )
-        return xml_string, request_id
+        messages.success(request, _('Export of %d invoice(s) queued for MRP API processing') % queryset.count())
 
-    def _create_exporter(self, invoices, invoice_origin, user):
-        """Create and configure the appropriate MRP exporter."""
-        from invoicing.exporters.mrp.v2.list import OutgoingInvoiceMrpExporter, IncomingInvoiceMrpExporter
-        exporter_class = OutgoingInvoiceMrpExporter if invoice_origin == Invoice.ORIGIN.OUTGOING else IncomingInvoiceMrpExporter
-
-        exporter = exporter_class(
-            user=user,
-            recipients=[user]
-        )
-        exporter.queryset = invoices
-        return exporter
-
-    def _send_export_summary_email(self, user, results):
-        """
-        Send email summary of MRP export results to the user.
-
-        Args:
-            user: User object to send email to
-            results: List of result dictionaries from invoice processing
-        """
-        # Build plain-text email body with results
-        lines = [
-            str(_('MRP export of invoices')),
-            "",
-            f"{_('Total invoices processed')}: {len(results)}",
-            f"{_('Successful')}: {sum(1 for r in results if r['status'] == 'success')}",
-            f"{_('Errors')}: {sum(1 for r in results if r['status'] == 'error')}",
-            "",
-            str(_('Details:')),
-        ]
-
-        for r in results:
-            invoice_number = r.get('invoice_number')
-            status = r.get('status')
-            error = r.get('error')
-
-            status_text = _('Success') if status == 'success' else _('Error')
-            # Bullet line with invoice number and localized status
-            lines.append(f"  • {invoice_number} - {status_text}")
-
-            # Add error message on next indented line if present
-            if status == 'error' and error:
-                error_clean = ' '.join(str(error).strip().split())
-                lines.append(f"    {error_clean}")
-
-        email_body = "\n".join(lines)
-
-        # Send email to user if email is available
-        creator_email = getattr(user, "email", None)
-        if creator_email:
-            subject = _('MRP export of invoices')
-            message = EmailMultiAlternatives(
-                subject=subject,
-                body=email_body,
-                to=[creator_email],
-            )
-            message.send(fail_silently=False)
-
-    def _error_result(self, invoice, request_id, error_message, error_code=None, error_class=None):
-        """Helper method to create error result dictionary."""
-        result = {
-            'invoice_number': str(invoice.number),
-            'request_id': str(request_id) if request_id is not None else None,
-            'status': 'error',
-            'error': str(error_message)
-        }
-        if error_code is not None:
-            result['error_code'] = str(error_code)
-        if error_class is not None:
-            result['error_class'] = str(error_class)
-        return result
-
-    def _extract_xml_errors(self, response_xml, request_id):
-        """
-        Extract error information from XML response.
-        
-        Args:
-            response_xml: Parsed XML response or None
-            request_id: Request ID for logging
-            
-        Returns:
-            dict: Error info with 'error', 'error_code', 'error_class' keys, or None if no error
-        """
-        if response_xml is None:
-            return None
-        
-        error_elem = response_xml.find('.//error')
-        if error_elem is None:
-            return None
-        
-        error_code = error_elem.get('errorCode', '')
-        error_class = error_elem.get('errorClass', '')
-        error_message_elem = error_elem.find('errorMessage')
-        error_message = error_message_elem.text if error_message_elem is not None else 'Unknown error'
-        
-        logger.error(f"MRP server returned error (request_id: {request_id}): {error_message}")
-        return {
-            'error': error_message,
-            'error_code': error_code,
-            'error_class': error_class
-        }
-
-    def _parse_response_xml(self, response):
-        """Parse XML from response if available, return None otherwise."""
-        try:
-            if response.headers.get('Content-Type', '').startswith('application/xml') or \
-                    response.content.strip().startswith(b'<'):
-                return etree.fromstring(response.content)
-        except (etree.XMLSyntaxError, etree.ParseError, ValueError) as e:
-            logger.warning(f"Failed to parse response XML: {e}")
-        return None
-
-def get_invoice_details_manager():
-    if invoicing_settings.INVOICE_DETAILS_MANAGER is not None:
-        return import_string(invoicing_settings.INVOICE_DETAILS_MANAGER)()
-
-    return import_string('invoicing.managers.InvoiceDetailsManager')()
-
+    export_via_api.short_description = _('Export to MRP (API)')
 
 class InvoiceDetailsManager(object):
     @staticmethod

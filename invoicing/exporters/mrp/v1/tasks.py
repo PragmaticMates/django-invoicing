@@ -6,16 +6,18 @@ from pragmatic.utils import compress
 
 from invoicing.exporters.mrp.v1.list import InvoiceFakvyXmlMrpExporter, InvoiceFakvypolXmlMrpExporter, InvoiceFvAdresXmlMrpExporter
 from invoicing.exporters.tasks import setup_export_context, send_export
-from invoicing.models import Invoice
+from invoicing.managers import MRPManager
+from invoicing.models import Invoice, InvoiceExport
+from invoicing.signals import invoices_exported
 from invoicing.utils import get_task_decorator
 
 task = get_task_decorator("exports")
 
 
 @task
-def mail_exported_invoices_mrp_v1(creator_id, recipients_ids, invoice_ids, filename, params=None, language=settings.LANGUAGE_CODE):
+def mail_exported_invoices_mrp_v1(creator_id, recipients_ids, invoice_ids, export_prefix, filename, params=None, language=settings.LANGUAGE_CODE):
     """MRP v1 export task - combines 3 XML exporters into a single zip file."""
-    creator, recipients, invoice_qs = setup_export_context(creator_id, recipients_ids, invoice_ids, language)
+    creator, recipients, invoice_qs, export_id = setup_export_context(creator_id, recipients_ids, invoice_ids, export_prefix, language)
 
     # Initialize and run all exporters
     exporters = [
@@ -47,6 +49,16 @@ def mail_exported_invoices_mrp_v1(creator_id, recipients_ids, invoice_ids, filen
     )
     export.recipients.add(*list(recipients))
     export.items.add(*list(invoice_qs))
+
+    invoices_exported.send(
+        sender=MRPManager,
+        invoices=invoice_qs,
+        method='export_mrp_v1',
+        export_id=export_id,
+        result=InvoiceExport.RESULT.SUCCESS,
+        detail='',
+        creator=creator
+    )
 
     return send_export(
         items=invoice_qs,

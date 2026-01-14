@@ -1,13 +1,13 @@
-from django.contrib import admin, messages
+import inspect
+from django.contrib import admin
 from django.db.models import F, DecimalField
 from django.db.models.functions import Coalesce
+from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from invoicing.exporters.mrp.v1.tasks import mail_exported_invoices_mrp_v1
-from invoicing.exporters.tasks import mail_exported_invoices
-from invoicing.managers import get_accounting_software_manager
-from invoicing.models import Invoice, Item
+from invoicing import settings as invoicing_settings
+from invoicing.models import Invoice, InvoiceExport, Item
 
 
 class ItemInline(admin.TabularInline):
@@ -44,7 +44,7 @@ class OverdueFilter(admin.SimpleListFilter):
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     ordering = ['-date_issue', '-sequence']
-    actions = ['recalculate_tax', 'send_to_accounting_software']
+    actions = ['recalculate_tax']
     list_display = ['pk', 'type', 'number', 'status',
                     'supplier_info', 'customer_info',
                     'annotated_subtotal', 'vat', 'total',
@@ -98,7 +98,10 @@ class InvoiceAdmin(admin.ModelAdmin):
 
     def get_actions(self, request):
         """
-        Return only explicitly listed actions plus all export-related actions.
+        Return only explicitly listed actions plus all export actions from configured managers.
+        
+        Iterates over all managers configured in INVOICING_MANAGERS setting and adds
+        all methods starting with "export_" as admin actions.
         """
         actions = super().get_actions(request)
 
@@ -109,25 +112,53 @@ class InvoiceAdmin(admin.ModelAdmin):
             if name in explicit
         }
 
-        # Add export actions explicitly
-        export_actions = {
-            'export_xlsx': (InvoiceAdmin.export_xlsx, 'export_xlsx', self.export_xlsx.short_description),
-            'export_pdf': (InvoiceAdmin.export_pdf, 'export_pdf', self.export_pdf.short_description),
-            'export_isdoc': (InvoiceAdmin.export_isdoc, 'export_isdoc', self.export_isdoc.short_description),
-            'export_mrp_v1': (InvoiceAdmin.export_mrp_v1, 'export_mrp_v1', self.export_mrp_v1.short_description),
-            'export_mrp_v2_outgoing': (
-                InvoiceAdmin.export_mrp_v2_outgoing,
-                'export_mrp_v2_outgoing',
-                self.export_mrp_v2_outgoing.short_description
-            ),
-            'export_mrp_v2_incoming': (
-                InvoiceAdmin.export_mrp_v2_incoming,
-                'export_mrp_v2_incoming',
-                self.export_mrp_v2_incoming.short_description
-            ),
-        }
+        # Collect export actions from all configured managers
+        for manager_name, manager_config in invoicing_settings.INVOICING_MANAGERS.items():
+            manager_class_path = manager_config.get('MANAGER_CLASS')
+            if not manager_class_path:
+                continue
 
-        actions.update(export_actions)
+            try:
+                manager_class = import_string(manager_class_path)
+                manager_instance = manager_class()
+            except (ImportError, Exception):
+                continue
+
+            # Find all methods starting with "export_"
+            for attr_name in dir(manager_instance):
+                if not attr_name.startswith('export_'):
+                    continue
+
+                method = getattr(manager_instance, attr_name, None)
+                if not callable(method):
+                    continue
+
+                # Create unique action name by combining manager name and method name
+                # e.g., "mrp_export_via_api" or "ikros_export_via_api"
+                unique_action_name = f"{manager_name.lower()}_{attr_name}"
+
+                # Create a wrapper that calls the manager method
+                def make_action(mgr_instance, method_name):
+                    def action(modeladmin, request, queryset):
+                        method = getattr(mgr_instance, method_name)
+                        # Inspect method signature to determine what parameters it accepts
+                        sig = inspect.signature(method)
+                        params = {'request': request, 'queryset': queryset, 'export_prefix': 'admin'}
+                        
+                        # Only add exporter_class if the method accepts it
+                        if 'exporter_class' in sig.parameters:
+                            params['exporter_class'] = None
+                        
+                        return method(**params)
+                    action.__name__ = method_name
+                    action.short_description = getattr(
+                        getattr(mgr_instance, method_name), 'short_description', method_name
+                    )
+                    return action
+
+                action_func = make_action(manager_instance, attr_name)
+                actions[unique_action_name] = (action_func, unique_action_name, action_func.short_description)
+
         return actions
 
     def get_queryset(self, request):
@@ -163,92 +194,17 @@ class InvoiceAdmin(admin.ModelAdmin):
         for invoice in queryset:
             invoice.recalculate_tax()
 
-    def send_to_accounting_software(self, request, queryset):
-        manager = get_accounting_software_manager()
 
-        if manager is None:
-            messages.error(request, _('Missing specification of accounting software'))
-            return
+@admin.register(InvoiceExport)
+class InvoiceExportAdmin(admin.ModelAdmin):
+    date_hierarchy = 'created'
+    ordering = ['-created']
+    list_display = ['id', 'export_id', 'invoice', 'manager_path', 'method_path', 'result', 'detail', 'creator', 'created']
+    list_filter = ['result', 'export_id', 'manager_path', 'method_path', 'created']
+    search_fields = ['export_id', 'invoice__number', 'manager_path', 'method_path', 'detail', 'creator__username']
+    readonly_fields = ['invoice', 'export_id', 'manager_path', 'method_path', 'result', 'detail', 'creator', 'created', 'modified']
+    raw_id_fields = ['invoice']
+    
 
-        try:
-            result = manager.send_to_accounting_software(request, queryset)
 
-            if isinstance(result, str):
-                messages.success(request, result)
-            elif isinstance(result, list):
-                success = 0
-
-                for r in result:
-                    if r['status_code'] == 200:
-                        success += 1
-                    else:
-                        messages.error(request, f"[{r['invoice']}]: {r['status_code']} ({r['reason']})")
-
-                if success > 0:
-                    messages.success(request, _('%d invoices sent to accounting software') % success)
-
-        except Exception as e:
-            messages.error(request, e)
-
-    send_to_accounting_software.short_description = _('Send to accounting software')
-
-    def _export_and_email(self, request, queryset, exporter_class):
-        """
-        Common export logic for email-based exports.
-        
-        Args:
-            request: The HTTP request object
-            queryset: The queryset of invoices to export
-            exporter_class: The exporter class to use
-        """
-        creator_id = request.user.id
-        recipients_ids = [creator_id]
-        invoice_ids = queryset.values_list("id", flat=True)
-
-        mail_exported_invoices.delay(
-            exporter_class, creator_id, recipients_ids, invoice_ids, exporter_class.filename
-        )
-
-        messages.success(request, _('Export %d invoices sent to email') % queryset.count())
-
-    def export_xlsx(self, request, queryset):
-        from invoicing.exporters import InvoiceXlsxListExporter
-        self._export_and_email(request, queryset, InvoiceXlsxListExporter)
-
-    export_xlsx.short_description = _('Export to xlsx')
-
-    def export_pdf(self, request, queryset):
-        from invoicing.exporters import InvoicePdfDetailExporter
-        self._export_and_email(request, queryset, InvoicePdfDetailExporter)
-
-    export_pdf.short_description = _('Export to PDF')
-
-    def export_isdoc(self, request, queryset):
-        from invoicing.exporters import InvoiceISDOCXmlListExporter
-        self._export_and_email(request, queryset, InvoiceISDOCXmlListExporter)
-
-    export_isdoc.short_description = _('Export to ISDOC (XML)')
-
-    def export_mrp_v2_outgoing(self, request, queryset):
-        from invoicing.exporters.mrp.v2.list import OutgoingInvoiceMrpExporter
-        self._export_and_email(request, queryset, OutgoingInvoiceMrpExporter)
-
-    export_mrp_v2_outgoing.short_description = _('Export to MRP v2 (outgoing)')
-
-    def export_mrp_v2_incoming(self, request, queryset):
-        from invoicing.exporters.mrp.v2.list import IncomingInvoiceMrpExporter
-        self._export_and_email(request, queryset, IncomingInvoiceMrpExporter)
-
-    export_mrp_v2_incoming.short_description = _('Export to MRP v2 (incoming)')
-
-    def export_mrp_v1(self, request, queryset):
-        """Legacy MRP XML export (v1) - returns direct response instead of email."""
-        creator_id = request.user.id
-        recipients_ids = [creator_id]
-        invoice_ids = queryset.values_list("id", flat=True)
-
-        mail_exported_invoices_mrp_v1.delay(
-            creator_id, recipients_ids, invoice_ids, 'MRP_export.zip'
-        )
-
-    export_mrp_v1.short_description = _('Export to MRP v1 (XML)')
+    

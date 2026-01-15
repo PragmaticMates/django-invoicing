@@ -200,7 +200,7 @@ class InvoiceExportAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
     ordering = ['-created']
     list_display = ['id', 'export_id', 'invoice', 'manager_path', 'method_path', 'result', 'detail', 'creator', 'created']
-    list_filter = ['result', 'export_id', 'manager_path', 'method_path', 'created']
+    list_filter = ['result', 'manager_path', 'method_path', 'created']
     search_fields = ['export_id', 'invoice__number', 'manager_path', 'method_path', 'detail', 'creator__username']
     readonly_fields = ['invoice', 'export_id', 'manager_path', 'method_path', 'result', 'detail', 'creator', 'created', 'modified']
     raw_id_fields = ['invoice']

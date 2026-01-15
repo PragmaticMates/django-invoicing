@@ -14,7 +14,7 @@ from outputs.models import Export
 class InvoiceXmlMrpListExporter(ExporterMixin):
     queryset = Invoice.objects.all()
     export_format = Export.FORMAT_XML_MRP
-    filename = "MRP_export.zip"
+    filename = "MRP_outgoing_invoice_export.zip"
 
     def get_queryset(self):
         return self.queryset.order_by("-pk").distinct()

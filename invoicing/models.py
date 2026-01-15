@@ -653,6 +653,41 @@ class InvoiceExport(models.Model):
             models.Index(fields=['result', 'created'], name='inv_export_result_created_idx'),
         ]
 
+    def get_method_display_name(self):
+        """
+        Get human-readable display name for the export method.
+        
+        Returns the short_description from the method if available,
+        otherwise falls back to the method_path value.
+        
+        Returns:
+            str: Human-readable method name (e.g., 'Export to PDF') or technical name as fallback
+        """
+        if not self.manager_path or not self.method_path:
+            return self.method_path or '-'
+        
+        try:
+            # Import the manager class dynamically
+            from django.utils.module_loading import import_string
+            manager_class = import_string(self.manager_path)
+            manager_instance = manager_class()
+            
+            # Get the method from manager instance
+            method = getattr(manager_instance, self.method_path, None)
+            if method and hasattr(method, 'short_description'):
+                # Return translated short_description
+                return str(method.short_description)
+        except (ImportError, AttributeError, EnvironmentError, TypeError) as e:
+            # Log error and fall back to method_path
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.debug(
+                f"Could not resolve short_description for {self.manager_path}.{self.method_path}: {e}"
+            )
+        
+        # Fallback to technical name
+        return self.method_path
+    
     def __str__(self):
         return f'Export {self.invoice.number} - {self.get_result_display()} ({self.created})'
 

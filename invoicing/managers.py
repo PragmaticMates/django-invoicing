@@ -80,7 +80,7 @@ class InvoiceExportApiMixin(object):
 class PdfExportManager(InvoiceExportMixin):
     manager_name = 'PDF'
 
-    def export_pdf(self, request, queryset, export_prefix='', exporter_class=None):
+    def export_detail_pdf(self, request, queryset, export_prefix='', exporter_class=None):
         if exporter_class in EMPTY_VALUES:
             from invoicing.exporters import InvoicePdfDetailExporter
             exporter_class = InvoicePdfDetailExporter
@@ -90,13 +90,13 @@ class PdfExportManager(InvoiceExportMixin):
             method_name='export_pdf', export_prefix=export_prefix
         )
 
-    export_pdf.short_description = _('Export to PDF')
+    export_detail_pdf.short_description = _('Export to PDF')
 
 
 class XlsxExportManager(InvoiceExportMixin):
     manager_name = 'XLSX'
 
-    def export_xlsx(self, request, queryset, export_prefix='', exporter_class=None):
+    def export_list_xlsx(self, request, queryset, export_prefix='', exporter_class=None):
         if exporter_class in EMPTY_VALUES:
             from invoicing.exporters import InvoiceXlsxListExporter
             exporter_class = InvoiceXlsxListExporter
@@ -106,13 +106,13 @@ class XlsxExportManager(InvoiceExportMixin):
             method_name='export_xlsx', export_prefix=export_prefix
         )
 
-    export_xlsx.short_description = _('Export to xlsx')
+    export_list_xlsx.short_description = _('Export to xlsx')
 
 
 class ISDOCManager(InvoiceExportMixin):
     manager_name = 'ISDOC'
 
-    def export_isdoc(self, request, queryset, export_prefix='', exporter_class=None):
+    def export_list_isdoc(self, request, queryset, export_prefix='', exporter_class=None):
         if exporter_class in EMPTY_VALUES:
             from invoicing.exporters import InvoiceISDOCXmlListExporter
             exporter_class = InvoiceISDOCXmlListExporter
@@ -122,7 +122,7 @@ class ISDOCManager(InvoiceExportMixin):
             method_name='export_isdoc', export_prefix=export_prefix
         )
 
-    export_isdoc.short_description = _('Export to ISDOC (XML)')
+    export_list_isdoc.short_description = _('Export to ISDOC (XML)')
 
 
 class IKrosManager(InvoiceExportApiMixin):
@@ -442,7 +442,7 @@ class Profit365Manager(InvoiceExportApiMixin):
 class MRPManager(InvoiceExportMixin, InvoiceExportApiMixin):
     manager_name = 'MRP'
 
-    def export_mrp_v2(self, request, queryset, export_prefix='', exporter_class=None):
+    def export_list_mrp_v2(self, request, queryset, export_prefix='', exporter_class=None):
         if exporter_class in EMPTY_VALUES:
             from invoicing.models import Invoice
 
@@ -462,10 +462,11 @@ class MRPManager(InvoiceExportMixin, InvoiceExportApiMixin):
             method_name='export_mrp_v2', export_prefix=export_prefix
         )
 
-    export_mrp_v2.short_description = _('Export to MRP v2')
+    export_list_mrp_v2.short_description = _('Export to MRP v2')
 
-    def export_mrp_v1(self, request, queryset, export_prefix=''):
+    def export_list_mrp_v1(self, request, queryset, export_prefix='', exporter_class=None):
         """Legacy MRP XML export (v1) - returns direct response instead of email."""
+        from invoicing.exporters.mrp.v1.list import InvoiceXmlMrpListExporter
         from invoicing.exporters.mrp.v1.tasks import mail_exported_invoices_mrp_v1
 
         logger.info(
@@ -483,12 +484,12 @@ class MRPManager(InvoiceExportMixin, InvoiceExportApiMixin):
         invoice_ids = list(queryset.values_list("id", flat=True))
 
         mail_exported_invoices_mrp_v1.delay(
-            creator_id, recipients_ids, invoice_ids, export_prefix, 'MRP_export.zip', request.GET
+            creator_id, recipients_ids, invoice_ids, export_prefix, InvoiceXmlMrpListExporter.filename, request.GET
         )
 
         messages.success(request, _('Export of %d invoice(s) queued and will be sent to email') % queryset.count())
 
-    export_mrp_v1.short_description = _('Export to MRP v1 (XML)')
+    export_list_mrp_v1.short_description = _('Export to MRP v1 (XML)')
 
 
     def export_via_api(self, request, queryset, export_prefix=''):

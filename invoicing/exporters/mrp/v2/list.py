@@ -158,7 +158,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
             etree.SubElement(invoice_elem, "InvoiceType").text = {
                 'INVOICE': 'F', 'ADVANCE': 'X', 'CREDIT_NOTE': 'P'
             }.get(invoice.type, 'F')
-            etree.SubElement(invoice_elem, "DeliveryTypeCode").text = invoice.delivery_method or ""
+            etree.SubElement(invoice_elem, "DeliveryTypeCode").text = invoice.delivery_method[:10] or ""
 
             # For incoming invoices only, include header-level reverse charge
             # totals as allowed by the incoming_invoices.xsd schema.

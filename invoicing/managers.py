@@ -51,6 +51,10 @@ class InvoiceExportMixin(object):
                 'export_prefix': export_prefix
             }
         )
+        if not queryset.exists():
+            messages.info(request,_('No invoice selected to export via %s' % method_name))
+            return
+
         creator_id = request.user.id
         recipients_ids = [creator_id]
         invoice_ids = list(queryset.values_list("id", flat=True))
@@ -454,7 +458,7 @@ class MRPManager(InvoiceExportMixin, InvoiceExportApiMixin):
                     from invoicing.exporters.mrp.v2.list import OutgoingInvoiceMrpExporter
                     exporter_class = OutgoingInvoiceMrpExporter
             else:
-                messages.info(request, _('No invoice to export selected'))
+                messages.info(request, _('No invoice selected to export via %s' % 'export_mrp_v2'))
                 return
 
         self._execute_export_and_send_email(
@@ -479,6 +483,11 @@ class MRPManager(InvoiceExportMixin, InvoiceExportApiMixin):
                 'export_prefix': export_prefix
             }
         )
+
+        if not queryset.exists():
+            messages.info(request, _('No invoice selected to export via %s' % 'export_list_mrp_v1'))
+            return
+
         creator_id = request.user.id
         recipients_ids = [creator_id]
         invoice_ids = list(queryset.values_list("id", flat=True))

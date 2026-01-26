@@ -12,8 +12,9 @@ from outputs.models import Export
 
 
 class InvoiceXmlMrpListExporter(ExporterMixin):
+    export_format = Export.FORMAT_XML
+    export_context = Export.CONTEXT_LIST
     queryset = Invoice.objects.all()
-    export_format = Export.FORMAT_XML_MRP
     filename = "MRP_outgoing_invoice_export.zip"
 
     def get_queryset(self):
@@ -22,7 +23,7 @@ class InvoiceXmlMrpListExporter(ExporterMixin):
     def export(self):
         self.write_data(self.output)
 
-    def get_message_body(self, count):
+    def get_message_body(self, count, file_url=None):
         template = loader.get_template('outputs/export_message_body.html')
         return template.render({'count': count, 'filtered_values': None})
 

@@ -6,6 +6,9 @@ from decimal import Decimal
 import binascii
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils import translation
 from django.utils.module_loading import import_string
 from requests_futures import sessions
 
@@ -134,30 +137,23 @@ def format_decimal(value, decimal_places=2):
         return format_decimal(0, decimal_places)
 
 
-def get_task_decorator(queue=None):
+def setup_export_context(creator_id, recipients_ids, invoice_ids, language=settings.LANGUAGE_CODE):
     """
-    Import task decorator based on INVOICING_TASK_BACKEND setting.
+    Common setup for export tasks.
 
-    Default: 'django.tasks.task' (Django 6.0+)
-    Examples: 'django_rq.job', 'celery.shared_task'
-
-    Args:
-        queue: Queue name for backends that support it (e.g. django_rq)
-
-    Raises ImportError if the module is not installed.
+    Returns:
+        tuple: (creator, recipients, invoice_qs)
     """
-    task_backend = getattr(settings, 'INVOICING_TASK_BACKEND', 'django.tasks.task')
+    translation.activate(language)
+    user_model = get_user_model()
 
     try:
-        decorator = import_string(task_backend)
-    except ImportError as e:
-        raise ImportError(
-            f"Task backend '{task_backend}' is not installed. "
-            f"Install the required package or set INVOICING_TASK_BACKEND to a valid decorator path."
-        ) from e
+        creator = user_model.objects.get(id=creator_id)
+    except ObjectDoesNotExist:
+        creator = None
 
-    # django_rq.job requires queue name as first argument
-    if task_backend == 'django_rq.job' and queue:
-        return decorator(queue)
+    from invoicing.models import Invoice
+    recipients = user_model.objects.filter(id__in=recipients_ids) if recipients_ids else []
+    invoice_qs = Invoice.objects.filter(id__in=invoice_ids) if invoice_ids else []
 
-    return decorator
+    return creator, recipients, invoice_qs

@@ -13,10 +13,10 @@ from pragmatic.utils import compress
 
 
 class InvoiceISDOCXmlListExporter(ExporterMixin):
+    export_format = Export.FORMAT_XML
+    export_context = Export.CONTEXT_LIST
     queryset = Invoice.objects.all()
     filename = 'invoices_isdoc.zip'
-    export_format = "ISDOC"
-    export_context = Export.CONTEXT_LIST
     ISDOC_DOCUMENT_TYPE_MAPPING = {
         'INVOICE': '1',
         'CREDIT_NOTE': '2',

@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from invoicing import settings as invoicing_settings
-from invoicing.models import Invoice, InvoiceExport, Item
+from invoicing.models import Invoice, Item
 
 
 class ItemInline(admin.TabularInline):
@@ -143,7 +143,7 @@ class InvoiceAdmin(admin.ModelAdmin):
                         method = getattr(mgr_instance, method_name)
                         # Inspect method signature to determine what parameters it accepts
                         sig = inspect.signature(method)
-                        params = {'request': request, 'queryset': queryset, 'export_prefix': 'admin'}
+                        params = {'request': request, 'queryset': queryset}
                         
                         # Only add exporter_class if the method accepts it
                         if 'exporter_class' in sig.parameters:
@@ -193,18 +193,3 @@ class InvoiceAdmin(admin.ModelAdmin):
     def recalculate_tax(self, request, queryset):
         for invoice in queryset:
             invoice.recalculate_tax()
-
-
-@admin.register(InvoiceExport)
-class InvoiceExportAdmin(admin.ModelAdmin):
-    date_hierarchy = 'created'
-    ordering = ['-created']
-    list_display = ['id', 'export_id', 'invoice', 'manager_path', 'method_path', 'result', 'detail', 'creator', 'created']
-    list_filter = ['result', 'manager_path', 'method_path', 'created']
-    search_fields = ['export_id', 'invoice__number', 'manager_path', 'method_path', 'detail', 'creator__username']
-    readonly_fields = ['invoice', 'export_id', 'manager_path', 'method_path', 'result', 'detail', 'creator', 'created', 'modified']
-    raw_id_fields = ['invoice']
-    
-
-
-    

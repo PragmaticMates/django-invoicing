@@ -74,19 +74,3 @@ class InvoiceQuerySet(QuerySet):
 class ItemQuerySet(QuerySet):
     def with_tag(self, tag):
         return self.filter(tag=tag)
-
-class InvoiceExportQuerySet(QuerySet):
-    def successful(self):
-        return self.filter(result=self.model.RESULT.SUCCESS)
-
-    def failed(self):
-        return self.filter(result=self.model.RESULT.FAIL)
-
-    def by_manager(self, manager_path):
-        return self.filter(manager_path=manager_path)
-
-    def for_invoice(self, invoice):
-        return self.filter(invoice=invoice)
-
-    def by_export_id(self, export_id):
-        return self.filter(export_id=export_id)

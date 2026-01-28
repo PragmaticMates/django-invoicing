@@ -1,4 +1,3 @@
-import io
 import logging
 import os
 from datetime import datetime
@@ -178,40 +177,74 @@ class InvoiceMrpExporterMixin(ExporterMixin):
 
         return xml_envelope
 
-    def get_xml_elements(self):
+    def write_xml_string(self, output):
         """
-        Generate and return list of XML elements (envelopes or MRPKSData).
-        Returns one element per item if export_per_item=True, otherwise one element with all items.
+        Generate a single XML element containing all invoices and write it to output.
+
+        Creates a MRPKSData element with all invoices from the queryset,
+        validates the XML against the XSD schema, and writes the result
+        to the provided output stream.
+
+        Args:
+            output: File-like object to write the XML string to.
+
+        Raises:
+            ValueError: If XML validation fails against the XSD schema.
         """
-        if self.export_per_item:
-            # Generate separate XML element for each invoice
-            xml_elements = []
-            for invoice in self.get_queryset():
-                invoice_element = self.get_invoice_element(invoice)
+        # Generate single XML element with all invoices
+        mrpks_data = etree.Element("MRPKSData", version="2.0")
+        invoices_container = etree.SubElement(mrpks_data, self.get_invoice_root_element())
 
-                # Create MRPKSData structure for single invoice
-                mrpks_data = etree.Element("MRPKSData", version="2.0")
-                invoices_container = etree.SubElement(mrpks_data, self.get_invoice_root_element())
-                invoices_container.append(invoice_element)
+        for invoice in self.get_queryset():
+            invoice_element = self.get_invoice_element(invoice)
+            invoices_container.append(invoice_element)
 
-                # Validate and wrap in request envelope
-                self.validate_xml(mrpks_data)
-                envelope = self.wrap_to_request_envelope(mrpks_data, invoice)
-                xml_elements.append(envelope)
+        # Validate once for all invoices
+        self.validate_xml(mrpks_data)
+        xml_string = self.xml_to_string(mrpks_data)
+        output.write(xml_string)
 
-            return xml_elements
-        else:
-            # Generate single XML element with all invoices
+    def write_xml_string_per_item(self):
+        """
+        Generate separate XML elements for each invoice and store them in self.outputs.
+
+        For each invoice in the queryset, creates a MRPKSData element containing
+        that single invoice, validates it, wraps it in a request envelope,
+        and appends the result to self.outputs as a dictionary with keys
+        'invoice' and 'xml_string'.
+
+        The outputs can be retrieved later using get_outputs_per_item().
+        This method is used when export_per_item=True.
+
+        Note:
+            This method does not return anything. Results are stored in
+            self.outputs and can be accessed via get_outputs_per_item().
+        """
+        # Generate separate XML element for each invoice
+        for invoice in self.get_queryset():
+            invoice_element = self.get_invoice_element(invoice)
+
+            # Create MRPKSData structure for single invoice
             mrpks_data = etree.Element("MRPKSData", version="2.0")
             invoices_container = etree.SubElement(mrpks_data, self.get_invoice_root_element())
+            invoices_container.append(invoice_element)
 
-            for invoice in self.get_queryset():
-                invoice_element = self.get_invoice_element(invoice)
-                invoices_container.append(invoice_element)
-
-            # Validate once for all invoices
+            # Validate and wrap in request envelope
             self.validate_xml(mrpks_data)
-            return [mrpks_data]
+            envelope = self.wrap_to_request_envelope(mrpks_data, invoice)
+            xml_string = self.xml_to_string(envelope)
+            self.outputs.append({"invoice": invoice, "xml_string": xml_string})
+
+    def xml_to_string(self, xml):
+        """
+        Convert an XML element tree to a formatted XML string.
+        """
+        return etree.tostring(
+            xml,
+            pretty_print=True,
+            xml_declaration=True,
+            encoding=self.xml_encoding
+        )
 
     def get_invoice_element(self, invoice):
         from invoicing.managers import get_invoice_details_manager
@@ -343,22 +376,11 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         For per-item mode, collects outputs in self.outputs list.
         For normal mode, writes all elements to the provided output stream.
         """
-        xml_elements = self.get_xml_elements()
-
-        for xml_element in xml_elements:
-            xml_bytes = etree.tostring(
-                xml_element,
-                pretty_print=True,
-                xml_declaration=True,
-                encoding=self.xml_encoding
-            )
-
-            if self.export_per_item:
-                # Collect separate outputs for each element
-                self.outputs.append(xml_bytes)
-            else:
-                # Write to main output stream
-                output.write(xml_bytes)            
+        if self.export_per_item:
+            self.write_xml_string_per_item()
+        else:
+            # Write to main output stream
+            self.write_xml_string()
 
 
 class IssuedInvoiceMrpExporter(InvoiceMrpExporterMixin):

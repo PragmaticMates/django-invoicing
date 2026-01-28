@@ -195,7 +195,6 @@ class IKrosManager(InvoiceExportApiMixin):
 
                 invoice_data['items'].append(item_data)
 
-            from invoicing.models import Invoice
             if invoice.status == Invoice.STATUS.CANCELED:
                 invoice_data['closingText'] = 'STORNO'
 

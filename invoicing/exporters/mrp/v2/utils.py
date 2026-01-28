@@ -85,6 +85,8 @@ def sanitize_city(city_value):
     Returns:
         str: Sanitized city string, empty string if input is None/empty
     """
+    if not city_value:
+        return ""
     sanitized_city = str(city_value).replace("'", "`")
     return sanitize_forbidden_chars(sanitized_city, max_length=30)
 

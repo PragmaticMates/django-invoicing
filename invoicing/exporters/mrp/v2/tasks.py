@@ -37,8 +37,8 @@ def send_invoices_to_mrp(creator_id, invoices_ids):
 
     # MRP autonomous mode handles only one invoice per request
     # Process each invoice separately and collect results
-    for xml_request in exporter.get_outputs_per_item():
-        result = _send_request_per_invoice_item(xml_request, export)
+    for output in exporter.get_outputs_per_item():
+        result = _send_request_per_invoice_item(output['invoice'], output['xml_string'], export)
         results.append(result)
 
     # update status of export
@@ -49,21 +49,20 @@ def send_invoices_to_mrp(creator_id, invoices_ids):
     _send_mail_with_summary(creator, results)
 
 
-def _send_request_per_invoice_item(xml_string, export):
+def _send_request_per_invoice_item(invoice, xml_string, export):
     """
     Send a single invoice to MRP server.
 
     Args:
-        xml_string: xml for single invoice object
-        export: created export
+        invoice: Invoice instance being sent to MRP server
+        xml_string: XML string (bytes) for single invoice, wrapped in MRP envelope
+        export: Export instance to track the export status
 
     Returns:
         dict: Result with invoice_number, request_id, status, and optional error
     """
     root = etree.fromstring(xml_string)
     request_id = root.find(".//request").get("requestId")
-    invoice_number = root.findtext(".//DocumentNumber")
-    invoice_id = request_id.split('-')[0]
     export_result = None
     export_detail = ''
 
@@ -73,7 +72,7 @@ def _send_request_per_invoice_item(xml_string, export):
         }
         url = invoicing_settings.INVOICING_MANAGERS.get('MRP')['API_URL']
 
-        logger.debug(f"Sending invoice {invoice_number} to MRP server: {url}")
+        logger.debug(f"Sending invoice {invoice.number} to MRP server: {url}")
         response = requests.post(
             url,
             data=xml_string,
@@ -81,15 +80,15 @@ def _send_request_per_invoice_item(xml_string, export):
             timeout=InvoiceMrpExporterMixin.request_timeout
         )
         response.raise_for_status()
-        logger.info(f"Received response for invoice {invoice_number}: {response.status_code}")
+        logger.info(f"Received response for invoice {invoice.number}: {response.status_code}")
 
         # Parse and check response
         response_xml = _parse_response_xml(response)
         error_info = _extract_xml_errors(response_xml, request_id)
         if error_info:
-            logger.error(f"Invoice {invoice_number} failed: Request ID: {request_id} - {error_info['error']}")
+            logger.error(f"Invoice {invoice.number} failed: Request ID: {request_id} - {error_info['error']}")
             export_result, export_detail, result = _handle_error(
-                invoice_number,
+                invoice.number,
                 request_id,
                 error_info['error'],
                 error_info.get('error_code'),
@@ -97,31 +96,31 @@ def _send_request_per_invoice_item(xml_string, export):
             )
         else:
             # Success
-            logger.info(f"Successfully sent invoice {invoice_number} to MRP server (request_id: {request_id})")
+            logger.info(f"Successfully sent invoice {invoice.number} to MRP server (request_id: {request_id})")
             export_result = ExportItem.RESULT_SUCCESS
-            export_detail = f'request_id: {request_id}, invoice_number: {invoice_number}'
+            export_detail = f'request_id: {request_id}, invoice_number: {invoice.number}'
             result = {
-                'invoice_number': invoice_number,
+                'invoice_number': invoice.number,
                 'request_id': str(request_id),
                 'status': 'success'
             }
 
     except requests.exceptions.Timeout as e:
-        logger.error(f"Timeout when sending invoice {invoice_number}: {e}")
+        logger.error(f"Timeout when sending invoice {invoice.number}: {e}")
         timeout_msg = f'Request timeout: The MRP server did not respond within {InvoiceMrpExporterMixin.request_timeout} seconds'
-        export_result, export_detail, result = _handle_error(invoice_number, request_id, timeout_msg)
+        export_result, export_detail, result = _handle_error(invoice.number, request_id, timeout_msg)
     except requests.exceptions.RequestException as e:
-        logger.error(f"Request error when sending invoice {invoice_number}: {e}")
-        export_result, export_detail, result = _handle_error(invoice_number, request_id, f'Network error: {str(e)}')
+        logger.error(f"Request error when sending invoice {invoice.number}: {e}")
+        export_result, export_detail, result = _handle_error(invoice.number, request_id, f'Network error: {str(e)}')
     except Exception as e:
-        logger.exception(f"Unexpected error when sending invoice {invoice_number}: {e}")
-        export_result, export_detail, result = _handle_error(invoice_number, request_id, f'Unexpected error: {str(e)}')
+        logger.exception(f"Unexpected error when sending invoice {invoice.number}: {e}")
+        export_result, export_detail, result = _handle_error(invoice.number, request_id, f'Unexpected error: {str(e)}')
     finally:
         # Send signal once at the end
         export_item_changed.send(
             sender=MRPManager,
             export_id=export.id,
-            object_id=invoice_id,
+            object_id=invoice.id,
             result=export_result,
             detail=export_detail,
         )

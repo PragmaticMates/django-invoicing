@@ -3,6 +3,7 @@ import logging
 
 import requests
 from django.contrib import messages
+from django.core.exceptions import ImproperlyConfigured
 from django.utils import translation
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -11,6 +12,10 @@ from django_filters.constants import EMPTY_VALUES
 from django.utils.translation import gettext_lazy as _
 
 from invoicing import settings as invoicing_settings
+from invoicing.exporters import InvoiceISDOCXmlListExporter, InvoiceXlsxListExporter, InvoicePdfDetailExporter
+from invoicing.exporters.mrp.v1.list import InvoiceXmlMrpListExporter
+from invoicing.exporters.mrp.v2.list import ReceivedInvoiceMrpExporter, IssuedInvoiceMrpExporter
+from invoicing.models import Invoice
 
 logger = logging.getLogger(__name__)
 
@@ -103,39 +108,30 @@ class InvoiceExportApiMixin(object):
 
 class PdfExportManager(InvoiceExportMixin):
     manager_name = 'PDF'
+    exporter_class = InvoicePdfDetailExporter
 
-    def export_detail_pdf(self, request, queryset=None, exporter_class=None, exporter_params=None):
-        if exporter_class in EMPTY_VALUES:
-            from invoicing.exporters.pdf.detail import InvoicePdfDetailExporter
-            exporter_class = InvoicePdfDetailExporter
-
-        self._execute_export(request, exporter_class, exporter_params, queryset)
+    def export_detail_pdf(self, request, queryset=None, exporter_params=None):
+        self._execute_export(request,  self.__class__.exporter_class, exporter_params, queryset)
 
     export_detail_pdf.short_description = _('Export to PDF')
 
 
 class XlsxExportManager(InvoiceExportMixin):
     manager_name = 'XLSX'
+    exporter_class = InvoiceXlsxListExporter
 
-    def export_list_xlsx(self, request, queryset=None, exporter_class=None, exporter_params=None):
-        if exporter_class in EMPTY_VALUES:
-            from invoicing.exporters.xlsx.list import InvoiceXlsxListExporter
-            exporter_class = InvoiceXlsxListExporter
-
-        self._execute_export(request, exporter_class, exporter_params, queryset)
+    def export_list_xlsx(self, request, queryset=None, exporter_params=None):
+        self._execute_export(request, self.__class__.exporter_class, exporter_params, queryset)
 
     export_list_xlsx.short_description = _('Export to xlsx')
 
 
 class ISDOCManager(InvoiceExportMixin):
     manager_name = 'ISDOC'
+    exporter_class = InvoiceISDOCXmlListExporter
 
-    def export_list_isdoc(self, request, queryset=None, exporter_class=None, exporter_params=None):
-        if exporter_class in EMPTY_VALUES:
-            from invoicing.exporters.isdoc.list import InvoiceISDOCXmlListExporter
-            exporter_class = InvoiceISDOCXmlListExporter
-
-        self._execute_export(request, exporter_class, exporter_params, queryset)
+    def export_list_isdoc(self, request, queryset=None, exporter_params=None):
+        self._execute_export(request,  self.__class__.exporter_class, exporter_params, queryset)
 
     export_list_isdoc.short_description = _('Export to ISDOC (XML)')
 
@@ -416,37 +412,40 @@ class Profit365Manager(InvoiceExportApiMixin):
 
 class MRPManager(InvoiceExportMixin, InvoiceExportApiMixin):
     manager_name = 'MRP'
+    exporter_classes = {
+        'v1': InvoiceXmlMrpListExporter,
+        'v2': {
+            Invoice.ORIGIN.RECEIVED: ReceivedInvoiceMrpExporter,
+            Invoice.ORIGIN.ISSUED: IssuedInvoiceMrpExporter,
+        }
+    }
 
-    def export_list_mrp_v2(self, request, queryset=None, exporter_class=None, exporter_params=None):
-        if exporter_class in EMPTY_VALUES:
-            from invoicing.models import Invoice
-
-            if not queryset.exists():
-                messages.info(request, _('%s: No invoice selected to export.' % 'export_mrp_v2'))
-                return
-            else:
-                origin = queryset.first().origin
-                if origin == Invoice.ORIGIN.INCOMING:
-                    from invoicing.exporters.mrp.v2.list import IncomingInvoiceMrpExporter
-                    exporter_class = IncomingInvoiceMrpExporter
-                else:
-                    from invoicing.exporters.mrp.v2.list import OutgoingInvoiceMrpExporter
-                    exporter_class = OutgoingInvoiceMrpExporter
+    def export_list_mrp_v2(self, request, queryset=None, exporter_params=None):
+        if not queryset.exists():
+            messages.info(request, _('%s: No invoice selected to export.' % 'export_mrp_v2'))
+            return
+        else:
+            origin = queryset.first().origin
+            exporter_class = self.__class__.exporter_classes.get('v2', {}).get(origin)
+            if exporter_class is None:
+                raise ImproperlyConfigured(
+                    _("Unsupported invoice origin '%s' for MRP v2 export.") % origin
+                )
 
         self._execute_export(request, exporter_class, exporter_params, queryset)
 
     export_list_mrp_v2.short_description = _('Export to MRP v2 (XML)')
 
-    def export_list_mrp_v1(self, request, queryset=None, exporter_class=None, exporter_params=None):
+    def export_list_mrp_v1(self, request, queryset=None, exporter_params=None):
         """Legacy MRP XML export (v1) - returns direct response instead of email."""
-
-        if exporter_class in EMPTY_VALUES:
-            from invoicing.exporters.mrp.v1.list import InvoiceXmlMrpListExporter
-            exporter_class = InvoiceXmlMrpListExporter
 
         if exporter_params is None:
             exporter_params = {"user": request.user, "recipients": [request.user], "params": None}
 
+        exporter_class = self.__class__.exporter_classes['v1']
+        if exporter_class is None:
+            raise ImproperlyConfigured(_("Undefined exporter class for MRP v1 export."))
+        
         exporter = exporter_class(**exporter_params)
 
         # set queryset if provided explicitly

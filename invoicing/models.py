@@ -112,12 +112,12 @@ class Invoice(models.Model):
     )
 
     ORIGIN = Choices(
-        ('INCOMING', _('incoming invoice')),
-        ('OUTGOING', _('outgoing invoice')),
+        ('RECEIVED', _('received invoice')),
+        ('ISSUED', _('issued invoice')),
     )
 
     # General information
-    origin = models.CharField(_(u'origin'), max_length=8, choices=ORIGIN, default=ORIGIN.OUTGOING)
+    origin = models.CharField(_(u'origin'), max_length=8, choices=ORIGIN, default=ORIGIN.ISSUED)
     type = models.CharField(_(u'type'), max_length=11, choices=TYPE, default=TYPE.INVOICE)
     sequence = models.IntegerField(_(u'sequence'), db_index=True, blank=True)
     number = models.CharField(_(u'number'), max_length=128, blank=True)

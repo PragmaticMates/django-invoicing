@@ -47,11 +47,11 @@ class InvoiceQuerySet(QuerySet):
                     .filter(count__gt=1)
                     .values_list('number', flat=True))
 
-    def incoming(self):
-        return self.filter(origin=self.model.ORIGIN.INCOMING)
+    def received(self):
+        return self.filter(origin=self.model.ORIGIN.RECEIVED)
 
-    def outgoing(self):
-        return self.filter(origin=self.model.ORIGIN.OUTGOING)
+    def issued(self):
+        return self.filter(origin=self.model.ORIGIN.ISSUED)
 
     def lock(self):
         """ Lock table.

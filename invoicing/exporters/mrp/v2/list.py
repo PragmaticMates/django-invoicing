@@ -7,7 +7,7 @@ from django.core.validators import EMPTY_VALUES
 from django.template import loader
 from lxml import etree
 
-from invoicing.managers import get_invoice_details_manager
+
 from invoicing.models import Invoice
 
 from outputs.mixins import ExporterMixin
@@ -29,7 +29,8 @@ class InvoiceMrpExporterMixin(ExporterMixin):
     export_format = Export.FORMAT_XML
     export_context = Export.CONTEXT_LIST
     queryset = Invoice.objects.all()
-    filename = 'MRP_invoice_export_v2.xml'
+    export_per_item = False
+    filename = 'MRP_invoice_export.xml'
     api_request_command = ''
     xml_encoding = 'Windows-1250'
     request_timeout = 30
@@ -47,6 +48,15 @@ class InvoiceMrpExporterMixin(ExporterMixin):
 
     def export(self):
         self.write_data(self.output)
+
+    def get_outputs_per_item(self):
+        """
+        Get separate output for each item in queryset.
+
+        Returns list of output bytes, one per item.
+        Only works if export_per_item=True and export() has been called.
+        """
+        return self.outputs
 
     def get_invoice_root_element(self):
         raise NotImplementedError()
@@ -204,6 +214,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
             return [mrpks_data]
 
     def get_invoice_element(self, invoice):
+        from invoicing.managers import get_invoice_details_manager
         invoice_details_manager = get_invoice_details_manager()
 
         invoice_elem = etree.Element("Invoice")
@@ -247,8 +258,8 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         }.get(invoice.type, 'F')
         etree.SubElement(invoice_elem, "DeliveryTypeCode").text = sanitize_forbidden_chars(invoice.delivery_method, 10)
 
-        # For incoming invoices only, include header-level reverse charge
-        # totals as allowed by the incoming_invoices.xsd schema.
+        # For received invoices only, include header-level reverse charge
+        # totals as allowed by the received_invoices.xsd schema.
         if (
                 self.get_invoice_root_element() == "IncomingInvoices"
                 and invoice.is_reverse_charge()
@@ -350,15 +361,16 @@ class InvoiceMrpExporterMixin(ExporterMixin):
                 output.write(xml_bytes)            
 
 
-class OutgoingInvoiceMrpExporter(InvoiceMrpExporterMixin):
-    queryset = Invoice.objects.outgoing()
+class IssuedInvoiceMrpExporter(InvoiceMrpExporterMixin):
+    queryset = Invoice.objects.issued()
+    filename = 'MRP_issued_invoice_export.xml'
     api_request_command = "IMPFV0"
 
     def get_invoice_root_element(self):
         return "IssuedInvoices"
 
     def get_xsd_filename(self):
-        """Return the full path to the XSD schema file for outgoing invoices."""
+        """Return the full path to the XSD schema file for issued invoices."""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         return os.path.join(current_dir, 'xsd', 'issued_invoices.xsd')
 
@@ -374,8 +386,9 @@ class OutgoingInvoiceMrpExporter(InvoiceMrpExporterMixin):
         etree.SubElement(parent_element, "Email").text = sanitize_forbidden_chars(invoice.customer_email, 256)
 
 
-class IncomingInvoiceMrpExporter(InvoiceMrpExporterMixin):
-    queryset = Invoice.objects.incoming()
+class ReceivedInvoiceMrpExporter(InvoiceMrpExporterMixin):
+    queryset = Invoice.objects.received()
+    filename = 'MRP_received_invoice_export.xml'
     api_request_command = "IMPFP0"
 
     def get_invoice_root_element(self):
@@ -384,7 +397,7 @@ class IncomingInvoiceMrpExporter(InvoiceMrpExporterMixin):
     def get_xsd_filename(self):
         """Return the full path to the XSD schema file for incoming invoices."""
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(current_dir, 'xsd', 'incoming_invoices.xsd')
+        return os.path.join(current_dir, 'xsd', 'received_invoices.xsd')
 
     def fill_company(self, invoice, parent_element):
         etree.SubElement(parent_element, "CompanyId").text = sanitize_forbidden_chars(invoice.supplier_registration_id, 12)

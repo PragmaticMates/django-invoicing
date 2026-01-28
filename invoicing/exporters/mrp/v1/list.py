@@ -4,7 +4,6 @@ from decimal import Decimal
 from django.core.validators import EMPTY_VALUES
 from django.template import loader
 
-from invoicing.managers import get_invoice_details_manager
 from invoicing.models import Invoice
 from lxml import etree
 from outputs.mixins import ExporterMixin
@@ -15,7 +14,7 @@ class InvoiceXmlMrpListExporter(ExporterMixin):
     export_format = Export.FORMAT_XML
     export_context = Export.CONTEXT_LIST
     queryset = Invoice.objects.all()
-    filename = "MRP_outgoing_invoice_export.zip"
+    filename = "MRP_invoice_export.zip"
 
     def get_queryset(self):
         return self.queryset.order_by("-pk").distinct()
@@ -93,6 +92,9 @@ class InvoiceFakvyXmlMrpExporter(InvoiceXmlMrpListExporter):
         # < KH_LEASING > F < / KH_LEASING >
         # < REZIM_DPH > 0 < / REZIM_DPH >
 
+        from invoicing.managers import get_invoice_details_manager
+        invoice_details_manager = get_invoice_details_manager()
+
         # build xml structure
         document = etree.Element("document")
         datasets = etree.SubElement(document, "datasets")
@@ -113,14 +115,14 @@ class InvoiceFakvyXmlMrpExporter(InvoiceXmlMrpListExporter):
             # idfak.text = '1'  # rather ?
 
             # < udpredkont > 11 < / udpredkont >
-            advance_notice = get_invoice_details_manager().advance_notice(invoice)
+            advance_notice = invoice_details_manager.advance_notice(invoice)
 
             if advance_notice not in EMPTY_VALUES:
                 udpredkont = etree.SubElement(fields, "udpredkont")
                 udpredkont.text = advance_notice
 
             # < cislo_zak > 0 < / cislo_zak >
-            customer_number = get_invoice_details_manager().customer_number(invoice)
+            customer_number = invoice_details_manager.customer_number(invoice)
 
             if customer_number not in EMPTY_VALUES:
                 cislo_zak = etree.SubElement(fields, "cislo_zak")
@@ -139,14 +141,14 @@ class InvoiceFakvyXmlMrpExporter(InvoiceXmlMrpListExporter):
             icoprij.text = ""
 
             # < typdph > 72 < / typdph >
-            vat_type = get_invoice_details_manager().vat_type(invoice)
+            vat_type = invoice_details_manager.vat_type(invoice)
 
             if vat_type not in EMPTY_VALUES:
                 typdph = etree.SubElement(fields, "typdph")
                 typdph.text = str(vat_type)
 
             # < KODPLNENI > X < / KODPLNENI >
-            fulfillment_code = get_invoice_details_manager().fulfillment_code(invoice)
+            fulfillment_code = invoice_details_manager.fulfillment_code(invoice)
 
             if fulfillment_code not in EMPTY_VALUES:
                 kodplneni = etree.SubElement(fields, "kodplneni")
@@ -210,7 +212,7 @@ class InvoiceFakvyXmlMrpExporter(InvoiceXmlMrpListExporter):
             specisymb.text = str(invoice.specific_symbol) if invoice.specific_symbol else ""
 
             # < stredisko > zml. d < / stredisko >
-            center = get_invoice_details_manager().center(invoice)
+            center = invoice_details_manager.center(invoice)
 
             if center not in EMPTY_VALUES:
                 stredisko = etree.SubElement(fields, "stredisko")
@@ -356,6 +358,9 @@ class InvoiceFakvypolXmlMrpExporter(InvoiceXmlMrpListExporter):
         # < stredisko > zml. d < / stredisko >
         # < cislo_zak > 20176595 < / cislo_zak >
 
+        from invoicing.managers import get_invoice_details_manager
+        invoice_details_manager = get_invoice_details_manager()
+
         # build xml structure
         document = etree.Element("document")
         datasets = etree.SubElement(document, "datasets")
@@ -384,7 +389,7 @@ class InvoiceFakvypolXmlMrpExporter(InvoiceXmlMrpListExporter):
                     idfak.text = str(invoice.id)
 
                     # < cislo_zak > 0 < / cislo_zak >
-                    customer_number = get_invoice_details_manager().customer_number(invoice)
+                    customer_number = invoice_details_manager.customer_number(invoice)
                     if customer_number not in EMPTY_VALUES:
                         cislo_zak = etree.SubElement(fields, "cislo_zak")
                         cislo_zak.text = customer_number
@@ -430,7 +435,7 @@ class InvoiceFakvypolXmlMrpExporter(InvoiceXmlMrpListExporter):
                         slevamj.text = "0"
                     else:
                         # last item line
-                        typ_pol.text = "S" if get_invoice_details_manager().vat_type(invoice) in [13, 72] else ""
+                        typ_pol.text = "S" if invoice_details_manager.vat_type(invoice) in [13, 72] else ""
                         mj.text = str(item.get_unit_display())
                         pocetmj.text = str(item.quantity)
                         cenamj.text = str(item.unit_price)
@@ -460,7 +465,7 @@ class InvoiceFakvypolXmlMrpExporter(InvoiceXmlMrpListExporter):
                     typ_sum.text = "1"
 
                     # < stredisko > zml. d < / stredisko >
-                    center = get_invoice_details_manager().center(invoice)
+                    center = invoice_details_manager.center(invoice)
 
                     if center not in EMPTY_VALUES:
                         stredisko = etree.SubElement(fields, "stredisko")

@@ -1,7 +1,6 @@
 import logging
 
 import requests
-from datetime import datetime
 from django.core.mail import EmailMultiAlternatives
 from django_filters.constants import EMPTY_VALUES
 
@@ -133,17 +132,17 @@ def _send_request_per_invoice_item(xml_string, export):
 def _create_exporter(invoice_qs, user):
     """Create and configure the appropriate MRP exporter."""
     from invoicing.models import Invoice
-    from invoicing.exporters.mrp.v2.list import OutgoingInvoiceMrpExporter, IncomingInvoiceMrpExporter
+    from invoicing.exporters.mrp.v2.list import IssuedInvoiceMrpExporter, ReceivedInvoiceMrpExporter
 
     invoice_origin = invoice_qs.first().origin
-    exporter_class = OutgoingInvoiceMrpExporter if invoice_origin == Invoice.ORIGIN.OUTGOING else IncomingInvoiceMrpExporter
+    exporter_class = IssuedInvoiceMrpExporter if invoice_origin == Invoice.ORIGIN.ISSUED else ReceivedInvoiceMrpExporter
 
     exporter = exporter_class(
         user=user,
         recipients=[user],
-        export_per_item=True,
         output_type=Export.OUTPUT_TYPE_STREAM
     )
+    exporter.export_per_item = True
     exporter.queryset = invoice_qs
     return exporter
 

@@ -40,7 +40,7 @@ class InvoiceExportMixin(object):
         queryset = exporter.get_queryset()
 
         # 1) Check if there is anything to export
-        if not queryset.exists():
+        if queryset is None or not queryset.exists():
             messages.warning(request, _("%s: There is no invoice selected to export." % exporter.__class__))
             return False
 
@@ -64,16 +64,6 @@ class InvoiceExportMixin(object):
             exporter_params: The params of the exporter
             queryset: The queryset of invoices to export
         """
-
-        logger.info(
-            f"User {request.user} (ID: {request.user.id}) executing export with {queryset.count()} invoice(s)",
-            extra={
-                'user_id': request.user.id,
-                'exporter_class': exporter_class,
-                'exporter_params': exporter_params
-            }
-        )
-
         if exporter_params is None:
             exporter_params = {"user": request.user, "recipients": [request.user], "params": None}
 
@@ -83,12 +73,22 @@ class InvoiceExportMixin(object):
         if queryset is not None and queryset.exists():
             exporter.queryset = queryset
 
+        qs_count = exporter.queryset.count() if queryset else 0
+        logger.info(
+            f"User {request.user} (ID: {request.user.id}) executing export with {qs_count} invoice(s)",
+            extra={
+                'user_id': request.user.id,
+                'exporter_class': exporter_class,
+                'exporter_params': exporter_params
+            }
+        )
+
         if not self._is_export_qs_valid(request, exporter):
             return
 
         from outputs.usecases import execute_export
         execute_export(exporter, language=translation.get_language())
-        messages.success(request, _('Export of %d invoice(s) queued and will be sent to email') % queryset.count())
+        messages.success(request, _('Export of %d invoice(s) queued and will be sent to email') % qs_count)
 
 class InvoiceExportApiMixin(object):
     manager_name = ""
@@ -420,7 +420,7 @@ class MRPManager(InvoiceExportMixin, InvoiceExportApiMixin):
     }
 
     def export_list_mrp_v2(self, request, queryset=None, exporter_params=None):
-        if not queryset.exists():
+        if queryset is None or not queryset.exists():
             messages.info(request, _('%s: No invoice selected to export.' % 'export_mrp_v2'))
             return
         else:

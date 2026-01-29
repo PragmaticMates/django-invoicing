@@ -1,0 +1,29 @@
+# Development and testing requirements
+-r requirements.txt
+
+# Testing framework
+pytest>=7.4.0
+pytest-django>=4.5.0
+pytest-cov>=4.1.0
+pytest-xdist>=3.3.0  # Parallel test execution
+
+# Test utilities
+factory-boy>=3.3.0   # Test data factories
+faker>=19.0.0        # Fake data generation
+freezegun>=1.2.2     # Time mocking
+responses>=0.23.0    # HTTP request mocking
+requests-futures>=1.0.0
+
+# Code quality
+flake8>=6.0.0
+black>=23.0.0
+isort>=5.12.0
+mypy>=1.4.0
+
+# Django extensions for testing
+django-extensions>=3.2.0
+
+# Debugging
+ipdb>=0.13.13
+
+

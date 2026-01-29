@@ -432,7 +432,7 @@ class Invoice(models.Model):
     @cached_property
     def sum_quantity(self):
         quantity = self.item_set.aggregate(Sum('quantity'))
-        return quantity.get('quantity__sum', 1) if quantity else 0
+        return quantity.get('quantity__sum') or 0 if quantity else 0
 
     @cached_property
     def all_items_with_single_quantity(self):
@@ -505,15 +505,17 @@ class Invoice(models.Model):
         invoice_dict.update(kwargs)
 
         # check presence of custom sequence generator and number formatter
-        sequence_generator = invoice_dict.pop('sequence_generator')
-        number_formatter = invoice_dict.pop('number_formatter')
+        sequence_generator = invoice_dict.pop('sequence_generator', None)
+        number_formatter = invoice_dict.pop('number_formatter', None)
 
         # create new instance but don't save yet
         new_instance = Invoice(**invoice_dict)
 
-        # pass custom sequence generator and number formatter
-        new_instance.sequence_generator = sequence_generator
-        new_instance.number_formatter = number_formatter
+        # pass custom sequence generator and number formatter if provided
+        if sequence_generator is not None:
+            new_instance.sequence_generator = sequence_generator
+        if number_formatter is not None:
+            new_instance.number_formatter = number_formatter
 
         # save new instance with new sequence and number
         new_instance.save()

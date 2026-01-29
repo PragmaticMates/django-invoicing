@@ -1,6 +1,6 @@
 # Django settings for example project.
 from os.path import normpath, join
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 
 
 DEBUG = True

@@ -4,10 +4,10 @@ import logging
 import requests
 from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
+from django.core.validators import EMPTY_VALUES
 from django.utils import translation
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
-from django_filters.constants import EMPTY_VALUES
 
 from django.utils.translation import gettext_lazy as _
 

@@ -2,7 +2,7 @@ import logging
 
 import requests
 from django.core.mail import EmailMultiAlternatives
-from django_filters.constants import EMPTY_VALUES
+from django.core.validators import EMPTY_VALUES
 
 from django.utils.translation import gettext_lazy as _
 from lxml import etree

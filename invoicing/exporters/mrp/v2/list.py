@@ -29,6 +29,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
     export_context = Export.CONTEXT_LIST
     queryset = Invoice.objects.all()
     export_per_item = False
+    outputs = []
     filename = 'MRP_invoice_export.xml'
     api_request_command = ''
     xml_encoding = 'Windows-1250'
@@ -46,7 +47,11 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         return template.render({"count": count, "filtered_values": None})
 
     def export(self):
-        self.write_data(self.output)
+        if self.export_per_item:
+            self.write_data_per_item(self.outputs)
+        else:
+            self.write_data(self.output)
+
 
     def get_outputs_per_item(self):
         """
@@ -177,7 +182,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
 
         return xml_envelope
 
-    def write_xml_string(self, output):
+    def write_data(self, output):
         """
         Generate a single XML element containing all invoices and write it to output.
 
@@ -204,7 +209,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         xml_string = self.xml_to_string(mrpks_data)
         output.write(xml_string)
 
-    def write_xml_string_per_item(self):
+    def write_data_per_item(self, outputs):
         """
         Generate separate XML elements for each invoice and store them in self.outputs.
 
@@ -231,9 +236,12 @@ class InvoiceMrpExporterMixin(ExporterMixin):
 
             # Validate and wrap in request envelope
             self.validate_xml(mrpks_data)
-            envelope = self.wrap_to_request_envelope(mrpks_data, invoice)
-            xml_string = self.xml_to_string(envelope)
-            self.outputs.append({"invoice": invoice, "xml_string": xml_string})
+
+            if self.output_type == Export.OUTPUT_TYPE_STREAM:
+                mrpks_data = self.wrap_to_request_envelope(mrpks_data, invoice)
+
+            xml_string = self.xml_to_string(mrpks_data)
+            outputs.append({"invoice": invoice, "xml_string": xml_string})
 
     def xml_to_string(self, xml):
         """
@@ -369,18 +377,6 @@ class InvoiceMrpExporterMixin(ExporterMixin):
             etree.SubElement(pay_elem, "CurrencyCode").text = sanitize_uppercase_only(invoice.currency, 3)
 
         return invoice_elem
-
-    def write_data(self, output):
-        """
-        Write XML elements to output stream.
-        For per-item mode, collects outputs in self.outputs list.
-        For normal mode, writes all elements to the provided output stream.
-        """
-        if self.export_per_item:
-            self.write_xml_string_per_item()
-        else:
-            # Write to main output stream
-            self.write_xml_string()
 
 
 class IssuedInvoiceMrpExporter(InvoiceMrpExporterMixin):

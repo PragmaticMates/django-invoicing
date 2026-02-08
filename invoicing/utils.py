@@ -13,24 +13,6 @@ from django.utils.module_loading import import_string
 from requests_futures import sessions
 
 
-def generate_export_id(export_prefix):
-    """
-    Generate export_id in format: {export_prefix}-{timestamp}
-    
-    Args:
-        export_prefix: Type of export ('admin', 'cron', 'manual', etc.)
-    
-    Returns:
-        str: Export ID like 'admin-20240112143045' or 'cron-20240112143045'
-    """
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-    
-    if export_prefix:
-        return f'{export_prefix}-{timestamp}'
-    
-    return timestamp
-
-
 def get_invoices_in_pdf(invoices):
     # TODO: replace with invoicing_settings
     invoicing_formatter = getattr(settings, 'INVOICING_FORMATTER', 'invoicing.formatters.html.BootstrapHTMLFormatter')

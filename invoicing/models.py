@@ -3,6 +3,7 @@ from __future__ import division  # TODO: refactor
 from decimal import Decimal
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from django.db.models import JSONField, Max, Sum
@@ -210,6 +211,7 @@ class Invoice(models.Model):
         blank=True, null=True, default=0)
 
     # Other
+    export_items = GenericRelation('outputs.ExportItem', related_query_name='invoice')
     attachments = JSONField(_(u'attachments'),
         blank=True, null=True, default=None)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
@@ -546,7 +548,7 @@ class Item(models.Model):
 
     invoice = models.ForeignKey(Invoice, verbose_name=_(u'invoice'), on_delete=models.CASCADE)
     title = models.TextField(_(u'title'))
-    quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1)
+    quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1, validators=[MinValueValidator(0.001)])
     unit = models.CharField(_(u'unit'), choices=UNITS, max_length=6, default=UNIT_PIECES)
     unit_price = models.DecimalField(_(u'unit price'), max_digits=10, decimal_places=2)
     discount = models.DecimalField(_(u'discount (%)'), max_digits=4, decimal_places=1, default=0)

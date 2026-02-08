@@ -24,7 +24,7 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
-class InvoiceMrpExporterMixin(ExporterMixin):
+class InvoiceMrpListExporterMixin(ExporterMixin):
     export_format = Export.FORMAT_XML
     export_context = Export.CONTEXT_LIST
     queryset = Invoice.objects.all()
@@ -44,7 +44,16 @@ class InvoiceMrpExporterMixin(ExporterMixin):
 
     def get_message_body(self, count, file_url=None):
         template = loader.get_template("outputs/export_message_body.html")
-        return template.render({"count": count, "filtered_values": None})
+        return template.render({"count": count})
+
+    @staticmethod
+    def vat_type(invoice):
+        return ''
+
+    # predkontacia
+    @staticmethod
+    def advance_notice(invoice):
+        return ''
 
     def export(self):
         if self.export_per_item:
@@ -255,9 +264,6 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         )
 
     def get_invoice_element(self, invoice):
-        from invoicing.managers import get_invoice_details_manager
-        invoice_details_manager = get_invoice_details_manager()
-
         invoice_elem = etree.Element("Invoice")
 
         # ==== HEADER ====
@@ -267,7 +273,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         etree.SubElement(invoice_elem, "ValuesWithTax").text = "T" if invoice.type in ['INVOICE', 'ADVANCE'] else "F"
 
         # TaxCode is required - always include it, default to "0" if not available
-        vat_type = invoice_details_manager.vat_type(invoice)
+        vat_type = self.vat_type(invoice)
         if vat_type not in EMPTY_VALUES:
             etree.SubElement(invoice_elem, "TaxCode").text = str(vat_type)
         else:
@@ -281,7 +287,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         etree.SubElement(invoice_elem, "DeliveryDate").text = invoice.date_issue.isoformat()
         etree.SubElement(invoice_elem, "PaymentDueDate").text = invoice.date_due.isoformat()
 
-        advance_notice = invoice_details_manager.advance_notice(invoice)
+        advance_notice = self.advance_notice(invoice)
         if advance_notice not in EMPTY_VALUES:
             etree.SubElement(invoice_elem, "DoubleEntryBookkeepingCode").text = advance_notice
 
@@ -346,7 +352,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         for vat_sum in invoice.vat_summary:
             sv = etree.SubElement(sum_values, "SumValue")
             # Use the same vat_type logic as in header
-            sum_vat_type = invoice_details_manager.vat_type(invoice)
+            sum_vat_type = self.vat_type(invoice)
             if sum_vat_type not in EMPTY_VALUES:
                 etree.SubElement(sv, "TaxCode").text = str(sum_vat_type)
             else:
@@ -379,7 +385,7 @@ class InvoiceMrpExporterMixin(ExporterMixin):
         return invoice_elem
 
 
-class IssuedInvoiceMrpExporter(InvoiceMrpExporterMixin):
+class IssuedInvoiceMrpListExporter(InvoiceMrpListExporterMixin):
     queryset = Invoice.objects.issued()
     filename = 'MRP_issued_invoice_export.xml'
     api_request_command = "IMPFV0"
@@ -404,7 +410,7 @@ class IssuedInvoiceMrpExporter(InvoiceMrpExporterMixin):
         etree.SubElement(parent_element, "Email").text = sanitize_forbidden_chars(invoice.customer_email, 256)
 
 
-class ReceivedInvoiceMrpExporter(InvoiceMrpExporterMixin):
+class ReceivedInvoiceMrpListExporter(InvoiceMrpListExporterMixin):
     queryset = Invoice.objects.received()
     filename = 'MRP_received_invoice_export.xml'
     api_request_command = "IMPFP0"

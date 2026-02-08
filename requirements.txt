@@ -1,6 +1,5 @@
 Django>=2.2
 django-countries>=2.1.2
-django-iban>=0.2.8
 django-internationalflavor>=0.4.0
 django-model-utils>=2.0.3
 django-money>=0.4.1

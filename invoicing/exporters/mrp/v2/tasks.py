@@ -10,9 +10,7 @@ from outputs.models import Export, ExportItem
 from outputs.signals import export_item_changed
 from pragmatic.utils import get_task_decorator
 
-from invoicing import settings as invoicing_settings
-from invoicing.exporters.mrp.v2.list import InvoiceMrpExporterMixin
-from invoicing.managers import MRPManager
+from invoicing.exporters.mrp.v2.list import InvoiceMrpListExporterMixin
 
 from invoicing.utils import setup_export_context
 
@@ -22,7 +20,7 @@ task = get_task_decorator("exports")
 
 
 @task
-def send_invoices_to_mrp(creator_id, invoices_ids):
+def send_invoices_to_mrp(exporter_class, creator_id, invoices_ids, api_url):
     if invoices_ids in EMPTY_VALUES:
         return
 
@@ -31,25 +29,38 @@ def send_invoices_to_mrp(creator_id, invoices_ids):
     logger.info(f"Sending {invoice_qs.count()} invoices to MRP server (one invoice per request)")
 
     results = []
-    exporter = _create_exporter(invoice_qs, creator)
+    exporter = _create_exporter(exporter_class, invoice_qs, creator)
+
+    if not exporter:
+        logger.error(f"Sending to MRP failed, no exporter found.")
+        return
+
     exporter.export()
     export = exporter.save_export()
+
+    # update status of export
+    export.status = Export.STATUS_PROCESSING
+    export.save(update_fields=['status'])
 
     # MRP autonomous mode handles only one invoice per request
     # Process each invoice separately and collect results
     for output in exporter.get_outputs_per_item():
-        result = _send_request_per_invoice_item(output['invoice'], output['xml_string'], export)
+        result = _send_request_per_invoice_item(output['invoice'], output['xml_string'], export, api_url)
         results.append(result)
 
     # update status of export
     export.status = Export.STATUS_FINISHED
+
+    if export.items.failed().exists():
+        export.status = Export.STATUS_FAILED
+
     export.save(update_fields=['status'])
 
     # Send email summary to user
     _send_mail_with_summary(creator, results)
 
 
-def _send_request_per_invoice_item(invoice, xml_string, export):
+def _send_request_per_invoice_item(invoice, xml_string, export, api_url):
     """
     Send a single invoice to MRP server.
 
@@ -68,16 +79,14 @@ def _send_request_per_invoice_item(invoice, xml_string, export):
 
     try:
         headers = {
-            'Content-Type': f'application/xml; charset={InvoiceMrpExporterMixin.xml_encoding}'
+            'Content-Type': f'application/xml; charset={InvoiceMrpListExporterMixin.xml_encoding}'
         }
-        url = invoicing_settings.INVOICING_MANAGERS.get('MRP')['API_URL']
-
-        logger.debug(f"Sending invoice {invoice.number} to MRP server: {url}")
+        logger.debug(f"Sending invoice {invoice.number} to MRP server: {api_url}")
         response = requests.post(
-            url,
+            api_url,
             data=xml_string,
             headers=headers,
-            timeout=InvoiceMrpExporterMixin.request_timeout
+            timeout=InvoiceMrpListExporterMixin.request_timeout
         )
         response.raise_for_status()
         logger.info(f"Received response for invoice {invoice.number}: {response.status_code}")
@@ -107,7 +116,7 @@ def _send_request_per_invoice_item(invoice, xml_string, export):
 
     except requests.exceptions.Timeout as e:
         logger.error(f"Timeout when sending invoice {invoice.number}: {e}")
-        timeout_msg = f'Request timeout: The MRP server did not respond within {InvoiceMrpExporterMixin.request_timeout} seconds'
+        timeout_msg = f'Request timeout: The MRP server did not respond within {InvoiceMrpListExporterMixin.request_timeout} seconds'
         export_result, export_detail, result = _handle_error(invoice.number, request_id, timeout_msg)
     except requests.exceptions.RequestException as e:
         logger.error(f"Request error when sending invoice {invoice.number}: {e}")
@@ -118,8 +127,9 @@ def _send_request_per_invoice_item(invoice, xml_string, export):
     finally:
         # Send signal once at the end
         export_item_changed.send(
-            sender=MRPManager,
+            sender=export.exporter,
             export_id=export.id,
+            content_type=export.content_type,
             object_id=invoice.id,
             result=export_result,
             detail=export_detail,
@@ -128,21 +138,17 @@ def _send_request_per_invoice_item(invoice, xml_string, export):
     return result
 
 
-def _create_exporter(invoice_qs, user):
+def _create_exporter(exporter_class, invoice_qs, user):
     """Create and configure the appropriate MRP exporter."""
-    from invoicing.models import Invoice
-    from invoicing.exporters.mrp.v2.list import IssuedInvoiceMrpExporter, ReceivedInvoiceMrpExporter
-
-    invoice_origin = invoice_qs.first().origin
-    exporter_class = IssuedInvoiceMrpExporter if invoice_origin == Invoice.ORIGIN.ISSUED else ReceivedInvoiceMrpExporter
 
     exporter = exporter_class(
         user=user,
         recipients=[user],
+        params={},
         output_type=Export.OUTPUT_TYPE_STREAM
     )
     exporter.export_per_item = True
-    exporter.queryset = invoice_qs
+    exporter.items = invoice_qs
     return exporter
 
 

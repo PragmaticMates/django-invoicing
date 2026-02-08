@@ -113,11 +113,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         }
 
         # Collect export actions from all configured managers
-        for manager_name, manager_config in invoicing_settings.INVOICING_MANAGERS.items():
-            manager_class_path = manager_config.get('MANAGER_CLASS')
-            if not manager_class_path:
-                continue
-
+        for manager_class_path, manager_config in invoicing_settings.INVOICING_MANAGERS.items():
             try:
                 manager_class = import_string(manager_class_path)
                 manager_instance = manager_class()
@@ -133,9 +129,9 @@ class InvoiceAdmin(admin.ModelAdmin):
                 if not callable(method):
                     continue
 
-                # Create unique action name by combining manager name and method name
-                # e.g., "mrp_export_via_api" or "ikros_export_via_api"
-                unique_action_name = f"{manager_name.lower()}_{attr_name}"
+                # Create unique action name by combining manager class name and method name
+                class_name = manager_class_path.rsplit('.', 1)[-1].lower()
+                unique_action_name = f"{class_name}_{attr_name}"
 
                 # Create a wrapper that calls the manager method
                 def make_action(mgr_instance, method_name):

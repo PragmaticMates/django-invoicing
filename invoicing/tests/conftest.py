@@ -22,6 +22,7 @@ _outputs_pkg = types.ModuleType("outputs")
 _outputs_mixins = types.ModuleType("outputs.mixins")
 _outputs_models = types.ModuleType("outputs.models")
 _outputs_usecases = types.ModuleType("outputs.usecases")
+_outputs_signals = types.ModuleType("outputs.signals")
 
 
 class _DummyExport:
@@ -33,16 +34,54 @@ class _DummyExport:
     RESULT_FAILURE = "failure"
     OUTPUT_TYPE_STREAM = "stream"
     STATUS_FINISHED = "finished"
+    STATUS_PROCESSING = "processing"
+    STATUS_FAILED = "failed"
+
+    def __init__(self):
+        self.id = 1
+        self.total = 0
+        self.status = self.STATUS_FINISHED
+        self.exporter = None
+        self.content_type = MagicMock()
+        self.object_list = []
+        self.creator = None
+        self.recipients = []
+        self.items = MagicMock()
+
+    def save(self, update_fields=None):
+        pass
+
+    def update_export_items_result(self, result, detail=None):
+        return 0
 
 
 class _DummyExporterMixin:
     def __init__(self, *args, **kwargs):
         self.queryset = kwargs.get("queryset", None)
+        self._items = None
         self.output = MagicMock()
         self.outputs = []
 
+    @property
+    def items(self):
+        return self._items
+
+    @items.setter
+    def items(self, value):
+        self._items = value
+        # Sync queryset so that subclass get_queryset() (which returns
+        # self.queryset) sees the assigned items – mirrors real ExporterMixin.
+        if value is not None:
+            self.queryset = value
+
     def export(self):
         pass
+
+    def save_export(self):
+        return _DummyExport()
+
+    def get_queryset(self):
+        return self.queryset
 
 
 def _dummy_execute_export(exporter, language=None):
@@ -50,20 +89,33 @@ def _dummy_execute_export(exporter, language=None):
         exporter.export()
 
 
+def _dummy_mail_successful_export(export, filename=None, zip_file=None):
+    pass
+
+
+def _dummy_notify_about_failed_export(export, error_msg):
+    pass
+
+
 _outputs_mixins.ExporterMixin = _DummyExporterMixin
 _outputs_mixins.ExcelExporterMixin = _DummyExporterMixin
 _outputs_models.Export = _DummyExport
 _outputs_models.ExportItem = _DummyExport
 _outputs_usecases.execute_export = _dummy_execute_export
+_outputs_usecases.mail_successful_export = _dummy_mail_successful_export
+_outputs_usecases.notify_about_failed_export = _dummy_notify_about_failed_export
 
 _outputs_pkg.mixins = _outputs_mixins
 _outputs_pkg.models = _outputs_models
 _outputs_pkg.usecases = _outputs_usecases
 
+_outputs_signals.export_item_changed = MagicMock()
+
 sys.modules["outputs"] = _outputs_pkg
 sys.modules["outputs.mixins"] = _outputs_mixins
 sys.modules["outputs.models"] = _outputs_models
 sys.modules["outputs.usecases"] = _outputs_usecases
+sys.modules["outputs.signals"] = _outputs_signals
 
 _pragmatic_pkg = types.ModuleType("pragmatic")
 _pragmatic_utils = types.ModuleType("pragmatic.utils")

@@ -305,6 +305,14 @@ class Invoice(models.Model):
         return None
 
     @property
+    def is_received(self):
+        return self.origin == Invoice.ORIGIN.RECEIVED
+
+    @property
+    def is_issued(self):
+        return self.origin == Invoice.ORIGIN.ISSUED
+
+    @property
     def is_overdue(self):
         if self.total == 0:
             return False

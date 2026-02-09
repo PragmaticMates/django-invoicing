@@ -1,10 +1,12 @@
-from django.contrib import admin, messages
+import inspect
+from django.contrib import admin
 from django.db.models import F, DecimalField
 from django.db.models.functions import Coalesce
+from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from invoicing.managers import get_accounting_software_manager
+from invoicing import settings as invoicing_settings
 from invoicing.models import Invoice, Item
 
 
@@ -42,13 +44,13 @@ class OverdueFilter(admin.SimpleListFilter):
 class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     ordering = ['-date_issue', '-sequence']
-    actions = ['recalculate_tax', 'send_to_accounting_software', 'export', 'export_to_pdf']
+    actions = ['recalculate_tax']
     list_display = ['pk', 'type', 'number', 'status',
                     'supplier_info', 'customer_info',
                     'annotated_subtotal', 'vat', 'total',
                     'currency', 'date_issue', 'payment_term_days', 'is_overdue_boolean', 'is_paid']
     list_editable = ['status']
-    list_filter = ['type', 'status', 'payment_method', 'delivery_method', OverdueFilter, 'language', 'currency']
+    list_filter = ['origin', 'type', 'status', 'payment_method', 'delivery_method', OverdueFilter, 'language', 'currency']
     search_fields = ['number', 'subtitle', 'note', 'supplier_name', 'customer_name', 'shipping_name']
     inlines = (ItemInline, )
     autocomplete_fields = ('related_invoices',)
@@ -94,6 +96,67 @@ class InvoiceAdmin(admin.ModelAdmin):
         })
     )
 
+    def get_actions(self, request):
+        """
+        Return only explicitly listed actions plus all export actions from configured managers.
+        
+        Iterates over all managers configured in INVOICING_MANAGERS setting and adds
+        all methods starting with "export_" as admin actions.
+        """
+        actions = super().get_actions(request)
+
+        # Keep only actions explicitly listed on the ModelAdmin
+        explicit = set(self.actions or [])
+        actions = {
+            name: action for name, action in actions.items()
+            if name in explicit
+        }
+
+        # Collect export actions from all configured managers
+        for manager_class_path, manager_config in invoicing_settings.INVOICING_MANAGERS.items():
+            try:
+                manager_class = import_string(manager_class_path)
+                manager_instance = manager_class()
+            except (ImportError, Exception):
+                continue
+
+            # Find all methods starting with "export_"
+            for attr_name in dir(manager_instance):
+                if not attr_name.startswith('export_'):
+                    continue
+
+                method = getattr(manager_instance, attr_name, None)
+                if not callable(method):
+                    continue
+
+                # Create unique action name by combining manager class name and method name
+                class_name = manager_class_path.rsplit('.', 1)[-1].lower()
+                unique_action_name = f"{class_name}_{attr_name}"
+
+                # Create a wrapper that calls the manager method
+                def make_action(mgr_instance, method_name):
+                    def action(modeladmin, request, queryset):
+                        method = getattr(mgr_instance, method_name)
+                        # Inspect method signature to determine what parameters it accepts
+                        sig = inspect.signature(method)
+                        params = {'request': request, 'queryset': queryset}
+                        
+                        # Only add exporter_class if the method accepts it
+                        if 'exporter_class' in sig.parameters:
+                            params['exporter_class'] = None
+                        
+                        return method(**params)
+                    action.__name__ = method_name
+                    action.short_description = getattr(
+                        getattr(mgr_instance, method_name), 'short_description', method_name
+                    )
+                    return action
+
+                action_func = make_action(manager_instance, attr_name)
+                actions[unique_action_name] = (action_func, unique_action_name, action_func.short_description)
+
+        return actions
+
     def get_queryset(self, request):
         return self.model.objects.annotate(annotated_subtotal=F('total')-Coalesce(F('vat'), 0, output_field=DecimalField()))
 
@@ -126,68 +189,3 @@ class InvoiceAdmin(admin.ModelAdmin):
     def recalculate_tax(self, request, queryset):
         for invoice in queryset:
             invoice.recalculate_tax()
-
-    def send_to_accounting_software(self, request, queryset):
-        manager = get_accounting_software_manager()
-
-        if manager is None:
-            messages.error(request, _('Missing specification of accounting software'))
-            return
-
-        try:
-            result = manager.send_to_accounting_software(request, queryset)
-
-            if isinstance(result, str):
-                messages.success(request, result)
-            elif isinstance(result, list):
-                success = 0
-
-                for r in result:
-                    if r['status_code'] == 200:
-                        success += 1
-                    else:
-                        messages.error(request, f"[{r['invoice']}]: {r['status_code']} ({r['reason']})")
-
-                if success > 0:
-                    messages.success(request, _('%d invoices sent to accounting software') % success)
-
-        except Exception as e:
-            messages.error(request, e)
-
-    send_to_accounting_software.short_description = _('Send to accounting software')
-
-    def export(self, request, queryset):
-        from invoicing.exporters import InvoiceXlsxListExporter
-
-        # init exporter
-        exporter = InvoiceXlsxListExporter(
-            user=request.user,
-            recipients=[request.user],
-            selected_fields=None
-        )
-
-        # set queryset
-        exporter.queryset = queryset
-
-        # export to file
-        return exporter.export_to_response()
-
-    export.short_description = _('Export to xlsx')
-
-    def export_to_pdf(self, request, queryset):
-        from invoicing.exporters import InvoicePdfDetailExporter
-
-        # init exporter
-        exporter = InvoicePdfDetailExporter(
-            user=request.user,
-            recipients=[request.user],
-            selected_fields=None
-        )
-
-        # set queryset
-        exporter.queryset = queryset
-
-        # export to file
-        return exporter.export_to_response()
-
-    export_to_pdf.short_description = _('Export to PDF')

@@ -1,7 +1,10 @@
+import logging
+
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from invoicing.models import Item, Invoice
-# from pragmatic.signals import temporary_disconnect_signal
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=Item)

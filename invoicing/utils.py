@@ -117,25 +117,3 @@ def format_decimal(value, decimal_places=2):
         return "{:.{places}f}".format(float(value), places=decimal_places)
     except (ValueError, TypeError):
         return format_decimal(0, decimal_places)
-
-
-def setup_export_context(creator_id, recipients_ids, invoice_ids, language=settings.LANGUAGE_CODE):
-    """
-    Common setup for export tasks.
-
-    Returns:
-        tuple: (creator, recipients, invoice_qs)
-    """
-    translation.activate(language)
-    user_model = get_user_model()
-
-    try:
-        creator = user_model.objects.get(id=creator_id)
-    except ObjectDoesNotExist:
-        creator = None
-
-    from invoicing.models import Invoice
-    recipients = user_model.objects.filter(id__in=recipients_ids) if recipients_ids else []
-    invoice_qs = Invoice.objects.filter(id__in=invoice_ids) if invoice_ids else []
-
-    return creator, recipients, invoice_qs

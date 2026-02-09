@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 
 from invoicing import settings as invoicing_settings
 from invoicing.exporters import InvoiceISDOCXmlListExporter, InvoiceXlsxListExporter, InvoicePdfDetailExporter
-from invoicing.exporters.mrp.v1.list import InvoiceXmlMrpListExporter
+from invoicing.exporters.mrp.v1.list import InvoiceXmlMrpListExporter, InvoiceFakvyXmlMrpExporter, InvoiceFakvypolXmlMrpExporter, InvoiceFvAdresXmlMrpExporter
 from invoicing.exporters.mrp.v2.list import ReceivedInvoiceMrpListExporter, IssuedInvoiceMrpListExporter
 from invoicing.models import Invoice
 
@@ -397,7 +397,7 @@ class Profit365Manager(InvoiceExportApiMixin):
 
 class MrpV1Manager(InvoiceExportMixin):
     exporter_class = InvoiceXmlMrpListExporter
-    exporter_subclasses = None
+    exporter_subclasses = [InvoiceFakvyXmlMrpExporter, InvoiceFakvypolXmlMrpExporter, InvoiceFvAdresXmlMrpExporter]
 
     def export_list_mrp(self, request, queryset=None, exporter_params=None):
         """Legacy MRP XML export (v1) - returns direct response instead of email."""
@@ -475,13 +475,17 @@ class MrpV2Manager(InvoiceExportMixin, InvoiceExportApiMixin):
             }
         )
 
+        from outputs.models import Export
         exporter_class = self._get_exporter_class(queryset)
-        creator_id = request.user.id
-        invoice_ids = list(queryset.values_list("id", flat=True))
-        api_url = self.manager_settings['API_URL']
+        exporter_params = {"user": request.user, "recipients": [request.user], "params": request.GET, "output_type":Export.OUTPUT_TYPE_STREAM}
+        exporter = exporter_class(**exporter_params)
+        exporter.export_per_item = True
+        exporter.items = queryset
+
+        export = exporter.save_export()
 
         from invoicing.exporters.mrp.v2.tasks import send_invoices_to_mrp
-        send_invoices_to_mrp.delay(exporter_class, creator_id, invoice_ids, api_url)
+        send_invoices_to_mrp.delay(export.id, self)
 
         messages.success(request, _('Export of %d invoice(s) queued for MRP API processing') % queryset.count())
 

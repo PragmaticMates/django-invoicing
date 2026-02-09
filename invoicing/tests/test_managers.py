@@ -319,6 +319,13 @@ class TestMrpV1Manager:
                 manager.export_list_mrp(request, queryset=queryset)
 
             assert mock_task.delay.called
+            # Verify the task was called with export_id and exporter_subclass_paths
+            call_args = mock_task.delay.call_args
+            assert call_args[0][0] is not None  # export_id
+            assert 'exporter_subclass_paths' in call_args[1]
+            exporter_subclass_paths = call_args[1]['exporter_subclass_paths']
+            assert exporter_subclass_paths is not None
+            assert len(exporter_subclass_paths) == 3  # Should have 3 exporter subclasses
 
 
 @pytest.mark.django_db
@@ -383,7 +390,6 @@ class TestMrpV2Manager:
     def test_export_via_api(self, invoice_factory, item_factory, settings):
         """Test MRP v2 API export - queues send_invoices_to_mrp task."""
         import invoicing.exporters.mrp.v2.tasks as mrp_v2_tasks
-        from invoicing.exporters.mrp.v2.list import ReceivedInvoiceMrpListExporter
 
         invoicing_settings.INVOICING_MANAGERS = {
             'invoicing.managers.MrpV2Manager': {'API_URL': 'https://mrp.example.com'}
@@ -394,6 +400,7 @@ class TestMrpV2Manager:
             request = Mock()
             request.user = Mock()
             request.user.id = 1
+            request.GET = {}
 
             invoice = invoice_factory(origin=Invoice.ORIGIN.RECEIVED)
             item_factory(invoice=invoice, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
@@ -403,7 +410,14 @@ class TestMrpV2Manager:
             manager.export_via_api(request, queryset)
 
             assert mock_task.delay.called
-            mock_task.delay.assert_called_once_with(
-                ReceivedInvoiceMrpListExporter, 1, list(queryset.values_list('id', flat=True)), 'https://mrp.example.com'
-            )
+            # Verify the task was called with export_id (integer) and manager (self)
+            call_args = mock_task.delay.call_args
+            assert len(call_args[0]) == 2
+            export_id_arg = call_args[0][0]
+            manager_arg = call_args[0][1]
+            # export_id_arg should be an integer (export.id)
+            assert isinstance(export_id_arg, int)
+            assert export_id_arg > 0
+            # manager_arg should be the manager instance
+            assert manager_arg == manager
 

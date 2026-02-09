@@ -2,7 +2,6 @@ import logging
 
 import requests
 from django.core.mail import EmailMultiAlternatives
-from django.core.validators import EMPTY_VALUES
 
 from django.utils.translation import gettext_lazy as _
 from lxml import etree
@@ -10,9 +9,8 @@ from outputs.models import Export, ExportItem
 from outputs.signals import export_item_changed
 from pragmatic.utils import get_task_decorator
 
+from invoicing import settings as invoicing_settings
 from invoicing.exporters.mrp.v2.list import InvoiceMrpListExporterMixin
-
-from invoicing.utils import setup_export_context
 
 logger = logging.getLogger(__name__)
 
@@ -20,27 +18,29 @@ task = get_task_decorator("exports")
 
 
 @task
-def send_invoices_to_mrp(exporter_class, creator_id, invoices_ids, api_url):
-    if invoices_ids in EMPTY_VALUES:
-        return
+def send_invoices_to_mrp(export_id, manager_class):
+    export = Export.objects.get(id=export_id)
 
-    creator, recipients, invoice_qs = setup_export_context(creator_id, [creator_id], invoices_ids)
+    export.status = Export.STATUS_PROCESSING
+    export.save(update_fields=['status'])
 
-    logger.info(f"Sending {invoice_qs.count()} invoices to MRP server (one invoice per request)")
+    logger.info(f"Sending {export.total} invoices to MRP server (one invoice per request)")
 
     results = []
-    exporter = _create_exporter(exporter_class, invoice_qs, creator)
+    exporter = export.exporter
 
     if not exporter:
         logger.error(f"Sending to MRP failed, no exporter found.")
         return
 
     exporter.export()
-    export = exporter.save_export()
 
     # update status of export
     export.status = Export.STATUS_PROCESSING
     export.save(update_fields=['status'])
+
+    export_class_path = f'{manager_class.__class__.__module__}.{manager_class.__class__.__name__}'
+    api_url = invoicing_settings.INVOICING_MANAGERS.get(export_class_path)['API_URL']
 
     # MRP autonomous mode handles only one invoice per request
     # Process each invoice separately and collect results
@@ -57,7 +57,7 @@ def send_invoices_to_mrp(exporter_class, creator_id, invoices_ids, api_url):
     export.save(update_fields=['status'])
 
     # Send email summary to user
-    _send_mail_with_summary(creator, results)
+    _send_mail_with_summary(export.creator, results)
 
 
 def _send_request_per_invoice_item(invoice, xml_string, export, api_url):
@@ -244,7 +244,6 @@ def _extract_xml_errors(response_xml, request_id):
     error_message_elem = error_elem.find('errorMessage')
     error_message = error_message_elem.text if error_message_elem is not None else 'Unknown error'
 
-    logger.error(f"MRP server returned error (request_id: {request_id}): {error_message}")
     return {
         'error': error_message,
         'error_code': error_code,

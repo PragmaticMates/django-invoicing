@@ -29,11 +29,10 @@ Configuration
 Basic Configuration
 ~~~~~~~~~~~~~~~~~~~
 
-The app comes with three core managers configured by default:
+The app comes with two core managers configured by default:
 
-- **DETAILS**: Invoice details manager
-- **PDF**: PDF export manager  
-- **XLSX**: Excel export manager
+- **PdfExportManager**: PDF export manager  
+- **XlsxExportManager**: Excel export manager
 
 No additional configuration is required for these core managers.
 
@@ -41,7 +40,11 @@ No additional configuration is required for these core managers.
 Advanced Manager Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To use additional managers (MRP, ISDOC, IKROS, PROFIT365), add the ``INVOICING_MANAGERS`` setting to your Django settings.py:
+To use additional managers (MRP, ISDOC, IKROS, PROFIT365), add the ``INVOICING_MANAGERS`` setting to your Django settings.py.
+
+**Configuration Format:**
+
+Managers are configured using their full module path as the dictionary key. The value is a dictionary containing the manager-specific configuration (empty dict ``{}`` if no configuration is needed).
 
 **Example with all available managers:**
 
@@ -49,38 +52,27 @@ To use additional managers (MRP, ISDOC, IKROS, PROFIT365), add the ``INVOICING_M
 
     INVOICING_MANAGERS = {
         # Core managers (included by default)
-        "DETAILS": {
-            "MANAGER_CLASS": "invoicing.managers.InvoiceDetailsManager",
-        },
-        "PDF": {
-            "MANAGER_CLASS": "invoicing.managers.PdfExportManager",
-        },
-        "XLSX": {
-            "MANAGER_CLASS": "invoicing.managers.XlsxExportManager",
-        },
+        "invoicing.managers.PdfExportManager": {},
+        "invoicing.managers.XlsxExportManager": {},
         
         # Additional managers (configure as needed)
-        "MRP": {
-            "MANAGER_CLASS": "invoicing.managers.MRPManager",
-            "API_URL": 'https://your-mrp-api.example.com/api/',
+        "invoicing.managers.ISDOCManager": {},
+        "invoicing.managers.MrpV1Manager": {},
+        "invoicing.managers.MrpV2Manager": {
+            "API_URL": "https://your-mrp-api.example.com/api/",
         },
-        "ISDOC": {
-            "MANAGER_CLASS": "invoicing.managers.ISDOCManager",
-        },
-        "IKROS": {
-            "MANAGER_CLASS": "invoicing.managers.IKrosManager",
+        "invoicing.managers.IKrosManager": {
             "API_URL": "https://eshops.inteo.sk/api/v1/invoices/",
             "API_KEY": "your-api-key-here",
         },
-        "PROFIT365": {
-            "MANAGER_CLASS": "invoicing.managers.Profit365Manager",
+        "invoicing.managers.Profit365Manager": {
             "API_URL": "https://api.profit365.eu/1.6",
             "API_DATA": {
                 "Authorization": "Bearer your-token",
                 "bankAccountId": "12345",
                 "ClientID": "your-client-id",
                 "ClientSecret": "your-client-secret",
-                "CompanyID": "your-company-id",
+                "CompanyID": "your-company-id",  # Optional
             },
         },
     }
@@ -89,53 +81,72 @@ To use additional managers (MRP, ISDOC, IKROS, PROFIT365), add the ``INVOICING_M
 Individual Manager Examples
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**MRP Manager** (Czech accounting system):
+**PDF Export Manager** (no configuration needed):
 
 .. code-block:: python
 
     INVOICING_MANAGERS = {
-        "MRP": {
-            "MANAGER_CLASS": "invoicing.managers.MRPManager",
+        "invoicing.managers.PdfExportManager": {},
+    }
+
+**XLSX Export Manager** (no configuration needed):
+
+.. code-block:: python
+
+    INVOICING_MANAGERS = {
+        "invoicing.managers.XlsxExportManager": {},
+    }
+
+**ISDOC Manager** (Czech electronic invoice format, no configuration needed):
+
+.. code-block:: python
+
+    INVOICING_MANAGERS = {
+        "invoicing.managers.ISDOCManager": {},
+    }
+
+**MRP v1 Manager** (Czech accounting system, no configuration needed):
+
+.. code-block:: python
+
+    INVOICING_MANAGERS = {
+        "invoicing.managers.MrpV1Manager": {},
+    }
+
+**MRP v2 Manager** (Czech accounting system, requires API_URL):
+
+.. code-block:: python
+
+    INVOICING_MANAGERS = {
+        "invoicing.managers.MrpV2Manager": {
             "API_URL": "https://your-mrp-instance.example.com/api/",
         },
     }
 
-**ISDOC Manager** (Czech electronic invoice format):
+**IKROS Manager** (Slovak accounting system, requires API_URL and API_KEY):
 
 .. code-block:: python
 
     INVOICING_MANAGERS = {
-        "ISDOC": {
-            "MANAGER_CLASS": "invoicing.managers.ISDOCManager",
-        },
-    }
-
-**IKROS Manager** (Slovak accounting system):
-
-.. code-block:: python
-
-    INVOICING_MANAGERS = {
-        "IKROS": {
-            "MANAGER_CLASS": "invoicing.managers.IKrosManager",
+        "invoicing.managers.IKrosManager": {
             "API_URL": "https://eshops.inteo.sk/api/v1/invoices/",
             "API_KEY": "your-api-key-here",
         },
     }
 
-**PROFIT365 Manager** (European accounting system):
+**PROFIT365 Manager** (European accounting system, requires API_URL and API_DATA):
 
 .. code-block:: python
 
     INVOICING_MANAGERS = {
-        "PROFIT365": {
-            "MANAGER_CLASS": "invoicing.managers.Profit365Manager",
+        "invoicing.managers.Profit365Manager": {
             "API_URL": "https://api.profit365.eu/1.6",
             "API_DATA": {
                 "Authorization": "Bearer your-token",
                 "bankAccountId": "12345",
                 "ClientID": "your-client-id",
                 "ClientSecret": "your-client-secret",
-                "CompanyID": "your-company-id",
+                "CompanyID": "your-company-id",  # Optional
             },
         },
     }
@@ -148,12 +159,13 @@ The managers integrate with Django Admin. Once configured, export actions will b
 
 **Available export formats:**
 
-- PDF invoices
-- Excel (XLSX) spreadsheets
-- MRP XML exports (v1 and v2)
-- ISDOC XML format
-- Direct API integration with IKROS
-- Direct API integration with PROFIT365
+- PDF invoices (PdfExportManager)
+- Excel (XLSX) spreadsheets (XlsxExportManager)
+- MRP XML exports v1 (MrpV1Manager)
+- MRP XML exports v2 (MrpV2Manager) - supports both email export and API export
+- ISDOC XML format (ISDOCManager)
+- Direct API integration with IKROS (IKrosManager)
+- Direct API integration with PROFIT365 (Profit365Manager)
 
 **Django Admin Integration:**
 

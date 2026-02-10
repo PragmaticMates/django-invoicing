@@ -17,7 +17,7 @@ setup(
     include_package_data=True,
     install_requires=(
         'django>=4.2', 'django-countries', 'django-model-utils', 'django-money',
-        'django-localflavor', 'django-internationalflavor'
+        'django-localflavor', 'django-internationalflavor', 'lxml'
     ),
     extras_require={
         'exporters': ['django-outputs'],  # optional umbrella for all exporters

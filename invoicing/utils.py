@@ -1,10 +1,14 @@
 import functools
 import warnings
+from datetime import datetime
 from decimal import Decimal
 
 import binascii
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils import translation
 from django.utils.module_loading import import_string
 from requests_futures import sessions
 
@@ -67,6 +71,28 @@ def get_invoices_in_pdf(invoices):
 def deprecated(func):
     """This decorator can be used to mark functions or properties as deprecated."""
 
+    # Handle property objects
+    if isinstance(func, property):
+        prop_fget = func.fget
+        prop_name = prop_fget.__name__ if prop_fget else "unknown"
+
+        @functools.wraps(prop_fget)
+        def deprecated_getter(self):
+            warnings.warn(
+                f"{prop_name} is deprecated and will be removed in a future version.",
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            return prop_fget(self)
+
+        return property(
+            fget=deprecated_getter,
+            fset=func.fset,
+            fdel=func.fdel,
+            doc=func.__doc__
+        )
+
+    # Handle regular functions/methods
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         warnings.warn(

@@ -3,6 +3,7 @@ from __future__ import division  # TODO: refactor
 from decimal import Decimal
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from django.db.models import JSONField, Max, Sum
@@ -112,12 +113,12 @@ class Invoice(models.Model):
     )
 
     ORIGIN = Choices(
-        ('INCOMING', _('incoming invoice')),
-        ('OUTGOING', _('outgoing invoice')),
+        ('RECEIVED', _('received invoice')),
+        ('ISSUED', _('issued invoice')),
     )
 
     # General information
-    origin = models.CharField(_(u'origin'), max_length=8, choices=ORIGIN, default=ORIGIN.OUTGOING)
+    origin = models.CharField(_(u'origin'), max_length=8, choices=ORIGIN, default=ORIGIN.ISSUED)
     type = models.CharField(_(u'type'), max_length=11, choices=TYPE, default=TYPE.INVOICE)
     sequence = models.IntegerField(_(u'sequence'), db_index=True, blank=True)
     number = models.CharField(_(u'number'), max_length=128, blank=True)
@@ -210,6 +211,7 @@ class Invoice(models.Model):
         blank=True, null=True, default=0)
 
     # Other
+    export_items = GenericRelation('outputs.ExportItem', related_query_name='invoice')
     attachments = JSONField(_(u'attachments'),
         blank=True, null=True, default=None)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)
@@ -301,6 +303,14 @@ class Invoice(models.Model):
                 return EUTaxationPolicy
 
         return None
+
+    @property
+    def is_received(self):
+        return self.origin == Invoice.ORIGIN.RECEIVED
+
+    @property
+    def is_issued(self):
+        return self.origin == Invoice.ORIGIN.ISSUED
 
     @property
     def is_overdue(self):
@@ -432,7 +442,7 @@ class Invoice(models.Model):
     @cached_property
     def sum_quantity(self):
         quantity = self.item_set.aggregate(Sum('quantity'))
-        return quantity.get('quantity__sum', 1) if quantity else 0
+        return quantity.get('quantity__sum') or 0 if quantity else 0
 
     @cached_property
     def all_items_with_single_quantity(self):
@@ -505,15 +515,17 @@ class Invoice(models.Model):
         invoice_dict.update(kwargs)
 
         # check presence of custom sequence generator and number formatter
-        sequence_generator = invoice_dict.pop('sequence_generator')
-        number_formatter = invoice_dict.pop('number_formatter')
+        sequence_generator = invoice_dict.pop('sequence_generator', None)
+        number_formatter = invoice_dict.pop('number_formatter', None)
 
         # create new instance but don't save yet
         new_instance = Invoice(**invoice_dict)
 
-        # pass custom sequence generator and number formatter
-        new_instance.sequence_generator = sequence_generator
-        new_instance.number_formatter = number_formatter
+        # pass custom sequence generator and number formatter if provided
+        if sequence_generator is not None:
+            new_instance.sequence_generator = sequence_generator
+        if number_formatter is not None:
+            new_instance.number_formatter = number_formatter
 
         # save new instance with new sequence and number
         new_instance.save()
@@ -544,7 +556,7 @@ class Item(models.Model):
 
     invoice = models.ForeignKey(Invoice, verbose_name=_(u'invoice'), on_delete=models.CASCADE)
     title = models.TextField(_(u'title'))
-    quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1)
+    quantity = models.DecimalField(_(u'quantity'), max_digits=10, decimal_places=3, default=1, validators=[MinValueValidator(0.001)])
     unit = models.CharField(_(u'unit'), choices=UNITS, max_length=6, default=UNIT_PIECES)
     unit_price = models.DecimalField(_(u'unit price'), max_digits=10, decimal_places=2)
     discount = models.DecimalField(_(u'discount (%)'), max_digits=4, decimal_places=1, default=0)
@@ -621,6 +633,5 @@ class Item(models.Model):
         # self.tax_rate = self.invoice.get_tax_rate()
 
         return super(Item, self).save(**kwargs)
-
 
 from .signals import *

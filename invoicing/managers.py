@@ -91,6 +91,7 @@ class InvoiceExportManagerMixin(object):
 
         from outputs.usecases import execute_export
         execute_export(exporter, language=translation.get_language())
+        messages.info(request, _('Export of %d invoice(s) queued and will be sent to email') % qs_count)
 
 
 class PdfExportManager(InvoiceExportManagerMixin):

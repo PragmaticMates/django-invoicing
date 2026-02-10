@@ -112,7 +112,7 @@ class XlsxExportManager(InvoiceExportManagerMixin):
     export_list_xlsx.short_description = _('Export to xlsx')
 
 
-class ISDOCManager(InvoiceExportManagerMixin):
+class IsdocExportManager(InvoiceExportManagerMixin):
     exporter_class = InvoiceISDOCXmlListExporter
 
     def export_list_isdoc(self, request, queryset=None, exporter_params=None):
@@ -121,7 +121,7 @@ class ISDOCManager(InvoiceExportManagerMixin):
     export_list_isdoc.short_description = _('Export to ISDOC (XML)')
 
 
-class IKrosManager(InvoiceExportManagerMixin):
+class IKrosExportManager(InvoiceExportManagerMixin):
 
     def export_via_api(self, request, queryset):
         if self.manager_settings.get('API_URL', None) in EMPTY_VALUES:
@@ -241,7 +241,7 @@ class IKrosManager(InvoiceExportManagerMixin):
     export_via_api.short_description = _('Export to IKROS (API)')
 
 
-class Profit365Manager(InvoiceExportManagerMixin):
+class Profit365ExportManager(InvoiceExportManagerMixin):
 
     def export_via_api(self, request, queryset):
         if self.manager_settings.get('API_URL', None) in EMPTY_VALUES:
@@ -395,7 +395,7 @@ class Profit365Manager(InvoiceExportManagerMixin):
     export_via_api.short_description = _('Export to Profit365 (API)')
 
 
-class MrpV1Manager(InvoiceExportManagerMixin):
+class MrpV1ExportManager(InvoiceExportManagerMixin):
     exporter_class = InvoiceXmlMrpListExporter
     exporter_subclasses = [InvoiceFakvyXmlMrpExporter, InvoiceFakvypolXmlMrpExporter, InvoiceFvAdresXmlMrpExporter]
     required_origin = Invoice.ORIGIN.ISSUED
@@ -432,7 +432,7 @@ class MrpV1Manager(InvoiceExportManagerMixin):
 
     export_list_mrp.short_description = _('Export to MRP v1 (XML)')
 
-class MrpApiV2ManagerMixin(InvoiceExportManagerMixin):
+class MrpApiExportManagerMixin(InvoiceExportManagerMixin):
     def _execute_api_export(self, request, queryset, exporter_params=None):
         """
         Handle POST request to send invoices to MRP server.
@@ -477,10 +477,10 @@ class MrpApiV2ManagerMixin(InvoiceExportManagerMixin):
         from invoicing.exporters.mrp.v2.tasks import send_invoices_to_mrp
         send_invoices_to_mrp.delay(export.id, self)
 
-        messages.success(request, _('Export of %d invoice(s) queued for MRP API processing') % exporter.get_queryset().count())
+        messages.info(request, _('Export of %d invoice(s) queued for MRP API processing') % exporter.get_queryset().count())
 
 
-class MrpIssuedV2Manager(MrpApiV2ManagerMixin):
+class MrpIssuedExportManager(MrpApiExportManagerMixin):
     exporter_class = IssuedInvoiceMrpListExporter
     required_origin = Invoice.ORIGIN.ISSUED
 
@@ -495,7 +495,7 @@ class MrpIssuedV2Manager(MrpApiV2ManagerMixin):
     export_via_api.short_description = _(f'Export issued to MRP (API)')
 
 
-class MrpReceivedV2Manager(MrpApiV2ManagerMixin):
+class MrpReceivedExportManager(MrpApiExportManagerMixin):
     exporter_class = ReceivedInvoiceMrpListExporter
     required_origin = Invoice.ORIGIN.RECEIVED
 

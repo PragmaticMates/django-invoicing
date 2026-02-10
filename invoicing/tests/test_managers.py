@@ -13,12 +13,12 @@ from invoicing.managers import (
     InvoiceExportManagerMixin,
     PdfExportManager,
     XlsxExportManager,
-    ISDOCManager,
-    IKrosManager,
-    Profit365Manager,
-    MrpV1Manager,
-    MrpIssuedV2Manager,
-    MrpReceivedV2Manager,
+    IsdocExportManager,
+    IKrosExportManager,
+    Profit365ExportManager,
+    MrpV1ExportManager,
+    MrpIssuedExportManager,
+    MrpReceivedExportManager,
 )
 from invoicing.models import Invoice
 
@@ -184,18 +184,18 @@ class TestXlsxExportManager:
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestISDOCManager:
-    """Tests for ISDOCManager."""
+class TestIsdocExportManager:
+    """Tests for IsdocExportManager."""
 
     def test_isdoc_export_manager_initialization(self):
         """Test manager initialization."""
-        manager = ISDOCManager()
+        manager = IsdocExportManager()
         assert manager.exporter_class is not None
 
     @patch('outputs.usecases.execute_export', create=True)
     def test_export_list_isdoc(self, mock_execute_export, invoice_factory, item_factory):
         """Test ISDOC export."""
-        manager = ISDOCManager()
+        manager = IsdocExportManager()
         request = Mock()
         request.user = Mock()
         
@@ -213,16 +213,16 @@ class TestISDOCManager:
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestIKrosManager:
-    """Tests for IKrosManager."""
+class TestIKrosExportManager:
+    """Tests for IKrosExportManager."""
 
     def test_ikros_manager_missing_api_url(self, settings):
         """Test missing API URL error."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.IKrosManager': {}
+            'invoicing.managers.IKrosExportManager': {}
         }
 
-        manager = IKrosManager()
+        manager = IKrosExportManager()
         request = Mock()
         queryset = Invoice.objects.none()
 
@@ -233,12 +233,12 @@ class TestIKrosManager:
     def test_ikros_manager_missing_api_key(self, settings):
         """Test missing API key error."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.IKrosManager': {
+            'invoicing.managers.IKrosExportManager': {
                 'API_URL': 'https://api.example.com'
             }
         }
 
-        manager = IKrosManager()
+        manager = IKrosExportManager()
         request = Mock()
         queryset = Invoice.objects.none()
 
@@ -250,7 +250,7 @@ class TestIKrosManager:
     def test_export_via_api_success(self, mock_post, invoice_factory, item_factory, settings):
         """Test successful API export."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.IKrosManager': {
+            'invoicing.managers.IKrosExportManager': {
                 'API_URL': 'https://api.example.com',
                 'API_KEY': 'test-key'
             }
@@ -263,7 +263,7 @@ class TestIKrosManager:
         }
         mock_post.return_value = mock_response
         
-        manager = IKrosManager()
+        manager = IKrosExportManager()
         request = Mock()
         request.user = Mock()
         messages = Mock()
@@ -283,16 +283,16 @@ class TestIKrosManager:
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestProfit365Manager:
-    """Tests for Profit365Manager."""
+class TestProfit365ExportManager:
+    """Tests for Profit365ExportManager."""
 
     def test_profit365_manager_missing_api_url(self, settings):
         """Test missing API URL error."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.Profit365Manager': {}
+            'invoicing.managers.Profit365ExportManager': {}
         }
 
-        manager = Profit365Manager()
+        manager = Profit365ExportManager()
         request = Mock()
         queryset = Invoice.objects.none()
 
@@ -303,12 +303,12 @@ class TestProfit365Manager:
     def test_profit365_manager_missing_api_data(self, settings):
         """Test missing API data error."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.Profit365Manager': {
+            'invoicing.managers.Profit365ExportManager': {
                 'API_URL': 'https://api.example.com'
             }
         }
 
-        manager = Profit365Manager()
+        manager = Profit365ExportManager()
         request = Mock()
         queryset = Invoice.objects.none()
 
@@ -320,7 +320,7 @@ class TestProfit365Manager:
     def test_export_via_api_success(self, mock_post, invoice_factory, item_factory, settings):
         """Test successful API export."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.Profit365Manager': {
+            'invoicing.managers.Profit365ExportManager': {
                 'API_URL': 'https://api.example.com',
                 'API_DATA': {
                     'Authorization': 'Bearer token',
@@ -336,7 +336,7 @@ class TestProfit365Manager:
         mock_response.reason = 'OK'
         mock_post.return_value = mock_response
         
-        manager = Profit365Manager()
+        manager = Profit365ExportManager()
         request = Mock()
         request.user = Mock()
         
@@ -353,12 +353,12 @@ class TestProfit365Manager:
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestMrpV1Manager:
-    """Tests for MrpV1Manager."""
+class TestMrpV1ExportManager:
+    """Tests for MrpV1ExportManager."""
 
     def test_mrp_v1_manager_initialization(self):
         """Test manager initialization."""
-        manager = MrpV1Manager()
+        manager = MrpV1ExportManager()
         assert manager.exporter_class is not None
         assert manager.required_origin == Invoice.ORIGIN.ISSUED
 
@@ -367,7 +367,7 @@ class TestMrpV1Manager:
         import invoicing.exporters.mrp.v1.tasks as mrp_v1_tasks
 
         with patch.object(mrp_v1_tasks, 'mail_exported_invoices_mrp_v1') as mock_task:
-            manager = MrpV1Manager()
+            manager = MrpV1ExportManager()
             request = Mock()
             request.user = Mock()
             request.user.id = 1
@@ -393,25 +393,25 @@ class TestMrpV1Manager:
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestMrpV2Managers:
-    """Tests for MRP v2 managers (issued and received)."""
+class TestMrpExportManagers:
+    """Tests for MRP export managers (issued and received)."""
 
     def test_mrp_issued_v2_manager_initialization(self):
         """Issued manager should define exporter_class and required_origin."""
-        manager = MrpIssuedV2Manager()
+        manager = MrpIssuedExportManager()
         assert manager.exporter_class is not None
         assert manager.required_origin == Invoice.ORIGIN.ISSUED
 
     def test_mrp_received_v2_manager_initialization(self):
         """Received manager should define exporter_class and required_origin."""
-        manager = MrpReceivedV2Manager()
+        manager = MrpReceivedExportManager()
         assert manager.exporter_class is not None
         assert manager.required_origin == Invoice.ORIGIN.RECEIVED
 
     def test_mrp_v2_issued_manager_missing_api_url(self, settings):
         """Missing API URL for issued manager should raise on export_via_api."""
         invoicing_settings.INVOICING_MANAGERS = {}
-        manager = MrpIssuedV2Manager()
+        manager = MrpIssuedExportManager()
         request = Mock()
         request.user = Mock()
         request.GET = {}
@@ -423,7 +423,7 @@ class TestMrpV2Managers:
     @patch('outputs.usecases.execute_export', create=True)
     def test_export_list_mrp_received(self, mock_execute_export, invoice_factory, item_factory, settings):
         """Test MRP v2 received export."""
-        manager = MrpReceivedV2Manager()
+        manager = MrpReceivedExportManager()
         request = Mock()
         request.user = Mock()
 
@@ -440,7 +440,7 @@ class TestMrpV2Managers:
     @patch('outputs.usecases.execute_export', create=True)
     def test_export_list_mrp_issued(self, mock_execute_export, invoice_factory, item_factory, settings):
         """Test MRP v2 issued export."""
-        manager = MrpIssuedV2Manager()
+        manager = MrpIssuedExportManager()
         request = Mock()
         request.user = Mock()
 
@@ -459,11 +459,11 @@ class TestMrpV2Managers:
         import invoicing.exporters.mrp.v2.tasks as mrp_v2_tasks
 
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.MrpReceivedV2Manager': {'API_URL': 'https://mrp.example.com'}
+            'invoicing.managers.MrpReceivedExportManager': {'API_URL': 'https://mrp.example.com'}
         }
 
         with patch.object(mrp_v2_tasks, 'send_invoices_to_mrp') as mock_task:
-            manager = MrpReceivedV2Manager()
+            manager = MrpReceivedExportManager()
             request = Mock()
             request.user = Mock()
             request.user.id = 1

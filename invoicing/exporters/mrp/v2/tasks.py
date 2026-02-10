@@ -45,8 +45,8 @@ def send_invoices_to_mrp(export_id, manager_class):
     export.status = Export.STATUS_PROCESSING
     export.save(update_fields=['status'])
 
-    export_class_path = f'{manager_class.__class__.__module__}.{manager_class.__class__.__name__}'
-    api_url = invoicing_settings.INVOICING_MANAGERS.get(export_class_path)['API_URL']
+    manager_class_path = f'{manager_class.__class__.__module__}.{manager_class.__class__.__name__}'
+    api_url = invoicing_settings.INVOICING_MANAGERS.get(manager_class_path)['API_URL']
 
     # MRP autonomous mode handles only one invoice per request
     # Process each invoice separately and collect results

@@ -19,6 +19,7 @@ from invoicing.models import Invoice
 logger = logging.getLogger(__name__)
 
 class InvoiceExportManagerMixin(object):
+    required_origin = None
 
     @property
     def manager_settings(self):
@@ -26,7 +27,7 @@ class InvoiceExportManagerMixin(object):
         key = f"{self.__module__}.{self.__class__.__name__}"
         return invoicing_settings.INVOICING_MANAGERS.get(key, {})
 
-    def _is_export_qs_valid(self, request, exporter, origin=None):
+    def _is_export_qs_valid(self, request, exporter):
         """
         Validate queryset to be exported.
 
@@ -40,15 +41,16 @@ class InvoiceExportManagerMixin(object):
             messages.warning(request, _("%s: There is no invoice selected to export." % exporter.__class__.__name__))
             return False
 
-        # 2) Check if origin is unique across the queryset
-        #    (assumes an 'origin' field on the model)
-        origins_qs = queryset.values_list("origin", flat=True).distinct()
-        if origins_qs.count() != 1:
+        # 2) Check origin in one go: single DB hit for distinct origins, then validate
+        #    (assumes an 'origin' field on the model). order_by() clears default ordering
+        #    so distinct() applies only to origin (otherwise we get one row per invoice).
+        origins = list(queryset.values_list("origin", flat=True).order_by().distinct())
+        if len(origins) != 1:
             messages.warning(request, _("%s: All exported invoices must have the same origin." % exporter.__class__.__name__))
             return False
 
-        # 3) check qs contains only expected origin
-        if origin and queryset.exclude(origin=origin).exists():
+        # 3) If manager requires a specific origin, ensure the queryset's (single) origin matches
+        if self.required_origin is not None and origins[0] != self.required_origin:
             messages.warning(request, _("%s: All exported invoices must have the expected origin." % exporter.__class__.__name__))
             return False
 
@@ -395,6 +397,7 @@ class Profit365Manager(InvoiceExportManagerMixin):
 class MrpV1Manager(InvoiceExportManagerMixin):
     exporter_class = InvoiceXmlMrpListExporter
     exporter_subclasses = [InvoiceFakvyXmlMrpExporter, InvoiceFakvypolXmlMrpExporter, InvoiceFvAdresXmlMrpExporter]
+    required_origin = Invoice.ORIGIN.ISSUED
 
     def export_list_mrp(self, request, queryset=None, exporter_params=None):
         """Legacy MRP XML export (v1) - returns direct response instead of email."""
@@ -429,7 +432,7 @@ class MrpV1Manager(InvoiceExportManagerMixin):
     export_list_mrp.short_description = _('Export to MRP v1 (XML)')
 
 class MrpApiV2ManagerMixin(InvoiceExportManagerMixin):
-    def _execute_api_export(self, request, queryset, exporter_params=None, origin=None):
+    def _execute_api_export(self, request, queryset, exporter_params=None):
         """
         Handle POST request to send invoices to MRP server.
 
@@ -437,7 +440,6 @@ class MrpApiV2ManagerMixin(InvoiceExportManagerMixin):
             request: Django request object with user attribute
             queryset: QuerySet of Invoice objects to export
             exporter_params: The params of the exporter
-            origin: invoice origin
         """
 
         if self.manager_settings.get('API_URL', None) in EMPTY_VALUES:
@@ -456,7 +458,7 @@ class MrpApiV2ManagerMixin(InvoiceExportManagerMixin):
         if queryset is not None and queryset.exists():
             exporter.items = queryset
 
-        if not self._is_export_qs_valid(request, exporter, origin):
+        if not self._is_export_qs_valid(request, exporter):
             return
 
         qs_count = exporter.get_queryset().count()
@@ -479,6 +481,7 @@ class MrpApiV2ManagerMixin(InvoiceExportManagerMixin):
 
 class MrpIssuedV2Manager(MrpApiV2ManagerMixin):
     exporter_class = IssuedInvoiceMrpListExporter
+    required_origin = Invoice.ORIGIN.ISSUED
 
     def export_list_issued_mrp(self, request, queryset=None, exporter_params=None):
         self._execute_export(request, self.exporter_class, exporter_params, queryset)
@@ -486,13 +489,14 @@ class MrpIssuedV2Manager(MrpApiV2ManagerMixin):
     export_list_issued_mrp.short_description = _('Export issued to MRP v2 (XML)')
 
     def export_via_api(self, request, queryset=None, exporter_params=None):
-        self._execute_api_export(request, queryset, exporter_params, origin=Invoice.ORIGIN.ISSUED)
+        self._execute_api_export(request, queryset, exporter_params)
 
     export_via_api.short_description = _(f'Export issued to MRP (API)')
 
 
 class MrpReceivedV2Manager(MrpApiV2ManagerMixin):
     exporter_class = ReceivedInvoiceMrpListExporter
+    required_origin = Invoice.ORIGIN.RECEIVED
 
     def export_list_received_mrp(self, request, queryset=None, exporter_params=None):
         self._execute_export(request, self.exporter_class, exporter_params, queryset)
@@ -500,6 +504,6 @@ class MrpReceivedV2Manager(MrpApiV2ManagerMixin):
     export_list_received_mrp.short_description = _('Export received to MRP v2 (XML)')
 
     def export_via_api(self, request, queryset=None, exporter_params=None):
-        self._execute_api_export(request, queryset, exporter_params, origin=Invoice.ORIGIN.RECEIVED)
+        self._execute_api_export(request, queryset, exporter_params)
 
     export_via_api.short_description = _(f'Export received to MRP (API)')

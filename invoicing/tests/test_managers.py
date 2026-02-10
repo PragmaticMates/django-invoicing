@@ -26,10 +26,10 @@ from invoicing.models import Invoice
 @pytest.mark.django_db
 @pytest.mark.unit
 class TestInvoiceExportMixin:
-    """Tests for InvoiceExportMixin."""
+    """Tests for InvoiceExportManagerMixin validation logic."""
 
     def test_is_export_qs_valid_empty(self):
-        """Test validation with empty queryset."""
+        """Empty queryset should be rejected."""
         mixin = InvoiceExportManagerMixin()
         request = Mock()
         
@@ -40,7 +40,7 @@ class TestInvoiceExportMixin:
         assert result is False
 
     def test_is_export_qs_valid_multiple_origins(self, invoice_factory, item_factory):
-        """Test validation with multiple origins."""
+        """Mixed-origin queryset should be rejected."""
         mixin = InvoiceExportManagerMixin()
         request = Mock()
         
@@ -59,7 +59,7 @@ class TestInvoiceExportMixin:
         assert result is False
 
     def test_is_export_qs_valid_single_origin(self, invoice_factory, item_factory):
-        """Test validation with single origin."""
+        """Single-origin queryset should pass when no origin constraint is set."""
         mixin = InvoiceExportManagerMixin()
         request = Mock()
         
@@ -74,6 +74,51 @@ class TestInvoiceExportMixin:
             id__in=[invoice1.id, invoice2.id]
         )
         
+        result = mixin._is_export_qs_valid(request, exporter)
+        assert result is True
+
+    def test_is_export_qs_valid_origin_matches(self, invoice_factory, item_factory):
+        """Queryset should pass when all invoices match the manager's required_origin."""
+        mixin = InvoiceExportManagerMixin()
+        mixin.required_origin = Invoice.ORIGIN.ISSUED
+        request = Mock()
+
+        invoice = invoice_factory(origin=Invoice.ORIGIN.ISSUED)
+        item_factory(invoice=invoice, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        exporter = Mock()
+        exporter.get_queryset.return_value = Invoice.objects.filter(id=invoice.id)
+
+        result = mixin._is_export_qs_valid(request, exporter)
+        assert result is True
+
+    def test_is_export_qs_valid_origin_mismatch(self, invoice_factory, item_factory):
+        """Queryset should be rejected when invoices don't match the manager's required_origin."""
+        mixin = InvoiceExportManagerMixin()
+        mixin.required_origin = Invoice.ORIGIN.ISSUED
+        request = Mock()
+
+        invoice = invoice_factory(origin=Invoice.ORIGIN.RECEIVED)
+        item_factory(invoice=invoice, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        exporter = Mock()
+        exporter.get_queryset.return_value = Invoice.objects.filter(id=invoice.id)
+
+        result = mixin._is_export_qs_valid(request, exporter)
+        assert result is False
+
+    def test_is_export_qs_valid_no_origin_constraint(self, invoice_factory, item_factory):
+        """When required_origin is None, any single-origin queryset should pass."""
+        mixin = InvoiceExportManagerMixin()
+        assert mixin.required_origin is None  # default
+        request = Mock()
+
+        invoice = invoice_factory(origin=Invoice.ORIGIN.RECEIVED)
+        item_factory(invoice=invoice, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        exporter = Mock()
+        exporter.get_queryset.return_value = Invoice.objects.filter(id=invoice.id)
+
         result = mixin._is_export_qs_valid(request, exporter)
         assert result is True
 
@@ -315,6 +360,7 @@ class TestMrpV1Manager:
         """Test manager initialization."""
         manager = MrpV1Manager()
         assert manager.exporter_class is not None
+        assert manager.required_origin == Invoice.ORIGIN.ISSUED
 
     def test_export_list_mrp(self, invoice_factory, item_factory):
         """Test MRP v1 export - saves export and queues task."""
@@ -351,14 +397,16 @@ class TestMrpV2Managers:
     """Tests for MRP v2 managers (issued and received)."""
 
     def test_mrp_issued_v2_manager_initialization(self):
-        """Issued manager should define exporter_class."""
+        """Issued manager should define exporter_class and required_origin."""
         manager = MrpIssuedV2Manager()
         assert manager.exporter_class is not None
+        assert manager.required_origin == Invoice.ORIGIN.ISSUED
 
     def test_mrp_received_v2_manager_initialization(self):
-        """Received manager should define exporter_class."""
+        """Received manager should define exporter_class and required_origin."""
         manager = MrpReceivedV2Manager()
         assert manager.exporter_class is not None
+        assert manager.required_origin == Invoice.ORIGIN.RECEIVED
 
     def test_mrp_v2_issued_manager_missing_api_url(self, settings):
         """Missing API URL for issued manager should raise on export_via_api."""

@@ -35,6 +35,10 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
     xml_encoding = 'Windows-1250'
     request_timeout = 30
 
+    def __init__(self, user, recipients, **kwargs):
+        self.outputs = []
+        super().__init__(user, recipients, **kwargs)
+
     def get_queryset(self):
         return self.queryset
 

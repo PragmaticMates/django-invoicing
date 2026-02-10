@@ -9,27 +9,25 @@ from unittest.mock import Mock, patch
 from django.core.exceptions import ImproperlyConfigured
 
 from invoicing import settings as invoicing_settings
-from invoicing.managers import (
-    InvoiceExportMixin,
-    PdfExportManager,
-    XlsxExportManager,
-    ISDOCManager,
-    IKrosManager,
-    Profit365Manager,
-    MrpV1Manager,
-    MrpV2Manager,
-)
+from invoicing.exporters.mixins import InvoiceManagerMixin
+from invoicing.exporters.pdf.managers import PdfManager
+from invoicing.exporters.xlsx.managers import XlsxManager
+from invoicing.exporters.isdoc.managers import IsdocManager
+from invoicing.exporters.ikros.managers import IKrosManager
+from invoicing.exporters.profit365.managers import Profit365Manager
+from invoicing.exporters.mrp.v1.managers import MrpV1Manager
+from invoicing.exporters.mrp.v2.managers import MrpIssuedManager, MrpReceivedManager
 from invoicing.models import Invoice
 
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestInvoiceExportMixin:
-    """Tests for InvoiceExportMixin."""
+class TestInvoiceManagerMixin:
+    """Tests for InvoiceManagerMixin validation logic."""
 
     def test_is_export_qs_valid_empty(self):
-        """Test validation with empty queryset."""
-        mixin = InvoiceExportMixin()
+        """Empty queryset should be rejected."""
+        mixin = InvoiceManagerMixin()
         request = Mock()
         
         exporter = Mock()
@@ -39,8 +37,8 @@ class TestInvoiceExportMixin:
         assert result is False
 
     def test_is_export_qs_valid_multiple_origins(self, invoice_factory, item_factory):
-        """Test validation with multiple origins."""
-        mixin = InvoiceExportMixin()
+        """Mixed-origin queryset should be rejected."""
+        mixin = InvoiceManagerMixin()
         request = Mock()
         
         invoice1 = invoice_factory(origin=Invoice.ORIGIN.RECEIVED)
@@ -58,8 +56,8 @@ class TestInvoiceExportMixin:
         assert result is False
 
     def test_is_export_qs_valid_single_origin(self, invoice_factory, item_factory):
-        """Test validation with single origin."""
-        mixin = InvoiceExportMixin()
+        """Single-origin queryset should pass when no origin constraint is set."""
+        mixin = InvoiceManagerMixin()
         request = Mock()
         
         invoice1 = invoice_factory(origin=Invoice.ORIGIN.ISSUED)
@@ -76,21 +74,66 @@ class TestInvoiceExportMixin:
         result = mixin._is_export_qs_valid(request, exporter)
         assert result is True
 
+    def test_is_export_qs_valid_origin_matches(self, invoice_factory, item_factory):
+        """Queryset should pass when all invoices match the manager's required_origin."""
+        mixin = InvoiceManagerMixin()
+        mixin.required_origin = Invoice.ORIGIN.ISSUED
+        request = Mock()
+
+        invoice = invoice_factory(origin=Invoice.ORIGIN.ISSUED)
+        item_factory(invoice=invoice, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        exporter = Mock()
+        exporter.get_queryset.return_value = Invoice.objects.filter(id=invoice.id)
+
+        result = mixin._is_export_qs_valid(request, exporter)
+        assert result is True
+
+    def test_is_export_qs_valid_origin_mismatch(self, invoice_factory, item_factory):
+        """Queryset should be rejected when invoices don't match the manager's required_origin."""
+        mixin = InvoiceManagerMixin()
+        mixin.required_origin = Invoice.ORIGIN.ISSUED
+        request = Mock()
+
+        invoice = invoice_factory(origin=Invoice.ORIGIN.RECEIVED)
+        item_factory(invoice=invoice, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        exporter = Mock()
+        exporter.get_queryset.return_value = Invoice.objects.filter(id=invoice.id)
+
+        result = mixin._is_export_qs_valid(request, exporter)
+        assert result is False
+
+    def test_is_export_qs_valid_no_origin_constraint(self, invoice_factory, item_factory):
+        """When required_origin is None, any single-origin queryset should pass."""
+        mixin = InvoiceManagerMixin()
+        assert mixin.required_origin is None  # default
+        request = Mock()
+
+        invoice = invoice_factory(origin=Invoice.ORIGIN.RECEIVED)
+        item_factory(invoice=invoice, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        exporter = Mock()
+        exporter.get_queryset.return_value = Invoice.objects.filter(id=invoice.id)
+
+        result = mixin._is_export_qs_valid(request, exporter)
+        assert result is True
+
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestPdfExportManager:
-    """Tests for PdfExportManager."""
+class TestPdfManager:
+    """Tests for PdfManager."""
 
-    def test_pdf_export_manager_initialization(self):
+    def test_pdf_manager_initialization(self):
         """Test manager initialization."""
-        manager = PdfExportManager()
+        manager = PdfManager()
         assert manager.exporter_class is not None
 
     @patch('outputs.usecases.execute_export', create=True)
     def test_export_detail_pdf(self, mock_execute_export, invoice_factory, item_factory):
         """Test PDF export."""
-        manager = PdfExportManager()
+        manager = PdfManager()
         request = Mock()
         request.user = Mock()
         
@@ -109,18 +152,18 @@ class TestPdfExportManager:
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestXlsxExportManager:
-    """Tests for XlsxExportManager."""
+class TestXlsxManager:
+    """Tests for XlsxManager."""
 
-    def test_xlsx_export_manager_initialization(self):
+    def test_xlsx_manager_initialization(self):
         """Test manager initialization."""
-        manager = XlsxExportManager()
+        manager = XlsxManager()
         assert manager.exporter_class is not None
 
     @patch('outputs.usecases.execute_export', create=True)
     def test_export_list_xlsx(self, mock_execute_export, invoice_factory, item_factory):
         """Test XLSX export."""
-        manager = XlsxExportManager()
+        manager = XlsxManager()
         request = Mock()
         request.user = Mock()
         
@@ -138,18 +181,18 @@ class TestXlsxExportManager:
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestISDOCManager:
-    """Tests for ISDOCManager."""
+class TestIsdocManager:
+    """Tests for IsdocManager."""
 
-    def test_isdoc_export_manager_initialization(self):
+    def test_isdoc_manager_initialization(self):
         """Test manager initialization."""
-        manager = ISDOCManager()
+        manager = IsdocManager()
         assert manager.exporter_class is not None
 
     @patch('outputs.usecases.execute_export', create=True)
     def test_export_list_isdoc(self, mock_execute_export, invoice_factory, item_factory):
         """Test ISDOC export."""
-        manager = ISDOCManager()
+        manager = IsdocManager()
         request = Mock()
         request.user = Mock()
         
@@ -173,30 +216,38 @@ class TestIKrosManager:
     def test_ikros_manager_missing_api_url(self, settings):
         """Test missing API URL error."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.IKrosManager': {}
+            'invoicing.exporters.ikros.managers.IKrosManager': {}
         }
 
-        # IKrosManager.__init__ checks for API_URL
+        manager = IKrosManager()
+        request = Mock()
+        queryset = Invoice.objects.none()
+
+        # export_via_api should validate API_URL and fail
         with pytest.raises((builtins.EnvironmentError, ImproperlyConfigured, AttributeError)):
-            IKrosManager()
+            manager.export_via_api(request, queryset)
 
     def test_ikros_manager_missing_api_key(self, settings):
         """Test missing API key error."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.IKrosManager': {
+            'invoicing.exporters.ikros.managers.IKrosManager': {
                 'API_URL': 'https://api.example.com'
             }
         }
 
-        # IKrosManager.__init__ checks for API_KEY after API_URL
-        with pytest.raises((builtins.EnvironmentError, ImproperlyConfigured, AttributeError)):
-            IKrosManager()
+        manager = IKrosManager()
+        request = Mock()
+        queryset = Invoice.objects.none()
 
-    @patch('invoicing.managers.requests.post')
+        # export_via_api should validate API_KEY after API_URL
+        with pytest.raises((builtins.EnvironmentError, ImproperlyConfigured, AttributeError)):
+            manager.export_via_api(request, queryset)
+
+    @patch('invoicing.exporters.ikros.managers.requests.post')
     def test_export_via_api_success(self, mock_post, invoice_factory, item_factory, settings):
         """Test successful API export."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.IKrosManager': {
+            'invoicing.exporters.ikros.managers.IKrosManager': {
                 'API_URL': 'https://api.example.com',
                 'API_KEY': 'test-key'
             }
@@ -235,30 +286,38 @@ class TestProfit365Manager:
     def test_profit365_manager_missing_api_url(self, settings):
         """Test missing API URL error."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.Profit365Manager': {}
+            'invoicing.exporters.profit365.managers.Profit365Manager': {}
         }
 
-        # Profit365Manager.__init__ checks for API_URL first
+        manager = Profit365Manager()
+        request = Mock()
+        queryset = Invoice.objects.none()
+
+        # export_via_api should validate API_URL first
         with pytest.raises((builtins.EnvironmentError, ImproperlyConfigured, AttributeError)):
-            Profit365Manager()
+            manager.export_via_api(request, queryset)
 
     def test_profit365_manager_missing_api_data(self, settings):
         """Test missing API data error."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.Profit365Manager': {
+            'invoicing.exporters.profit365.managers.Profit365Manager': {
                 'API_URL': 'https://api.example.com'
             }
         }
 
-        # Profit365Manager.__init__ checks for API_DATA after API_URL
-        with pytest.raises((builtins.EnvironmentError, ImproperlyConfigured, AttributeError)):
-            Profit365Manager()
+        manager = Profit365Manager()
+        request = Mock()
+        queryset = Invoice.objects.none()
 
-    @patch('invoicing.managers.requests.post')
+        # export_via_api should validate API_DATA after API_URL
+        with pytest.raises((builtins.EnvironmentError, ImproperlyConfigured, AttributeError)):
+            manager.export_via_api(request, queryset)
+
+    @patch('invoicing.exporters.profit365.managers.requests.post')
     def test_export_via_api_success(self, mock_post, invoice_factory, item_factory, settings):
         """Test successful API export."""
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.Profit365Manager': {
+            'invoicing.exporters.profit365.managers.Profit365Manager': {
                 'API_URL': 'https://api.example.com',
                 'API_DATA': {
                     'Authorization': 'Bearer token',
@@ -298,6 +357,7 @@ class TestMrpV1Manager:
         """Test manager initialization."""
         manager = MrpV1Manager()
         assert manager.exporter_class is not None
+        assert manager.required_origin == Invoice.ORIGIN.ISSUED
 
     def test_export_list_mrp(self, invoice_factory, item_factory):
         """Test MRP v1 export - saves export and queues task."""
@@ -330,30 +390,37 @@ class TestMrpV1Manager:
 
 @pytest.mark.django_db
 @pytest.mark.unit
-class TestMrpV2Manager:
-    """Tests for MrpV2Manager."""
+class TestMrpManagers:
+    """Tests for MRP managers (issued and received)."""
 
-    def test_mrp_v2_manager_initialization(self, settings):
-        """Test manager initialization requires API_URL."""
-        invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.MrpV2Manager': {'API_URL': 'https://mrp.example.com'}
-        }
-        manager = MrpV2Manager()
-        assert manager.exporter_classes is not None
+    def test_mrp_issued_v2_manager_initialization(self):
+        """Issued manager should define exporter_class and required_origin."""
+        manager = MrpIssuedManager()
+        assert manager.exporter_class is not None
+        assert manager.required_origin == Invoice.ORIGIN.ISSUED
 
-    def test_mrp_v2_manager_missing_api_url(self, settings):
-        """Test missing API URL raises error."""
+    def test_mrp_received_v2_manager_initialization(self):
+        """Received manager should define exporter_class and required_origin."""
+        manager = MrpReceivedManager()
+        assert manager.exporter_class is not None
+        assert manager.required_origin == Invoice.ORIGIN.RECEIVED
+
+    def test_mrp_v2_issued_manager_missing_api_url(self, settings):
+        """Missing API URL for issued manager should raise on export_via_api."""
         invoicing_settings.INVOICING_MANAGERS = {}
+        manager = MrpIssuedManager()
+        request = Mock()
+        request.user = Mock()
+        request.GET = {}
+        queryset = Invoice.objects.none()
+
         with pytest.raises((builtins.EnvironmentError, ImproperlyConfigured, AttributeError)):
-            MrpV2Manager()
+            manager.export_via_api(request, queryset)
 
     @patch('outputs.usecases.execute_export', create=True)
     def test_export_list_mrp_received(self, mock_execute_export, invoice_factory, item_factory, settings):
         """Test MRP v2 received export."""
-        invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.MrpV2Manager': {'API_URL': 'https://mrp.example.com'}
-        }
-        manager = MrpV2Manager()
+        manager = MrpReceivedManager()
         request = Mock()
         request.user = Mock()
 
@@ -363,17 +430,14 @@ class TestMrpV2Manager:
         queryset = Invoice.objects.filter(id=invoice.id)
 
         with patch.object(manager, '_is_export_qs_valid', return_value=True):
-            manager.export_list_mrp(request, queryset=queryset)
+            manager.export_list_received_mrp(request, queryset=queryset)
 
         assert mock_execute_export.called
 
     @patch('outputs.usecases.execute_export', create=True)
     def test_export_list_mrp_issued(self, mock_execute_export, invoice_factory, item_factory, settings):
         """Test MRP v2 issued export."""
-        invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.MrpV2Manager': {'API_URL': 'https://mrp.example.com'}
-        }
-        manager = MrpV2Manager()
+        manager = MrpIssuedManager()
         request = Mock()
         request.user = Mock()
 
@@ -383,20 +447,20 @@ class TestMrpV2Manager:
         queryset = Invoice.objects.filter(id=invoice.id)
 
         with patch.object(manager, '_is_export_qs_valid', return_value=True):
-            manager.export_list_mrp(request, queryset=queryset)
+            manager.export_list_issued_mrp(request, queryset=queryset)
 
         assert mock_execute_export.called
 
-    def test_export_via_api(self, invoice_factory, item_factory, settings):
-        """Test MRP v2 API export - queues send_invoices_to_mrp task."""
+    def test_export_via_api_queued(self, invoice_factory, item_factory, settings):
+        """Test MRP v2 API export queues send_invoices_to_mrp task."""
         import invoicing.exporters.mrp.v2.tasks as mrp_v2_tasks
 
         invoicing_settings.INVOICING_MANAGERS = {
-            'invoicing.managers.MrpV2Manager': {'API_URL': 'https://mrp.example.com'}
+            'invoicing.exporters.mrp.v2.managers.MrpReceivedManager': {'API_URL': 'https://mrp.example.com'}
         }
 
         with patch.object(mrp_v2_tasks, 'send_invoices_to_mrp') as mock_task:
-            manager = MrpV2Manager()
+            manager = MrpReceivedManager()
             request = Mock()
             request.user = Mock()
             request.user.id = 1
@@ -407,7 +471,9 @@ class TestMrpV2Manager:
 
             queryset = Invoice.objects.filter(id=invoice.id)
 
-            manager.export_via_api(request, queryset)
+            # Avoid coupling to queryset validation details
+            with patch.object(manager, '_is_export_qs_valid', return_value=True):
+                manager.export_via_api(request, queryset)
 
             assert mock_task.delay.called
             # Verify the task was called with export_id (integer) and manager (self)

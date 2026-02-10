@@ -10,6 +10,58 @@ from invoicing import settings as invoicing_settings
 from invoicing.models import Invoice, Item
 
 
+def _exporter_path_and_label(exporter_cls):
+    """Return (path, label) for an exporter class. Path matches Export.exporter_path storage."""
+    path = getattr(exporter_cls, 'get_path', lambda: None)()
+    if path is None:
+        path = f'{exporter_cls.__module__}.{exporter_cls.__qualname__}'
+    label = getattr(exporter_cls, 'get_description', lambda: None)() or path
+    return (path, label)
+
+
+def get_exporter_path_choices():
+    """Return choices of (path, label) from all configured INVOICING_MANAGERS.
+
+    Collects exporter_class from each manager so the filter only shows exporters
+    that are actually used by the invoicing app.
+    """
+    seen_paths = set()
+    choices = []
+
+    for manager_class_path in invoicing_settings.INVOICING_MANAGERS:
+        try:
+            manager_class = import_string(manager_class_path)
+        except (ImportError, ValueError):
+            continue
+        if not hasattr(manager_class, 'exporter_class') or manager_class.exporter_class is None:
+            continue
+        exporter_cls = manager_class.exporter_class
+        path, label = _exporter_path_and_label(exporter_cls)
+        if path not in seen_paths:
+            seen_paths.add(path)
+            choices.append((path, label))
+
+    return sorted(choices, key=lambda c: c[1])
+
+
+class NotExportedWithExporterListFilter(admin.SimpleListFilter):
+    title = _('not yet exported with exporter')
+    parameter_name = 'not_exported_with_exporter'
+
+    def lookups(self, request, model_admin):
+        return get_exporter_path_choices()
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if not value:
+            return queryset
+        from outputs.models import ExportItem
+        return queryset.exclude(
+            export_items__export__exporter_path=value,
+            export_items__result=ExportItem.RESULT_SUCCESS,
+        )
+
+
 class ItemInline(admin.TabularInline):
     fieldsets = (
         (
@@ -50,7 +102,10 @@ class InvoiceAdmin(admin.ModelAdmin):
                     'annotated_subtotal', 'vat', 'total',
                     'currency', 'date_issue', 'payment_term_days', 'is_overdue_boolean', 'is_paid']
     list_editable = ['status']
-    list_filter = ['origin', 'type', 'status', 'payment_method', 'delivery_method', OverdueFilter, 'language', 'currency']
+    list_filter = [
+        'origin', 'type', 'status', 'payment_method', 'delivery_method',
+        OverdueFilter, NotExportedWithExporterListFilter, 'language', 'currency',
+    ]
     search_fields = ['number', 'subtitle', 'note', 'supplier_name', 'customer_name', 'shipping_name']
     inlines = (ItemInline, )
     autocomplete_fields = ('related_invoices',)

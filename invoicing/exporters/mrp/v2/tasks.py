@@ -33,6 +33,12 @@ def send_invoices_to_mrp(export_id, manager_class):
         logger.error(f"Sending to MRP failed, no exporter found.")
         return
 
+    # important - set export_per_item, to split export items to multiple outputs
+    exporter.export_per_item = True
+
+    # get queryset via Export items
+    exporter.items = export.object_list
+
     exporter.export()
 
     # update status of export

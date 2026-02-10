@@ -18,9 +18,15 @@ from invoicing.models import Invoice
 
 logger = logging.getLogger(__name__)
 
-class InvoiceExportMixin(object):
+class InvoiceExportManagerMixin(object):
 
-    def _is_export_qs_valid(self, request, exporter):
+    @property
+    def manager_settings(self):
+        """Get the settings for this manager from INVOICING_MANAGERS config."""
+        key = f"{self.__module__}.{self.__class__.__name__}"
+        return invoicing_settings.INVOICING_MANAGERS.get(key, {})
+
+    def _is_export_qs_valid(self, request, exporter, origin=None):
         """
         Validate queryset to be exported.
 
@@ -41,6 +47,11 @@ class InvoiceExportMixin(object):
             messages.warning(request, _("%s: All exported invoices must have the same origin." % exporter.__class__.__name__))
             return False
 
+        # 3) check qs contains only expected origin
+        if origin and queryset.exclude(origin=origin).exists():
+            messages.warning(request, _("%s: All exported invoices must have the expected origin." % exporter.__class__.__name__))
+            return False
+
         return True
 
 
@@ -55,7 +66,7 @@ class InvoiceExportMixin(object):
             queryset: The queryset of invoices to export
         """
         if exporter_params is None:
-            exporter_params = {"user": request.user, "recipients": [request.user], "params": None}
+            exporter_params = {"user": request.user, "recipients": [request.user], "params": {}}
 
         exporter = exporter_class(**exporter_params)
 
@@ -78,25 +89,9 @@ class InvoiceExportMixin(object):
 
         from outputs.usecases import execute_export
         execute_export(exporter, language=translation.get_language())
-        messages.success(request, _('Export of %d invoice(s) queued and will be sent to email') % qs_count)
-
-class InvoiceExportApiMixin(object):
-
-    def __init__(self):
-        if self.manager_settings.get('API_URL', None) in EMPTY_VALUES:
-            raise EnvironmentError(_('Missing invoicing manager API url'), self.__class__.__name__)
-
-    def export_via_api(self, request, queryset):
-        raise NotImplementedError()
-
-    @property
-    def manager_settings(self):
-        """Get the settings for this manager from INVOICING_MANAGERS config."""
-        key = f"{self.__module__}.{self.__class__.__name__}"
-        return invoicing_settings.INVOICING_MANAGERS.get(key, {})
 
 
-class PdfExportManager(InvoiceExportMixin):
+class PdfExportManager(InvoiceExportManagerMixin):
     exporter_class = InvoicePdfDetailExporter
 
     def export_detail_pdf(self, request, queryset=None, exporter_params=None):
@@ -105,7 +100,7 @@ class PdfExportManager(InvoiceExportMixin):
     export_detail_pdf.short_description = _('Export to PDF')
 
 
-class XlsxExportManager(InvoiceExportMixin):
+class XlsxExportManager(InvoiceExportManagerMixin):
     exporter_class = InvoiceXlsxListExporter
 
     def export_list_xlsx(self, request, queryset=None, exporter_params=None):
@@ -114,7 +109,7 @@ class XlsxExportManager(InvoiceExportMixin):
     export_list_xlsx.short_description = _('Export to xlsx')
 
 
-class ISDOCManager(InvoiceExportMixin):
+class ISDOCManager(InvoiceExportManagerMixin):
     exporter_class = InvoiceISDOCXmlListExporter
 
     def export_list_isdoc(self, request, queryset=None, exporter_params=None):
@@ -123,14 +118,15 @@ class ISDOCManager(InvoiceExportMixin):
     export_list_isdoc.short_description = _('Export to ISDOC (XML)')
 
 
-class IKrosManager(InvoiceExportApiMixin):
+class IKrosManager(InvoiceExportManagerMixin):
 
-    def __init__(self):
-        super().__init__()
+    def export_via_api(self, request, queryset):
+        if self.manager_settings.get('API_URL', None) in EMPTY_VALUES:
+            raise EnvironmentError(_('Missing invoicing manager API url'), self.__class__.__name__)
+
         if self.manager_settings.get('API_KEY', None) in EMPTY_VALUES:
             raise EnvironmentError(_('Missing invoicing manager API key'), self.__class__.__name__)
 
-    def export_via_api(self, request, queryset):
         invoices_data = []
 
         for invoice in queryset:
@@ -242,14 +238,15 @@ class IKrosManager(InvoiceExportApiMixin):
     export_via_api.short_description = _('Export to IKROS (API)')
 
 
-class Profit365Manager(InvoiceExportApiMixin):
+class Profit365Manager(InvoiceExportManagerMixin):
 
-    def __init__(self):
-        super().__init__()
+    def export_via_api(self, request, queryset):
+        if self.manager_settings.get('API_URL', None) in EMPTY_VALUES:
+            raise EnvironmentError(_('Missing invoicing manager API url'), self.__class__.__name__)
+
         if self.manager_settings.get('API_DATA', None) in EMPTY_VALUES:
             raise EnvironmentError(_('Missing invoicing manager API data'), self.__class__.__name__)
 
-    def export_via_api(self, request, queryset):
         from invoicing.models import Invoice
 
         results = []
@@ -395,7 +392,7 @@ class Profit365Manager(InvoiceExportApiMixin):
     export_via_api.short_description = _('Export to Profit365 (API)')
 
 
-class MrpV1Manager(InvoiceExportMixin):
+class MrpV1Manager(InvoiceExportManagerMixin):
     exporter_class = InvoiceXmlMrpListExporter
     exporter_subclasses = [InvoiceFakvyXmlMrpExporter, InvoiceFakvypolXmlMrpExporter, InvoiceFvAdresXmlMrpExporter]
 
@@ -403,7 +400,7 @@ class MrpV1Manager(InvoiceExportMixin):
         """Legacy MRP XML export (v1) - returns direct response instead of email."""
 
         if exporter_params is None:
-            exporter_params = {"user": request.user, "recipients": [request.user], "params": request.GET}
+            exporter_params = {"user": request.user, "recipients": [request.user], "params": {}}
 
         if self.exporter_class is None:
             raise ImproperlyConfigured(_("Undefined exporter class for MRP v1 export."))
@@ -429,73 +426,80 @@ class MrpV1Manager(InvoiceExportMixin):
         from invoicing.exporters.mrp.v1.tasks import mail_exported_invoices_mrp_v1
         mail_exported_invoices_mrp_v1.delay(export.id, exporter_subclass_paths=exporter_subclass_paths)
 
-        messages.success(request, _('Export of %d invoice(s) queued and will be sent to email') % exporter.get_queryset().count())
-
     export_list_mrp.short_description = _('Export to MRP v1 (XML)')
 
-class MrpV2Manager(InvoiceExportMixin, InvoiceExportApiMixin):
-    exporter_classes = {
-        Invoice.ORIGIN.RECEIVED: ReceivedInvoiceMrpListExporter,
-        Invoice.ORIGIN.ISSUED: IssuedInvoiceMrpListExporter,
-    }
-
-    def export_list_mrp(self, request, queryset=None, exporter_params=None):
-        if queryset is None or not queryset.exists():
-            messages.info(request, _('%s: No invoice selected to export.' % 'export_mrp_v2'))
-            return
-
-        exporter_class = self._get_exporter_class(queryset)
-        self._execute_export(request, exporter_class, exporter_params, queryset)
-
-    export_list_mrp.short_description = _('Export to MRP v2 (XML)')
-
-    def export_via_api(self, request, queryset):
+class MrpApiV2ManagerMixin(InvoiceExportManagerMixin):
+    def _execute_api_export(self, request, queryset, exporter_params=None, origin=None):
         """
         Handle POST request to send invoices to MRP server.
 
         Args:
             request: Django request object with user attribute
             queryset: QuerySet of Invoice objects to export
-
-        Returns:
-            JsonResponse with success status and response data
+            exporter_params: The params of the exporter
+            origin: invoice origin
         """
-        # Input validation
-        if queryset is None or not queryset.exists():
-            messages.info(request, _('%s: No invoice selected to export.' % 'export_mrp_api'))
+
+        if self.manager_settings.get('API_URL', None) in EMPTY_VALUES:
+            raise EnvironmentError(_('Missing invoicing manager API url'), self.__class__.__name__)
+
+        if exporter_params is None:
+            exporter_params = {"user": request.user, "recipients": [request.user], "params": {}}
+
+        if "output_type" not in exporter_params:
+            from outputs.models import Export
+            exporter_params["output_type"] = Export.OUTPUT_TYPE_STREAM
+
+        exporter = self.exporter_class(**exporter_params)
+
+        # set queryset if provided explicitly
+        if queryset is not None and queryset.exists():
+            exporter.items = queryset
+
+        if not self._is_export_qs_valid(request, exporter, origin):
             return
 
+        qs_count = exporter.get_queryset().count()
         logger.info(
-            f"User {request.user} (ID: {request.user.id}) queuing MRP API export for {queryset.count()} invoice(s)",
+            f"User {request.user} (ID: {request.user.id}) executing export with {qs_count} invoice(s)",
             extra={
                 'user_id': request.user.id,
-                'manager': 'MRPManager',
-                'method': 'export_via_api',
-                'invoice_count': queryset.count(),
+                'exporter_class': self.exporter_class,
+                'exporter_params': exporter_params
             }
         )
-
-        from outputs.models import Export
-        exporter_class = self._get_exporter_class(queryset)
-        exporter_params = {"user": request.user, "recipients": [request.user], "params": request.GET, "output_type":Export.OUTPUT_TYPE_STREAM}
-        exporter = exporter_class(**exporter_params)
-        exporter.export_per_item = True
-        exporter.items = queryset
 
         export = exporter.save_export()
 
         from invoicing.exporters.mrp.v2.tasks import send_invoices_to_mrp
         send_invoices_to_mrp.delay(export.id, self)
 
-        messages.success(request, _('Export of %d invoice(s) queued for MRP API processing') % queryset.count())
+        messages.success(request, _('Export of %d invoice(s) queued for MRP API processing') % exporter.get_queryset().count())
 
-    def _get_exporter_class(self, queryset):
-        origin = queryset.first().origin
-        exporter_class =  self.exporter_classes.get(origin)
-        if exporter_class is None:
-            raise ImproperlyConfigured(
-                _("Unsupported invoice origin '%s' for MRP v2 export.") % origin
-            )
-        return exporter_class
 
-    export_via_api.short_description = _('Export to MRP (API)')
+class MrpIssuedV2Manager(MrpApiV2ManagerMixin):
+    exporter_class = IssuedInvoiceMrpListExporter
+
+    def export_list_issued_mrp(self, request, queryset=None, exporter_params=None):
+        self._execute_export(request, self.exporter_class, exporter_params, queryset)
+
+    export_list_issued_mrp.short_description = _('Export issued to MRP v2 (XML)')
+
+    def export_via_api(self, request, queryset=None, exporter_params=None):
+        self._execute_api_export(request, queryset, exporter_params, origin=Invoice.ORIGIN.ISSUED)
+
+    export_via_api.short_description = _(f'Export issued to MRP (API)')
+
+
+class MrpReceivedV2Manager(MrpApiV2ManagerMixin):
+    exporter_class = ReceivedInvoiceMrpListExporter
+
+    def export_list_received_mrp(self, request, queryset=None, exporter_params=None):
+        self._execute_export(request, self.exporter_class, exporter_params, queryset)
+
+    export_list_received_mrp.short_description = _('Export received to MRP v2 (XML)')
+
+    def export_via_api(self, request, queryset=None, exporter_params=None):
+        self._execute_api_export(request, queryset, exporter_params, origin=Invoice.ORIGIN.RECEIVED)
+
+    export_via_api.short_description = _(f'Export received to MRP (API)')

@@ -58,7 +58,10 @@ Managers are configured using their full module path as the dictionary key. The 
         # Additional managers (configure as needed)
         "invoicing.managers.ISDOCManager": {},
         "invoicing.managers.MrpV1Manager": {},
-        "invoicing.managers.MrpV2Manager": {
+        "invoicing.managers.MrpIssuedV2Manager": {
+            "API_URL": "https://your-mrp-api.example.com/api/",
+        },
+        "invoicing.managers.MrpReceivedV2Manager": {
             "API_URL": "https://your-mrp-api.example.com/api/",
         },
         "invoicing.managers.IKrosManager": {
@@ -113,12 +116,15 @@ Individual Manager Examples
         "invoicing.managers.MrpV1Manager": {},
     }
 
-**MRP v2 Manager** (Czech accounting system, requires API_URL):
+**MRP v2 Managers** (Czech accounting system, require API_URL per manager):
 
 .. code-block:: python
 
     INVOICING_MANAGERS = {
-        "invoicing.managers.MrpV2Manager": {
+        "invoicing.managers.MrpIssuedV2Manager": {
+            "API_URL": "https://your-mrp-instance.example.com/api/",
+        },
+        "invoicing.managers.MrpReceivedV2Manager": {
             "API_URL": "https://your-mrp-instance.example.com/api/",
         },
     }
@@ -162,7 +168,7 @@ The managers integrate with Django Admin. Once configured, export actions will b
 - PDF invoices (PdfExportManager)
 - Excel (XLSX) spreadsheets (XlsxExportManager)
 - MRP XML exports v1 (MrpV1Manager)
-- MRP XML exports v2 (MrpV2Manager) - supports both email export and API export
+- MRP XML exports v2 (MrpIssuedV2Manager / MrpReceivedV2Manager) - support both email export and API export
 - ISDOC XML format (ISDOCManager)
 - Direct API integration with IKROS (IKrosManager)
 - Direct API integration with PROFIT365 (Profit365Manager)

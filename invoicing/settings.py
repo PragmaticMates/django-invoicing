@@ -8,8 +8,8 @@ LANGUAGES = getattr(settings, 'INVOICING_LANGUAGES', getattr(settings, 'LANGUAGE
 # Default managers configuration - can be overridden in Django settings
 # see README.rst for configuration examples.
 DEFAULT_INVOICING_MANAGERS = {
-    "invoicing.managers.PdfExportManager": {},
-    "invoicing.managers.XlsxExportManager": {}
+    "invoicing.exporters.pdf.managers.PdfManager": {},
+    "invoicing.exporters.xlsx.managers.XlsxManager": {}
 }
 
 # Allow users to configure only the managers they need

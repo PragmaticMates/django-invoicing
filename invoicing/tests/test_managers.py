@@ -130,6 +130,19 @@ class TestPdfManager:
         manager = PdfManager()
         assert manager.exporter_class is not None
 
+    def test_pdf_manager_exporter_overridden_via_settings(self, settings):
+        """exporter_class can be overridden via INVOICING_MANAGERS.exporter_class."""
+        # Point the PdfManager to use the XLSX exporter instead (arbitrary choice for test)
+        invoicing_settings.INVOICING_MANAGERS = {
+            'invoicing.exporters.pdf.managers.PdfManager': {
+                'exporter_class': 'invoicing.exporters.xlsx.list.InvoiceXlsxListExporter',
+            }
+        }
+
+        manager = PdfManager()
+        from invoicing.exporters.xlsx.list import InvoiceXlsxListExporter
+        assert manager.exporter_class is InvoiceXlsxListExporter
+
     @patch('outputs.usecases.execute_export', create=True)
     def test_export_detail_pdf(self, mock_execute_export, invoice_factory, item_factory):
         """Test PDF export."""
@@ -274,7 +287,7 @@ class TestIKrosManager:
         result = manager.export_via_api(request, queryset)
 
         # In the test environment we mainly care that the call succeeds and
-        # returns some value; the low‑level HTTP call is mocked elsewhere.
+        # returns some value; the low-level HTTP call is mocked elsewhere.
         assert isinstance(result, (str, type(None)))
 
 
@@ -358,6 +371,34 @@ class TestMrpV1Manager:
         manager = MrpV1Manager()
         assert manager.exporter_class is not None
         assert manager.required_origin == Invoice.ORIGIN.ISSUED
+
+    def test_mrp_v1_manager_exporter_and_subclasses_overridden_via_settings(self, settings):
+        """exporter_class and exporter_subclasses can be overridden via settings."""
+        invoicing_settings.INVOICING_MANAGERS = {
+            'invoicing.exporters.mrp.v1.managers.MrpV1Manager': {
+                'exporter_class': 'invoicing.exporters.mrp.v1.list.InvoiceXmlMrpListExporter',
+                'exporter_subclasses': [
+                    'invoicing.exporters.mrp.v1.list.InvoiceFakvyXmlMrpExporter',
+                    'invoicing.exporters.mrp.v1.list.InvoiceFakvypolXmlMrpExporter',
+                    'invoicing.exporters.mrp.v1.list.InvoiceFvAdresXmlMrpExporter',
+                ],
+            }
+        }
+
+        manager = MrpV1Manager()
+        from invoicing.exporters.mrp.v1.list import (
+            InvoiceXmlMrpListExporter,
+            InvoiceFakvypolXmlMrpExporter,
+            InvoiceFakvyXmlMrpExporter,
+            InvoiceFvAdresXmlMrpExporter,
+        )
+
+        assert manager.exporter_class is InvoiceXmlMrpListExporter
+        assert manager.exporter_subclasses == [
+            InvoiceFakvyXmlMrpExporter,
+            InvoiceFakvypolXmlMrpExporter,
+            InvoiceFvAdresXmlMrpExporter,
+        ]
 
     def test_export_list_mrp(self, invoice_factory, item_factory):
         """Test MRP v1 export - saves export and queues task."""
@@ -486,4 +527,3 @@ class TestMrpManagers:
             assert export_id_arg > 0
             # manager_arg should be the manager instance
             assert manager_arg == manager
-

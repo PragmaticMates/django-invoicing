@@ -42,7 +42,7 @@ Advanced Manager Configuration
 
 To use additional managers (MRP, ISDOC, IKROS, PROFIT365), add the ``INVOICING_MANAGERS`` setting to your Django settings.py.
 
-**Configuration Format:**
+**Configuration Format (basic):**
 
 Managers are configured using their full module path as the dictionary key. The value is a dictionary containing the manager-specific configuration (empty dict ``{}`` if no configuration is needed).
 
@@ -77,6 +77,38 @@ Managers are configured using their full module path as the dictionary key. The 
                 "ClientSecret": "your-client-secret",
                 "CompanyID": "your-company-id",  # Optional
             },
+        },
+    }
+
+
+Overriding exporter classes (advanced)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, each manager uses a built‑in exporter class (and, where applicable, a
+set of exporter subclasses). For advanced use cases you can override these via
+settings using dotted import paths:
+
+- **exporter_class**: dotted path to the main exporter class
+- **exporter_subclasses**: list of dotted paths to exporter subclasses (used by some managers, e.g. MRP v1)
+
+Example:
+
+.. code-block:: python
+
+    INVOICING_MANAGERS = {
+        # Override the exporter used by PdfManager
+        "invoicing.exporters.pdf.managers.PdfManager": {
+            "exporter_class": "yourapp.exporters.CustomPdfExporter",
+        },
+
+        # Override main exporter and subclasses for MRP v1 manager
+        "invoicing.exporters.mrp.v1.managers.MrpV1Manager": {
+            "exporter_class": "invoicing.exporters.mrp.v1.list.InvoiceXmlMrpListExporter",
+            "exporter_subclasses": [
+                "invoicing.exporters.mrp.v1.list.InvoiceFakvyXmlMrpExporter",
+                "invoicing.exporters.mrp.v1.list.InvoiceFakvypolXmlMrpExporter",
+                "invoicing.exporters.mrp.v1.list.InvoiceFvAdresXmlMrpExporter",
+            ],
         },
     }
 

@@ -2,7 +2,6 @@ import logging
 
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
-from django.utils.module_loading import import_string
 
 from invoicing import settings as invoicing_settings
 
@@ -11,31 +10,6 @@ logger = logging.getLogger(__name__)
 
 class InvoiceManagerMixin(object):
     required_origin = None
-
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize manager and optionally override exporter configuration
-        from INVOICING_MANAGERS settings.
-
-        Supported per-manager options (keyed by the manager's dotted path):
-        - exporter_class: dotted path to the main exporter class
-        - exporter_subclasses: list of dotted paths to exporter subclasses
-
-        When not provided, the concrete manager's class-level attributes are kept as defaults.
-        """
-        super().__init__(*args, **kwargs)
-
-        config = self.manager_settings
-
-        exporter_path = config.get('exporter_class')
-        if exporter_path:
-            self.exporter_class = import_string(exporter_path)
-
-        exporter_subclass_paths = config.get('exporter_subclasses')
-        if exporter_subclass_paths:
-            self.exporter_subclasses = [
-                import_string(path) for path in exporter_subclass_paths
-            ]
 
     @property
     def manager_settings(self):

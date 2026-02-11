@@ -31,13 +31,11 @@ def get_exporter_path_choices():
     for manager_class_path in invoicing_settings.INVOICING_MANAGERS:
         try:
             manager_class = import_string(manager_class_path)
-            manager_instance = manager_class()
-        except (ImportError, ValueError, Exception):
+        except (ImportError, ValueError):
             continue
-
-        exporter_cls = getattr(manager_instance, 'exporter_class', None)
-        if exporter_cls is None:
+        if not hasattr(manager_class, 'exporter_class') or manager_class.exporter_class is None:
             continue
+        exporter_cls = manager_class.exporter_class
         path, label = _exporter_path_and_label(exporter_cls)
         if path not in seen_paths:
             seen_paths.add(path)
@@ -99,7 +97,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_issue'
     ordering = ['-date_issue', '-sequence']
     actions = ['recalculate_tax']
-    list_display = ['pk', 'type', 'origin', 'number', 'status',
+    list_display = ['pk', 'type', 'number', 'status',
                     'supplier_info', 'customer_info',
                     'annotated_subtotal', 'vat', 'total',
                     'currency', 'date_issue', 'payment_term_days', 'is_overdue_boolean', 'is_paid']
@@ -114,7 +112,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     fieldsets = (
         (_(u'General information'), {
             'fields': (
-                'type', 'origin', 'status', 'language', ('sequence', 'number'), 'subtitle', 'related_document', 'related_invoices',
+                'type', 'status', 'language', ('sequence', 'number'), 'subtitle', 'related_document', 'related_invoices',
                 'date_issue', 'date_tax_point', 'date_due', 'date_sent', 'date_paid',
                 'note'
             )

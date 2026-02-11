@@ -31,11 +31,13 @@ def get_exporter_path_choices():
     for manager_class_path in invoicing_settings.INVOICING_MANAGERS:
         try:
             manager_class = import_string(manager_class_path)
-        except (ImportError, ValueError):
+            manager_instance = manager_class()
+        except (ImportError, ValueError, Exception):
             continue
-        if not hasattr(manager_class, 'exporter_class') or manager_class.exporter_class is None:
+
+        exporter_cls = getattr(manager_instance, 'exporter_class', None)
+        if exporter_cls is None:
             continue
-        exporter_cls = manager_class.exporter_class
         path, label = _exporter_path_and_label(exporter_cls)
         if path not in seen_paths:
             seen_paths.add(path)

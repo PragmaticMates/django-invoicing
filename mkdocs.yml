@@ -1,0 +1,61 @@
+site_name: django-invoicing
+site_description: Django app for invoicing with support for multiple export formats and integrations
+site_url: https://django-invoicing.readthedocs.io
+repo_url: https://github.com/PragmaticMates/django-invoicing
+repo_name: PragmaticMates/django-invoicing
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - toc.integrate
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: installation.md
+    - Configuration: configuration.md
+  - Models:
+    - Invoice & Item: models.md
+    - QuerySets: querysets.md
+  - Exporters:
+    - Overview: exporters/index.md
+    - PDF: exporters/pdf.md
+    - XLSX: exporters/xlsx.md
+    - ISDOC: exporters/isdoc.md
+    - MRP v1: exporters/mrp_v1.md
+    - MRP v2: exporters/mrp_v2.md
+    - IKROS: exporters/ikros.md
+    - Profit365: exporters/profit365.md
+    - Custom Exporters: exporters/custom.md
+  - Taxation: taxation.md
+  - Admin: admin.md
+  - Signals & Views: signals_views.md
+  - Changelog: changelog.md

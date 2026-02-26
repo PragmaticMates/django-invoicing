@@ -4,8 +4,27 @@ Pytest conftest for invoicing tests (invoicing/tests/).
 Path and Django project discovery: pytest.ini sets pythonpath = . and
 django_find_project = false. Run pytest from the project root.
 
-This conftest installs outputs/pragmatic mocks before any invoicing imports,
-then defines shared fixtures (invoice_factory, item_factory, etc.).
+Mocking strategy
+----------------
+outputs.models / outputs.mixins / outputs.usecases  → real package (3.0.0)
+    Tests use the real ExporterMixin, Export and ExportItem models, and the
+    real execute_export → save_export pipeline.  The test database is
+    PostgreSQL, which is required by Export.fields/emails (ArrayField columns).
+
+outputs.signals  → mocked
+    signals.py imports django_rq at module level and registers a post_save
+    handler on Export that calls django_rq.get_scheduler().  That needs a
+    live Redis connection.  Keeping signals mocked avoids Redis entirely while
+    still letting invoicing/exporters/mrp/v2/tasks.py obtain a usable
+    export_item_changed signal object.
+
+pragmatic  → partially mocked
+    pragmatic.utils.get_task_decorator    – would wrap MRP tasks as RQ jobs
+    pragmatic.forms.SingleSubmitFormHelper – used by outputs.forms (UI only)
+    pragmatic.signals.*                    – imported by outputs.signals mock
+    pragmatic.templatetags.pragmatic_tags  – imported by outputs.mixins
+    All of the above are mocked with no-op stubs so the real outputs package
+    can be imported without needing django-pragmatic fully configured.
 """
 import sys
 import types
@@ -16,112 +35,29 @@ import pytest
 from decimal import Decimal
 
 
-# --- Mocks (before any other invoicing imports) ---
+# ---------------------------------------------------------------------------
+# outputs.signals  (mocked to avoid django_rq / Redis dependency)
+# ---------------------------------------------------------------------------
 
-_outputs_pkg = types.ModuleType("outputs")
-_outputs_mixins = types.ModuleType("outputs.mixins")
-_outputs_models = types.ModuleType("outputs.models")
-_outputs_usecases = types.ModuleType("outputs.usecases")
 _outputs_signals = types.ModuleType("outputs.signals")
-
-
-class _DummyExport:
-    FORMAT_XML = "xml"
-    FORMAT_PDF = "pdf"
-    CONTEXT_LIST = "list"
-    CONTEXT_DETAIL = "detail"
-    RESULT_SUCCESS = "success"
-    RESULT_FAILURE = "failure"
-    OUTPUT_TYPE_STREAM = "stream"
-    STATUS_FINISHED = "finished"
-    STATUS_PROCESSING = "processing"
-    STATUS_FAILED = "failed"
-
-    def __init__(self):
-        self.id = 1
-        self.total = 0
-        self.status = self.STATUS_FINISHED
-        self.exporter = None
-        self.content_type = MagicMock()
-        self.object_list = []
-        self.creator = None
-        self.recipients = []
-        self.items = MagicMock()
-
-    def save(self, update_fields=None):
-        pass
-
-    def update_export_items_result(self, result, detail=None):
-        return 0
-
-
-class _DummyExporterMixin:
-    def __init__(self, *args, **kwargs):
-        self.queryset = kwargs.get("queryset", None)
-        self._items = None
-        self.output = MagicMock()
-        self.outputs = []
-
-    @property
-    def items(self):
-        return self._items
-
-    @items.setter
-    def items(self, value):
-        self._items = value
-        # Sync queryset so that subclass get_queryset() (which returns
-        # self.queryset) sees the assigned items – mirrors real ExporterMixin.
-        if value is not None:
-            self.queryset = value
-
-    def export(self):
-        pass
-
-    def save_export(self):
-        return _DummyExport()
-
-    def get_queryset(self):
-        return self.queryset
-
-
-def _dummy_execute_export(exporter, language=None):
-    if hasattr(exporter, "export"):
-        exporter.export()
-
-
-def _dummy_mail_successful_export(export, filename=None, zip_file=None):
-    pass
-
-
-def _dummy_notify_about_failed_export(export, error_msg):
-    pass
-
-
-_outputs_mixins.ExporterMixin = _DummyExporterMixin
-_outputs_mixins.ExcelExporterMixin = _DummyExporterMixin
-_outputs_models.Export = _DummyExport
-_outputs_models.ExportItem = _DummyExport
-_outputs_usecases.execute_export = _dummy_execute_export
-_outputs_usecases.mail_successful_export = _dummy_mail_successful_export
-_outputs_usecases.notify_about_failed_export = _dummy_notify_about_failed_export
-
-_outputs_pkg.mixins = _outputs_mixins
-_outputs_pkg.models = _outputs_models
-_outputs_pkg.usecases = _outputs_usecases
-
 _outputs_signals.export_item_changed = MagicMock()
-
-sys.modules["outputs"] = _outputs_pkg
-sys.modules["outputs.mixins"] = _outputs_mixins
-sys.modules["outputs.models"] = _outputs_models
-sys.modules["outputs.usecases"] = _outputs_usecases
 sys.modules["outputs.signals"] = _outputs_signals
+
+
+# ---------------------------------------------------------------------------
+# pragmatic stubs  (no-op implementations of the parts outputs uses)
+# ---------------------------------------------------------------------------
 
 _pragmatic_pkg = types.ModuleType("pragmatic")
 _pragmatic_utils = types.ModuleType("pragmatic.utils")
+_pragmatic_forms = types.ModuleType("pragmatic.forms")
+_pragmatic_signals = types.ModuleType("pragmatic.signals")
+_pragmatic_templatetags = types.ModuleType("pragmatic.templatetags")
+_pragmatic_tags = types.ModuleType("pragmatic.templatetags.pragmatic_tags")
 
 
 def _get_task_decorator(_queue_name):
+    """Make the RQ @task decorator a plain no-op so MRP tasks stay synchronous."""
     def _decorator(fn):
         return fn
     return _decorator
@@ -129,10 +65,53 @@ def _get_task_decorator(_queue_name):
 
 _pragmatic_utils.get_task_decorator = _get_task_decorator
 _pragmatic_utils.compress = lambda content: content
+
+
+class _DummyFormHelper:
+    """Minimal crispy-forms helper stub (only layout/submit attrs used)."""
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def add_input(self, *args, **kwargs):
+        pass
+
+
+_pragmatic_forms.SingleSubmitFormHelper = _DummyFormHelper
+
+
+class _DummySignalsHelper:
+    @staticmethod
+    def attribute_changed(*args, **kwargs):
+        return False
+
+    @staticmethod
+    def add_task_and_connect(*args, **kwargs):
+        pass
+
+
+def _dummy_apm_custom_context(*args, **kwargs):
+    """Stub for the APM context decorator used by outputs.signals."""
+    def decorator(fn):
+        return fn
+    return decorator
+
+
+_pragmatic_signals.SignalsHelper = _DummySignalsHelper
+_pragmatic_signals.apm_custom_context = _dummy_apm_custom_context
+
+_pragmatic_tags.filtered_values = lambda *args, **kwargs: []
+
 _pragmatic_pkg.utils = _pragmatic_utils
+_pragmatic_pkg.forms = _pragmatic_forms
+_pragmatic_pkg.signals = _pragmatic_signals
+_pragmatic_pkg.templatetags = _pragmatic_templatetags
 
 sys.modules["pragmatic"] = _pragmatic_pkg
 sys.modules["pragmatic.utils"] = _pragmatic_utils
+sys.modules["pragmatic.forms"] = _pragmatic_forms
+sys.modules["pragmatic.signals"] = _pragmatic_signals
+sys.modules["pragmatic.templatetags"] = _pragmatic_templatetags
+sys.modules["pragmatic.templatetags.pragmatic_tags"] = _pragmatic_tags
 
 
 # --- Fixtures (invoicing imports after mocks) ---

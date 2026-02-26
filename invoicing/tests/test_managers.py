@@ -4,7 +4,7 @@ Tests for manager classes.
 import builtins
 import pytest
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, MagicMock, patch
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -424,7 +424,11 @@ class TestMrpV1Manager:
         """Test MRP v1 export - saves export and queues task."""
         import invoicing.exporters.mrp.v1.tasks as mrp_v1_tasks
 
-        with patch.object(mrp_v1_tasks, 'mail_exported_invoices_mrp_v1') as mock_task:
+        mock_export = MagicMock()
+        mock_export.id = 42
+
+        with patch.object(mrp_v1_tasks, 'mail_exported_invoices_mrp_v1') as mock_task, \
+                patch('outputs.mixins.ExporterMixin.save_export', return_value=mock_export):
             manager = MrpV1Manager()
             request = Mock()
             request.user = Mock()
@@ -520,7 +524,11 @@ class TestMrpManagers:
             'invoicing.exporters.mrp.v2.managers.MrpReceivedManager': {'API_URL': 'https://mrp.example.com'}
         }
 
-        with patch.object(mrp_v2_tasks, 'send_invoices_to_mrp') as mock_task:
+        mock_export = MagicMock()
+        mock_export.id = 99
+
+        with patch.object(mrp_v2_tasks, 'send_invoices_to_mrp') as mock_task, \
+                patch('outputs.mixins.ExporterMixin.save_export', return_value=mock_export):
             manager = MrpReceivedManager()
             request = Mock()
             request.user = Mock()
@@ -542,8 +550,8 @@ class TestMrpManagers:
             assert len(call_args[0]) == 2
             export_id_arg = call_args[0][0]
             manager_arg = call_args[0][1]
-            # export_id_arg should be an integer (export.id)
+            # export_id_arg should be the id from the mocked export
             assert isinstance(export_id_arg, int)
-            assert export_id_arg > 0
+            assert export_id_arg == mock_export.id
             # manager_arg should be the manager instance
             assert manager_arg == manager

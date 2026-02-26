@@ -3,7 +3,7 @@ Tests for InvoiceQuerySet and ItemQuerySet.
 """
 import pytest
 from decimal import Decimal
-from datetime import date, timedelta
+from datetime import timedelta
 from django.utils.timezone import now
 
 from invoicing.models import Invoice, Item

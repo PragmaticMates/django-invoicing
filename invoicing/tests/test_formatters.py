@@ -5,7 +5,6 @@ import pytest
 from django.http import HttpResponse
 
 from invoicing.formatters.html import HTMLFormatter, BootstrapHTMLFormatter
-from invoicing.models import Invoice
 
 
 @pytest.mark.django_db

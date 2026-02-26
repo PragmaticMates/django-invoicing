@@ -2,7 +2,6 @@
 Tests for helper functions.
 """
 import pytest
-from decimal import Decimal
 from datetime import date
 from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings

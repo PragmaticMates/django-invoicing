@@ -5,7 +5,7 @@ import pytest
 from decimal import Decimal
 from datetime import date, timedelta
 
-from invoicing.models import Invoice, Item
+from invoicing.models import Invoice
 
 
 @pytest.mark.django_db

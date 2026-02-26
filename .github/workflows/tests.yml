@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [master, exporters]
+    branches: [main, master]
   pull_request:
-    branches: [master, exporters]
+    branches: [main, master]
 
 jobs:
   test:
@@ -14,6 +14,21 @@ jobs:
       matrix:
         python-version: [ '3.10', '3.11', '3.12' ]
         django-version: [ '4.2', '5.0', '5.1' ]
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: test_invoicing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
@@ -37,4 +52,10 @@ jobs:
           pip install -r requirements-test.txt
 
       - name: Run pytest
+        env:
+          TEST_DB_NAME: test_invoicing
+          TEST_DB_USER: postgres
+          TEST_DB_PASSWORD: postgres
+          TEST_DB_HOST: localhost
+          TEST_DB_PORT: 5432
         run: pytest

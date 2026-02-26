@@ -1,6 +1,7 @@
 """
 Minimal Django settings for testing.
 """
+import os
 from decimal import Decimal
 
 DEBUG = True
@@ -8,10 +9,16 @@ SECRET_KEY = 'test-secret-key-for-testing-only'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('TEST_DB_NAME', 'test_invoicing'),
+        'USER': os.environ.get('TEST_DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('TEST_DB_PASSWORD', ''),
+        'HOST': os.environ.get('TEST_DB_HOST', 'localhost'),
+        'PORT': os.environ.get('TEST_DB_PORT', '5432'),
     }
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 INSTALLED_APPS = [
     'django.contrib.auth',
@@ -24,6 +31,7 @@ INSTALLED_APPS = [
     'django_countries',
     'djmoney',
     'model_utils',
+    'outputs',
     'invoicing',
 ]
 

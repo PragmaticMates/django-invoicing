@@ -1,5 +1,7 @@
 from collections import OrderedDict
 
+from django.template import loader
+
 from invoicing.models import Invoice
 
 from django.utils.translation import gettext_lazy as _, gettext
@@ -9,16 +11,8 @@ from outputs.mixins import ExcelExporterMixin
 
 class InvoiceXlsxListExporter(ExcelExporterMixin):
     model = Invoice
-    queryset = None
+    queryset = Invoice.objects.all()
     filename = _('invoices.xlsx')
-
-    @classmethod
-    def get_model(cls):
-        return cls.queryset.model if cls.queryset is not None else cls.model
-
-    @classmethod
-    def get_app_and_model(cls):
-        return cls.get_model()._meta.label.split('.')
 
     @staticmethod
     def selectable_fields():
@@ -27,6 +21,7 @@ class InvoiceXlsxListExporter(ExcelExporterMixin):
             gettext('Details'): [
                 ('id', gettext('ID'), 7, 'integer'),
                 ('created', gettext('Created'), 20, 'datetime'),
+                ('get_origin_display', gettext('Origin'), 15, None, lambda value: value()),
                 ('get_type_display', gettext('Type'), 10, None, lambda value: value()),
                 ('sequence', gettext('Sequence'), 10),
                 ('number', gettext('Number'), 15),
@@ -107,5 +102,6 @@ class InvoiceXlsxListExporter(ExcelExporterMixin):
     def get_worksheet_title(self, index=0):
         return gettext('Invoices')
 
-    def get_queryset(self):
-        return self.queryset
+    def get_message_body(self, count, file_url=None):
+        template = loader.get_template('outputs/export_message_body.html')
+        return template.render({'count': count})

@@ -48,7 +48,7 @@ class InvoiceManagerMixin(object):
         Validate queryset to be exported.
 
         - Ensures there is something to export.
-        - Ensures that all exported objects share a single origin.
+        - When required_origin is set: ensures all exported objects share that single origin.
         """
         queryset = exporter.get_queryset()
 
@@ -57,18 +57,18 @@ class InvoiceManagerMixin(object):
             messages.warning(request, _("%s: There is no invoice selected to export." % exporter.__class__.__name__))
             return False
 
-        # 2) Check origin in one go: single DB hit for distinct origins, then validate
-        #    (assumes an 'origin' field on the model). order_by() clears default ordering
-        #    so distinct() applies only to origin (otherwise we get one row per invoice).
-        origins = list(queryset.values_list("origin", flat=True).order_by().distinct())
-        if len(origins) != 1:
-            messages.warning(request, _("%s: All exported invoices must have the same origin." % exporter.__class__.__name__))
-            return False
-
-        # 3) If manager requires a specific origin, ensure the queryset's (single) origin matches
-        if self.required_origin is not None and origins[0] != self.required_origin:
-            messages.warning(request, _("%s: All exported invoices must have the expected origin." % exporter.__class__.__name__))
-            return False
+        # 2) When required_origin is set: enforce single origin and that it matches.
+        #    (Otherwise allow multiple origins in the queryset.)
+        if self.required_origin is not None:
+            # Single DB hit for distinct origins. order_by() clears default ordering
+            # so distinct() applies only to origin (otherwise we get one row per invoice).
+            origins = list(queryset.values_list("origin", flat=True).order_by().distinct())
+            if len(origins) != 1:
+                messages.warning(request, _("%s: All exported invoices must have the same origin." % exporter.__class__.__name__))
+                return False
+            if origins[0] != self.required_origin:
+                messages.warning(request, _("%s: All exported invoices must have the expected origin." % exporter.__class__.__name__))
+                return False
 
         return True
 
@@ -85,11 +85,10 @@ class InvoiceManagerMixin(object):
         if exporter_params is None:
             exporter_params = {"user": request.user, "recipients": [request.user], "params": {}}
 
-        exporter = exporter_class(**exporter_params)
-
-        # set queryset if provided explicitly
         if queryset is not None and queryset.exists():
-            exporter.items = queryset
+            exporter_params = {**exporter_params, 'queryset': queryset}
+
+        exporter = exporter_class(**exporter_params)
 
         if not self._is_export_qs_valid(request, exporter):
             return

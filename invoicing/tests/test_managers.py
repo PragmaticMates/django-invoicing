@@ -37,7 +37,7 @@ class TestInvoiceManagerMixin:
         assert result is False
 
     def test_is_export_qs_valid_multiple_origins(self, invoice_factory, item_factory):
-        """Mixed-origin queryset should be rejected."""
+        """Mixed-origin queryset should be allowed when no origin constraint is set."""
         mixin = InvoiceManagerMixin()
         request = Mock()
         
@@ -53,7 +53,7 @@ class TestInvoiceManagerMixin:
         )
         
         result = mixin._is_export_qs_valid(request, exporter)
-        assert result is False
+        assert result is True
 
     def test_is_export_qs_valid_single_origin(self, invoice_factory, item_factory):
         """Single-origin queryset should pass when no origin constraint is set."""
@@ -100,6 +100,26 @@ class TestInvoiceManagerMixin:
 
         exporter = Mock()
         exporter.get_queryset.return_value = Invoice.objects.filter(id=invoice.id)
+
+        result = mixin._is_export_qs_valid(request, exporter)
+        assert result is False
+
+    def test_is_export_qs_valid_multiple_origins_with_required_origin(self, invoice_factory, item_factory):
+        """Mixed-origin queryset should be rejected when required_origin is set."""
+        mixin = InvoiceManagerMixin()
+        mixin.required_origin = Invoice.ORIGIN.ISSUED
+        request = Mock()
+
+        invoice1 = invoice_factory(origin=Invoice.ORIGIN.ISSUED)
+        item_factory(invoice=invoice1, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        invoice2 = invoice_factory(origin=Invoice.ORIGIN.RECEIVED)
+        item_factory(invoice=invoice2, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        exporter = Mock()
+        exporter.get_queryset.return_value = Invoice.objects.filter(
+            id__in=[invoice1.id, invoice2.id]
+        )
 
         result = mixin._is_export_qs_valid(request, exporter)
         assert result is False

@@ -15,6 +15,7 @@ from pragmatic.utils import compress
 class InvoiceISDOCXmlListExporter(ExporterMixin):
     export_format = Export.FORMAT_XML
     export_context = Export.CONTEXT_LIST
+    model = Invoice
     queryset = Invoice.objects.all()
     filename = 'invoices_isdoc.zip'
     ISDOC_DOCUMENT_TYPE_MAPPING = {
@@ -29,9 +30,6 @@ class InvoiceISDOCXmlListExporter(ExporterMixin):
         'CASH_ON_DELIVERY': '30',
         'PAYMENT_CARD': '48',
     }
-
-    def get_queryset(self):
-        return self.queryset
 
     def export(self):
         self.write_data(self.output)

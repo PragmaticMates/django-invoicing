@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 class InvoiceMrpListExporterMixin(ExporterMixin):
     export_format = Export.FORMAT_XML
     export_context = Export.CONTEXT_LIST
+    model = Invoice
     queryset = Invoice.objects.all()
     export_per_item = False
     outputs = []
@@ -38,13 +39,6 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
     def __init__(self, user, recipients, **kwargs):
         self.outputs = []
         super().__init__(user, recipients, **kwargs)
-
-    def get_queryset(self):
-        return self.queryset
-
-    def get_whole_queryset(self, params):
-        return super().get_whole_queryset(params) \
-            .order_by('-pk').distinct()
 
     def get_message_body(self, count, file_url=None):
         template = loader.get_template("outputs/export_message_body.html")
@@ -231,30 +225,31 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
         and appends the result to self.outputs as a dictionary with keys
         'invoice' and 'xml_string'.
 
+        Invoices that fail XML validation are included in the output with an
+        'error' key instead of 'xml_string', so the caller can report them
+        without aborting the entire export.
+
         The outputs can be retrieved later using get_outputs_per_item().
         This method is used when export_per_item=True.
-
-        Note:
-            This method does not return anything. Results are stored in
-            self.outputs and can be accessed via get_outputs_per_item().
         """
-        # Generate separate XML element for each invoice
         for invoice in self.get_queryset():
-            invoice_element = self.get_invoice_element(invoice)
+            try:
+                invoice_element = self.get_invoice_element(invoice)
 
-            # Create MRPKSData structure for single invoice
-            mrpks_data = etree.Element("MRPKSData", version="2.0")
-            invoices_container = etree.SubElement(mrpks_data, self.get_invoice_root_element())
-            invoices_container.append(invoice_element)
+                mrpks_data = etree.Element("MRPKSData", version="2.0")
+                invoices_container = etree.SubElement(mrpks_data, self.get_invoice_root_element())
+                invoices_container.append(invoice_element)
 
-            # Validate and wrap in request envelope
-            self.validate_xml(mrpks_data)
+                self.validate_xml(mrpks_data)
 
-            if self.output_type == Export.OUTPUT_TYPE_STREAM:
-                mrpks_data = self.wrap_to_request_envelope(mrpks_data, invoice)
+                if self.output_type == Export.OUTPUT_TYPE_STREAM:
+                    mrpks_data = self.wrap_to_request_envelope(mrpks_data, invoice)
 
-            xml_string = self.xml_to_string(mrpks_data)
-            outputs.append({"invoice": invoice, "xml_string": xml_string})
+                xml_string = self.xml_to_string(mrpks_data)
+                outputs.append({"invoice": invoice, "xml_string": xml_string})
+            except (ValueError, etree.Error) as e:
+                logger.warning(f"XML validation failed for invoice {invoice.number}: {e}")
+                outputs.append({"invoice": invoice, "error": str(e)})
 
     def xml_to_string(self, xml):
         """

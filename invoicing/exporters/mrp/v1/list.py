@@ -13,6 +13,7 @@ from outputs.models import Export
 class InvoiceXmlMrpListExporter(ExporterMixin):
     export_format = Export.FORMAT_XML
     export_context = Export.CONTEXT_LIST
+    model = Invoice
     queryset = Invoice.objects.all()
     filename = "MRP_invoice_export.zip"
 

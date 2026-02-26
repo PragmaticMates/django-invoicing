@@ -29,10 +29,10 @@ class MrpV1Manager(InvoiceManagerMixin):
         if self.exporter_class is None:
             raise ImproperlyConfigured(_("Undefined exporter class for MRP v1 export."))
 
-        exporter = self.exporter_class(**exporter_params)
-
         if queryset is not None and queryset.exists():
-            exporter.items = queryset
+            exporter_params = {**exporter_params, 'queryset': queryset}
+
+        exporter = self.exporter_class(**exporter_params)
 
         if not self._is_export_qs_valid(request, exporter):
             return

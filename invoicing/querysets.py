@@ -28,6 +28,12 @@ class InvoiceQuerySet(QuerySet):
     def accountable(self):
         return self.exclude(type__in=[self.model.TYPE.PROFORMA, self.model.TYPE.ADVANCE])
 
+    def in_collection(self):
+        return self.filter(status=self.model.STATUS.IN_COLLECTION)
+
+    def not_in_collection(self):
+        return self.exclude(status=self.model.STATUS.IN_COLLECTION)
+
     def collectible(self):
         return self.exclude(status=self.model.STATUS.UNCOLLECTIBLE)
 

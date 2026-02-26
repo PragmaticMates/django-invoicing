@@ -753,7 +753,7 @@
                                                 </xs:restriction>
                                             </xs:simpleType>
                                         </xs:element>
-                                        <xs:element name="RReverseChargeBaseTaxRateTax"
+                                        <xs:element name="ReverseChargeBaseTaxRateTax"
                                             minOccurs="0" nillable="true">
                                             <xs:simpleType>
                                                 <xs:restriction base="xs:string">

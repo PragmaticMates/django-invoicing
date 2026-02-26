@@ -129,6 +129,51 @@ class TestInvoiceQuerySet:
         assert proforma not in accountable_invoices
         assert advance not in accountable_invoices
 
+    def test_in_collection_filter(self, invoice_factory, item_factory):
+        """Test filtering invoices in collection."""
+        in_collection = invoice_factory(
+            status=Invoice.STATUS.IN_COLLECTION,
+            total=Decimal('100.00')
+        )
+        item_factory(invoice=in_collection, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        not_in_collection = invoice_factory(
+            status=Invoice.STATUS.SENT,
+            total=Decimal('100.00')
+        )
+        item_factory(invoice=not_in_collection, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        in_collection_invoices = Invoice.objects.in_collection()
+
+        assert in_collection in in_collection_invoices
+        assert not_in_collection not in in_collection_invoices
+
+    def test_not_in_collection_filter(self, invoice_factory, item_factory):
+        """Test filtering invoices not in collection."""
+        in_collection = invoice_factory(
+            status=Invoice.STATUS.IN_COLLECTION,
+            total=Decimal('100.00')
+        )
+        item_factory(invoice=in_collection, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        sent = invoice_factory(
+            status=Invoice.STATUS.SENT,
+            total=Decimal('100.00')
+        )
+        item_factory(invoice=sent, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        paid = invoice_factory(
+            status=Invoice.STATUS.PAID,
+            total=Decimal('100.00')
+        )
+        item_factory(invoice=paid, quantity=Decimal('1.0'), unit_price=Decimal('100.00'))
+
+        not_in_collection_invoices = Invoice.objects.not_in_collection()
+
+        assert in_collection not in not_in_collection_invoices
+        assert sent in not_in_collection_invoices
+        assert paid in not_in_collection_invoices
+
     def test_collectible_filter(self, invoice_factory, item_factory):
         """Test filtering collectible invoices."""
         collectible = invoice_factory(status=Invoice.STATUS.SENT)

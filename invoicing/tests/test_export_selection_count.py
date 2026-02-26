@@ -19,9 +19,11 @@ Pipeline under test
                         └→ exporter.save_export()     ← captured HERE
                              └→ task.delay(export.id, ...)
 
-Because the ``outputs`` package is mocked in conftest.py we cannot
-inspect real ExportItem rows.  Instead, we intercept the two
-"handover points" listed above and verify that the exporter's
+``outputs`` is mocked in conftest.py to keep tests lightweight:
+``outputs`` is not in ``INSTALLED_APPS``, so its tables don't exist
+and running the real ``execute_export → save_export → Export.objects.create()``
+pipeline (which also sends email) would fail.  Instead we intercept
+the two "handover points" listed above and verify that the exporter's
 get_queryset().count() equals the number of invoices that were
 originally selected — not the total number of invoices in the database.
 """
@@ -252,6 +254,55 @@ class TestExportCountMatchesSelection:
                 MrpIssuedManager().export_via_api, _make_request(), queryset
             )
         assert count == selected_count
+
+
+@pytest.mark.django_db
+@pytest.mark.exporters
+class TestInvoiceManagerExecuteExport:
+    """
+    Direct unit tests for InvoiceManagerMixin._execute_export().
+
+    These focus on the behaviour of _execute_export itself, independent of any
+    concrete manager subclass or Admin integration.
+    """
+
+    def test_execute_export_passes_queryset_to_exporter(self, invoice_factory):
+        """
+        _execute_export must hand the *given* queryset to the exporter, not
+        silently fall back to the full table.
+        """
+        # Arrange: create 5 invoices, select only 3 of them.
+        all_inv = [invoice_factory() for _ in range(5)]
+        queryset = Invoice.objects.filter(id__in=[i.id for i in all_inv[:3]])
+
+        # Minimal manager subclass so we can call _execute_export() directly.
+        class DummyManager(InvoiceManagerMixin):
+            pass
+
+        manager = DummyManager()
+        request = _make_request()
+
+        # Patch outputs.usecases.execute_export to capture the queryset size
+        # seen by the exporter instance passed in from _execute_export().
+        captured = {}
+        usecases = sys.modules["outputs.usecases"]
+        original_execute_export = usecases.execute_export
+
+        def _capturing(exporter, language=None):
+            captured["count"] = exporter.get_queryset().count()
+
+        usecases.execute_export = _capturing
+        try:
+            manager._execute_export(
+                request=request,
+                exporter_class=sys.modules["outputs.mixins"].ExporterMixin,
+                exporter_params={"user": request.user, "recipients": [request.user], "params": {}},
+                queryset=queryset,
+            )
+        finally:
+            usecases.execute_export = original_execute_export
+
+        assert captured["count"] == 3
 
 
 # ---------------------------------------------------------------------------

@@ -7,5 +7,6 @@ django-money>=0.4.1
 django-outputs>=3.0.0
 lxml>=4.9.0
 psycopg2>=2.5.2
+xlsxwriter>=3.0.0
 py-moneyed>=0.5.0
 six>=1.6.1

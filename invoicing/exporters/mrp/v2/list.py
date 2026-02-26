@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 class InvoiceMrpListExporterMixin(ExporterMixin):
     export_format = Export.FORMAT_XML
     export_context = Export.CONTEXT_LIST
+    model = Invoice
     queryset = Invoice.objects.all()
     export_per_item = False
     outputs = []
@@ -38,13 +39,6 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
     def __init__(self, user, recipients, **kwargs):
         self.outputs = []
         super().__init__(user, recipients, **kwargs)
-
-    def get_queryset(self):
-        return self.queryset
-
-    def get_whole_queryset(self, params):
-        return super().get_whole_queryset(params) \
-            .order_by('-pk').distinct()
 
     def get_message_body(self, count, file_url=None):
         template = loader.get_template("outputs/export_message_body.html")

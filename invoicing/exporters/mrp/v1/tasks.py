@@ -30,25 +30,19 @@ def mail_exported_invoices_mrp_v1(export_id, exporter_subclass_paths, filename=N
             f"Not possible to executed mrp v1 export without exporter subclasses.  {exporter_subclass_paths}"
         )
 
+    queryset = export.object_list
     exporters = [
-        import_string(path)(user=export.creator, recipients=export.recipients, params={})
+        import_string(path)(user=export.creator, recipients=export.recipients, params={}, queryset=queryset)
         for path in exporter_subclass_paths
     ]
 
-    qs = export.object_list
-
     logger.info(
-        f"Executed mrp v1 export with {qs.count()} items."
+        f"Executed mrp v1 export with {queryset.count()} items."
     )
-
 
     try:
         with transaction.atomic():
             for exporter in exporters:
-                # Use 'items' instead of 'queryset' because FilterExporterMixin.get_queryset()
-                # ignores self.queryset — it reads self.items (pk list) or falls back to
-                # self.filter.qs (the full base queryset built at __init__ time).
-                exporter.items = qs
                 exporter.export()
 
             # Combine into zip

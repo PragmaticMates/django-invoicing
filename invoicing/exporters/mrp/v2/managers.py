@@ -29,12 +29,12 @@ class MrpApiManagerMixin(InvoiceManagerMixin):
 
         if "output_type" not in exporter_params:
             from outputs.models import Export
-            exporter_params["output_type"] = Export.OUTPUT_TYPE_STREAM
-
-        exporter = self.exporter_class(**exporter_params)
+            exporter_params = {**exporter_params, 'output_type': Export.OUTPUT_TYPE_STREAM}
 
         if queryset is not None and queryset.exists():
-            exporter.items = queryset
+            exporter_params = {**exporter_params, 'queryset': queryset}
+
+        exporter = self.exporter_class(**exporter_params)
 
         if not self._is_export_qs_valid(request, exporter):
             return

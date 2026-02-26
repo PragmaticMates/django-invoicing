@@ -16,15 +16,18 @@ class MyCustomManager(InvoiceManagerMixin):
 
     def export_to_my_system(self, request, queryset):
         # validate first
-        # (create a minimal exporter shell just for validation)
         from myapp.exporters import MyExporter
-        exporter = MyExporter(user=request.user, recipients=[request.user], params={})
-        exporter.items = queryset
+        exporter = MyExporter(
+            user=request.user,
+            recipients=[request.user],
+            params={},
+            queryset=queryset,
+        )
         if not self._is_export_qs_valid(request, exporter):
             return
 
-        # do your export work here
-        for invoice in queryset:
+        # do your export work here, using the validated queryset
+        for invoice in exporter.get_queryset():
             ...
 
     export_to_my_system.short_description = _('Export to My System')
@@ -56,7 +59,7 @@ class MyCustomManager(InvoiceManagerMixin):
 
 `_execute_export()` handles:
 
-- Queryset validation (non-empty, single origin)
+- Queryset validation (non-empty; and when `required_origin` is set, all invoices must share that origin)
 - Constructing default `exporter_params` if none are provided (`user`, `recipients`, `params`)
 - Calling `outputs.usecases.execute_export()` in the current language
 - Showing a success message in Admin

@@ -14,6 +14,8 @@ All methods return a filtered `QuerySet` and can be chained.
 | `.unpaid()` | Invoices that are not paid, cancelled, credited, and have a non-zero total |
 | `.overdue()` | Unpaid invoices whose `date_due` is in the past (excludes credit notes) |
 | `.not_overdue()` | Invoices that are not overdue (either future due date, or in a terminal status) |
+| `.in_collection()` | Invoices with `status=IN_COLLECTION` |
+| `.not_in_collection()` | Invoices with any status other than `IN_COLLECTION` |
 
 ### Validity / accounting filters
 

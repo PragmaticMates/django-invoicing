@@ -1,7 +1,5 @@
 from collections import OrderedDict
 
-from django.template import loader
-
 from invoicing.models import Invoice
 
 from django.utils.translation import gettext_lazy as _, gettext
@@ -101,7 +99,3 @@ class InvoiceXlsxListExporter(ExcelExporterMixin):
 
     def get_worksheet_title(self, index=0):
         return gettext('Invoices')
-
-    def get_message_body(self, count, file_url=None):
-        template = loader.get_template('outputs/export_message_body.html')
-        return template.render({'count': count})

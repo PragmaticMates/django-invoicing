@@ -3,7 +3,6 @@ import os
 from datetime import datetime
 
 from django.core.validators import EMPTY_VALUES
-from django.template import loader
 from lxml import etree
 
 
@@ -39,10 +38,6 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
     def __init__(self, user, recipients, **kwargs):
         self.outputs = []
         super().__init__(user, recipients, **kwargs)
-
-    def get_message_body(self, count, file_url=None):
-        template = loader.get_template("outputs/export_message_body.html")
-        return template.render({"count": count})
 
     @staticmethod
     def vat_type(invoice):

@@ -30,6 +30,7 @@
 | `CANCELED` | Voided |
 | `PAID` | Payment received |
 | `CREDITED` | Replaced by a credit note |
+| `IN_COLLECTION` | Sent to collection / debt recovery |
 | `UNCOLLECTIBLE` | Written off as bad debt |
 
 `date_sent` and `date_paid` are `MonitorField` values — they are set automatically when `status` transitions to `SENT` or `PAID`.

@@ -48,6 +48,8 @@ INVOICING_MANAGERS = {
 
 The API export path uses `outputs.models.Export` with `output_type=OUTPUT_TYPE_STREAM` and delegates to a Celery task (`invoicing.exporters.mrp.v2.tasks.send_invoices_to_mrp`). Make sure Celery is configured and running for API exports to work.
 
+Invoices are processed **one by one**. If a particular invoice fails XML generation or XSD validation, it is skipped, marked as a failure, and included in the summary email, while the rest of the invoices continue to be sent. Only fatal errors (for example, missing exporter configuration) abort the whole export; in that case the export is marked as failed and the email contains the fatal error message.
+
 ## Exporter classes
 
 | Manager | Exporter class |

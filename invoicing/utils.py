@@ -1,14 +1,10 @@
 import functools
 import warnings
-from datetime import datetime
 from decimal import Decimal
 
 import binascii
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
-from django.utils import translation
 from django.utils.module_loading import import_string
 from requests_futures import sessions
 

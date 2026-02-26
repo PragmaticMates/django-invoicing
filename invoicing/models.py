@@ -66,6 +66,7 @@ class Invoice(models.Model):
         ('CANCELED', _(u'canceled')),
         ('PAID', _(u'paid')),
         ('CREDITED', _(u'credited')),
+        ('IN_COLLECTION', _(u'in collection')),
         ('UNCOLLECTIBLE', _(u'uncollectible')),
     )
 

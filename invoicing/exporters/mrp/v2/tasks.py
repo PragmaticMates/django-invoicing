@@ -115,7 +115,7 @@ def _send_request_per_invoice_item(invoice, xml_string, export, api_url):
         response_xml = _parse_response_xml(response)
         error_info = _extract_xml_errors(response_xml, request_id)
         if error_info:
-            logger.error(f"Invoice {invoice.number} failed: Request ID: {request_id} - {error_info['error']}")
+            logger.warning(f"Invoice {invoice.number} failed: Request ID: {request_id} - {error_info['error']}")
             export_result, export_detail, result = _build_failure(
                 invoice.number,
                 request_id,

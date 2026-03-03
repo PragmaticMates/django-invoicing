@@ -251,7 +251,7 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
                 xml_string = self.xml_to_string(mrpks_data)
                 outputs.append({"invoice": invoice, "xml_string": xml_string})
             except (ValueError, etree.Error) as e:
-                logger.warning(f"XML validation failed for invoice {invoice.number}: {e}")
+                logger.error(f"XML validation failed for invoice {invoice.number}: {e}")
                 outputs.append({"invoice": invoice, "error": str(e)})
 
     def xml_to_string(self, xml):

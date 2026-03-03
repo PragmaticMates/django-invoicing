@@ -48,6 +48,14 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
     def advance_notice(invoice):
         return ''
 
+    @staticmethod
+    def fulfillment_code(invoice):
+        return ''
+
+    @staticmethod
+    def center(invoice):
+        return ''
+
     def export(self):
         if self.export_per_item:
             self.write_data_per_item(self.outputs)
@@ -294,10 +302,19 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
         etree.SubElement(invoice_elem, "ConstantSymbol").text = sanitize_forbidden_chars(invoice.constant_symbol, 8)
         etree.SubElement(invoice_elem, "SpecificSymbol").text = sanitize_forbidden_chars(invoice.specific_symbol, 10)
         etree.SubElement(invoice_elem, "OriginalDocumentNumber").text = sanitize_forbidden_chars(invoice.related_document, 32)
+
+        cost_centre = self.center(invoice)
+        if self.get_invoice_root_element() == "IssuedInvoices" and cost_centre:
+            etree.SubElement(invoice_elem, "CostCentre").text = cost_centre[:6]
+
         etree.SubElement(invoice_elem, "InvoiceType").text = {
             'INVOICE': 'F', 'ADVANCE': 'X', 'CREDIT_NOTE': 'P'
         }.get(invoice.type, 'F')
         etree.SubElement(invoice_elem, "DeliveryTypeCode").text = sanitize_forbidden_chars(invoice.delivery_method, 10)
+
+        fulfillment_code = self.fulfillment_code(invoice)
+        if self.get_invoice_root_element() == "IssuedInvoices" and fulfillment_code:
+            etree.SubElement(invoice_elem, "RecapitulativeStatementCode").text = fulfillment_code[:1]
 
         # For received invoices only, include header-level reverse charge
         # totals as allowed by the received_invoices.xsd schema.
@@ -329,9 +346,12 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
         items_elem = etree.SubElement(invoice_elem, "Items")
 
         for item in invoice.item_set.all():
-            item_elem = etree.SubElement(items_elem, "Item")
+            lines = (item.title or "").splitlines()
+            first_line, *extra_lines = lines if lines else [""]
 
-            etree.SubElement(item_elem, "Description").text = sanitize_forbidden_chars(item.title, 100)
+            item_elem = etree.SubElement(items_elem, "Item")
+            etree.SubElement(item_elem, "Description").text = sanitize_forbidden_chars(first_line, 100)
+            etree.SubElement(item_elem, "RowType").text = "1"
             etree.SubElement(item_elem, "Quantity").text = str(round(item.quantity, 6))
             etree.SubElement(item_elem, "UnitCode").text = ""
             etree.SubElement(item_elem, "UnitPrice").text = str(round(item.unit_price, 6))
@@ -339,6 +359,14 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
             etree.SubElement(item_elem, "TaxAmount").text = format_decimal(item.vat, 2)
             etree.SubElement(item_elem, "DiscountPercent").text = format_decimal(item.discount, 2)
             etree.SubElement(item_elem, "TotalWeight").text = str(item.weight if item.weight is not None else 0)
+
+            for extra_line in extra_lines:
+                stripped = extra_line.strip()
+                if not stripped:
+                    continue
+                text_elem = etree.SubElement(items_elem, "Item")
+                etree.SubElement(text_elem, "Description").text = sanitize_forbidden_chars(stripped, 100)
+                etree.SubElement(text_elem, "RowType").text = "2"
 
         # ==== SUMS (SumValues) ====
         sum_values = etree.SubElement(invoice_elem, "SumValues")

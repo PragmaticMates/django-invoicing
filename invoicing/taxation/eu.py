@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.validators import EMPTY_VALUES
-from internationalflavor.vat_number import VATNumberValidator
+from vies.validators import VATINValidator
 
 from invoicing.taxation import TaxationPolicy
 
@@ -138,7 +138,7 @@ class EUTaxationPolicy(TaxationPolicy):
 
             try:
                 # Verify VAT ID in VIES
-                VATNumberValidator(eu_only=True, vies_check=True)(customer_vat_id)
+                VATINValidator(verify=True, validate=True)(customer_vat_id)
 
                 # Company is registered in VIES
                 # Charge back

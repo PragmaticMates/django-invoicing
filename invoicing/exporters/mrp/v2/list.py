@@ -46,6 +46,10 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
         return ''
 
     @staticmethod
+    def item_type(invoice):
+        return ''
+
+    @staticmethod
     def vat_type(invoice):
         return ''
 
@@ -363,6 +367,11 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
             item_elem = etree.SubElement(items_elem, "Item")
             etree.SubElement(item_elem, "Description").text = sanitize_forbidden_chars(first_line, 100)
             etree.SubElement(item_elem, "RowType").text = "1"
+
+            item_type = self.item_type(invoice)
+            if item_type:
+                etree.SubElement(item_elem, "ItemType").text = item_type
+
             etree.SubElement(item_elem, "Quantity").text = str(round(item.quantity, 6))
             etree.SubElement(item_elem, "UnitCode").text = ""
             etree.SubElement(item_elem, "UnitPrice").text = str(round(item.unit_price, 6))

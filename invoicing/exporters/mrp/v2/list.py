@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+from django.conf import settings
 from django.core.validators import EMPTY_VALUES
 from lxml import etree
 
@@ -272,7 +273,8 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
 
     def get_invoice_element(self, invoice):
         invoice_elem = etree.Element("Invoice")
-        default_tax_rate = EUTaxationPolicy.get_default_tax('SK')
+        supplier = getattr(settings, 'INVOICING_SUPPLIER')
+        default_tax_rate = EUTaxationPolicy.get_default_tax(supplier['country_code'])
         is_reverse_charge = invoice.is_reverse_charge()
 
         # ==== HEADER ====

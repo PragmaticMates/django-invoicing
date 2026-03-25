@@ -448,7 +448,8 @@ class IssuedInvoiceMrpListExporter(InvoiceMrpListExporterMixin):
         etree.SubElement(parent_element, "ZipCode").text = sanitize_zipcode(invoice.customer_zip)
         etree.SubElement(parent_element, "City").text = sanitize_city(invoice.customer_city)
         etree.SubElement(parent_element, "CountryCode").text = sanitize_uppercase_only(getattr(invoice.customer_country, "code", ""), 10)
-        etree.SubElement(parent_element, "VatNumber").text = sanitize_forbidden_chars(invoice.customer_vat_id, 17)
+        etree.SubElement(parent_element, "VatNumber").text = sanitize_forbidden_chars(invoice.customer_tax_id, 17)
+        etree.SubElement(parent_element, "VatNumberSK").text = sanitize_forbidden_chars(invoice.customer_vat_id, 14)
         etree.SubElement(parent_element, "Phone").text = sanitize_forbidden_chars(invoice.customer_phone, 30)
         etree.SubElement(parent_element, "Email").text = sanitize_forbidden_chars(invoice.customer_email, 256)
 
@@ -473,6 +474,7 @@ class ReceivedInvoiceMrpListExporter(InvoiceMrpListExporterMixin):
         etree.SubElement(parent_element, "ZipCode").text = sanitize_zipcode(invoice.supplier_zip)
         etree.SubElement(parent_element, "City").text = sanitize_city(invoice.supplier_city)
         etree.SubElement(parent_element, "CountryCode").text = sanitize_uppercase_only(getattr(invoice.supplier_country, "code", ""), 10)
-        etree.SubElement(parent_element, "VatNumber").text = sanitize_forbidden_chars(invoice.supplier_vat_id, 17)
+        etree.SubElement(parent_element, "VatNumber").text = sanitize_forbidden_chars(invoice.supplier_tax_id, 17)
+        etree.SubElement(parent_element, "VatNumberSK").text = sanitize_forbidden_chars(invoice.supplier_vat_id, 14)
         etree.SubElement(parent_element, "Phone").text = sanitize_forbidden_chars(invoice.issuer_phone, 30)
         etree.SubElement(parent_element, "Email").text = sanitize_forbidden_chars(invoice.issuer_email, 256)

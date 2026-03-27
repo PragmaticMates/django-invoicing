@@ -46,6 +46,10 @@ class InvoiceXmlMrpListExporter(ExporterMixin):
     def center(invoice):
         return ''
 
+    @staticmethod
+    def order_number(invoice):
+        return ''
+
 
 class InvoiceFakvyXmlMrpExporter(InvoiceXmlMrpListExporter):
     filename = "FAKVY.xml"
@@ -252,16 +256,11 @@ class InvoiceFakvyXmlMrpExporter(InvoiceXmlMrpListExporter):
             sposobdopr.text = ""  # sluzba
 
             # < cisloobjed > 20176738 < / cisloobjed >
-            if hasattr(invoice, "orders") and invoice.orders.exists():
-                first_order = invoice.orders.first()
-                cisloobjed = etree.SubElement(fields, "cisloobjed")
+            order_number = self.order_number(invoice)
 
-                if hasattr(first_order, "number"):
-                    cisloobjed.text = str(first_order.number)
-                elif hasattr(first_order, "order_number"):
-                    cisloobjed.text = str(first_order.order_number)
-                else:
-                    cisloobjed.text = str(first_order)
+            if order_number not in EMPTY_VALUES:
+                cisloobjed = etree.SubElement(fields, "cisloobjed")
+                cisloobjed.text = str(order_number)
 
             # < origcislo > < / origcislo >
             origcislo = etree.SubElement(fields, "origcislo")

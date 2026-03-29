@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 
-from vies.models import VATINField
+from internationalflavor.vat_number import VATNumberField
 
 
 class Migration(migrations.Migration):
@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='invoice',
             name='customer_vat_id',
-            field=VATINField(blank=True),
+            field=VATNumberField(blank=True),
         ),
         migrations.AlterField(
             model_name='invoice',
@@ -30,6 +30,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='invoice',
             name='supplier_vat_id',
-            field=VATINField(blank=True),
+            field=VATNumberField(blank=True),
         ),
     ]

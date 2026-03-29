@@ -312,5 +312,5 @@ def mock_vies_validator(monkeypatch):
         validator = Mock()
         return validator
 
-    monkeypatch.setattr('invoicing.taxation.eu.VATINValidator', mock_validator)
+    monkeypatch.setattr('invoicing.taxation.eu.VATNumberValidator', mock_validator)
     return mock_validator

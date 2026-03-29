@@ -3,8 +3,7 @@
 from django.db import migrations
 from django.utils.translation import gettext_lazy as _
 
-from vies.models import VATINField
-from vies.validators import VATINValidator
+from internationalflavor.vat_number import VATNumberField
 
 
 class Migration(migrations.Migration):
@@ -16,20 +15,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='invoice',
             name='supplier_vat_id',
-            field=VATINField(
-                verbose_name=_(u'supplier VAT No.'),
-                blank=True,
-                validators=[VATINValidator(verify=True, validate=False)],
-            ),
+            field=VATNumberField(verbose_name=_(u'supplier VAT No.'), blank=True),
         ),
         migrations.AlterField(
             model_name='invoice',
             name='customer_vat_id',
-            field=VATINField(
-                verbose_name=_(u'customer VAT No.'),
-                blank=True,
-                validators=[VATINValidator(verify=True, validate=False)],
-            ),
+            field=VATNumberField(verbose_name=_(u'customer VAT No.'), blank=True),
         ),
     ]
-

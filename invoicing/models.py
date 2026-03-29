@@ -15,9 +15,8 @@ from django.utils.translation import gettext_lazy as _
 
 from django_countries.fields import CountryField
 from djmoney.forms.widgets import CURRENCY_CHOICES
+from internationalflavor.vat_number import VATNumberField
 from localflavor.generic.models import IBANField, BICField
-from vies.models import VATINField
-from vies.validators import VATINValidator
 from model_utils import Choices
 from model_utils.fields import MonitorField
 
@@ -172,11 +171,7 @@ class Invoice(models.Model):
     supplier_country = CountryField(_(u'supplier country'), default=None)
     supplier_registration_id = models.CharField(_(u'supplier Reg. No.'), max_length=255, blank=True)
     supplier_tax_id = models.CharField(_(u'supplier Tax No.'), max_length=255, blank=True)
-    supplier_vat_id = VATINField(
-        verbose_name=_(u'supplier VAT No.'),
-        blank=True,
-        validators=[VATINValidator(verify=True, validate=False)],
-    )
+    supplier_vat_id = VATNumberField(verbose_name=_(u'supplier VAT No.'), blank=True)
     supplier_additional_info = JSONField(_(u'supplier additional information'),
         blank=True, null=True, default=None)  # for example www or legal matters
 
@@ -193,11 +188,7 @@ class Invoice(models.Model):
     customer_country = CountryField(_(u'customer country'))
     customer_registration_id = models.CharField(_(u'customer Reg. No.'), max_length=255, blank=True)
     customer_tax_id = models.CharField(_(u'customer Tax No.'), max_length=255, blank=True)
-    customer_vat_id = VATINField(
-        verbose_name=_(u'customer VAT No.'),
-        blank=True,
-        validators=[VATINValidator(verify=True, validate=False)],
-    )
+    customer_vat_id = VATNumberField(verbose_name=_(u'customer VAT No.'), blank=True)
     customer_additional_info = JSONField(_(u'customer additional information'),
         blank=True, null=True, default=None)
     customer_email = models.EmailField(_(u'customer email'), blank=True)

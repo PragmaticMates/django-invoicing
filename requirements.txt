@@ -6,6 +6,7 @@ django-localflavor>=5.0
 django-model-utils>=2.0.3
 django-money>=0.4.1
 django-outputs>=3.0.0
+pytz>=2024.1
 lxml>=4.9.0
 psycopg2>=2.5.2
 xlsxwriter>=3.0.0

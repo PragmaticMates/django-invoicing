@@ -15,8 +15,8 @@ from django.utils.translation import gettext_lazy as _
 
 from django_countries.fields import CountryField
 from djmoney.forms.widgets import CURRENCY_CHOICES
-from internationalflavor.iban.models import IBANField, BICField
 from internationalflavor.vat_number import VATNumberField
+from localflavor.generic.models import IBANField, BICField
 from model_utils import Choices
 from model_utils.fields import MonitorField
 

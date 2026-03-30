@@ -7,8 +7,8 @@ import django.core.validators
 from django.db.models import JSONField
 import django_countries.fields
 import model_utils.fields
-from internationalflavor.iban import IBANField, BICField
 from internationalflavor.vat_number import VATNumberField
+from localflavor.generic.models import IBANField, BICField
 
 
 class Migration(migrations.Migration):

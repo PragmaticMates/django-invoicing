@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+from django.conf import settings
 from django.core.validators import EMPTY_VALUES
 from lxml import etree
 
@@ -11,6 +12,7 @@ from invoicing.models import Invoice
 from outputs.mixins import ExporterMixin
 from outputs.models import Export
 
+from invoicing.taxation.eu import EUTaxationPolicy
 from invoicing.utils import format_decimal
 
 from .utils import (
@@ -40,6 +42,10 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
         super().__init__(user, recipients, **kwargs)
 
     @staticmethod
+    def order_number(invoice):
+        return ''
+
+    @staticmethod
     def vat_type(invoice):
         return ''
 
@@ -54,6 +60,10 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
 
     @staticmethod
     def center(invoice):
+        return ''
+
+    @staticmethod
+    def item_type(invoice_item):
         return ''
 
     def export(self):
@@ -267,6 +277,9 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
 
     def get_invoice_element(self, invoice):
         invoice_elem = etree.Element("Invoice")
+        supplier = getattr(settings, 'INVOICING_SUPPLIER')
+        default_tax_rate = EUTaxationPolicy.get_default_tax(supplier['country_code'])
+        is_reverse_charge = invoice.is_reverse_charge()
 
         # ==== HEADER ====
         etree.SubElement(invoice_elem, "DocumentNumber").text = sanitize_forbidden_chars(invoice.number, 10)
@@ -283,10 +296,10 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
 
         etree.SubElement(invoice_elem, "DocType").text = "" if invoice.type == 'INVOICE' else \
             "D" if invoice.type == 'CREDIT_NOTE' else "X" if invoice.type == 'ADVANCE' else "P"
-        etree.SubElement(invoice_elem, "BaseTaxRateAmount").text = format_decimal(invoice.subtotal or 0)
-        etree.SubElement(invoice_elem, "BaseTaxRateTax").text = format_decimal(invoice.vat or 0)
+        etree.SubElement(invoice_elem, "BaseTaxRateAmount").text = format_decimal(invoice.subtotal)
+        etree.SubElement(invoice_elem, "BaseTaxRateTax").text = format_decimal(invoice.vat)
         etree.SubElement(invoice_elem, "TaxPointDate").text = invoice.date_tax_point.isoformat()
-        etree.SubElement(invoice_elem, "DeliveryDate").text = invoice.date_issue.isoformat()
+        etree.SubElement(invoice_elem, "DeliveryDate").text = invoice.date_tax_point.isoformat()
         etree.SubElement(invoice_elem, "PaymentDueDate").text = invoice.date_due.isoformat()
 
         advance_notice = self.advance_notice(invoice)
@@ -301,7 +314,11 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
         etree.SubElement(invoice_elem, "VariableSymbol").text = sanitize_forbidden_chars(invoice.variable_symbol, 10)
         etree.SubElement(invoice_elem, "ConstantSymbol").text = sanitize_forbidden_chars(invoice.constant_symbol, 8)
         etree.SubElement(invoice_elem, "SpecificSymbol").text = sanitize_forbidden_chars(invoice.specific_symbol, 10)
-        etree.SubElement(invoice_elem, "OriginalDocumentNumber").text = sanitize_forbidden_chars(invoice.related_document, 32)
+
+        if self.get_invoice_root_element() == "IncomingInvoices":
+            etree.SubElement(invoice_elem, "TaxPointDate2").text = invoice.date_tax_point.isoformat()
+
+        etree.SubElement(invoice_elem, "OriginalDocumentNumber").text = sanitize_forbidden_chars(invoice.reference, 32)
 
         cost_centre = self.center(invoice)
         if self.get_invoice_root_element() == "IssuedInvoices" and cost_centre:
@@ -318,16 +335,14 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
 
         # For received invoices only, include header-level reverse charge
         # totals as allowed by the received_invoices.xsd schema.
-        if (
-                self.get_invoice_root_element() == "IncomingInvoices"
-                and invoice.is_reverse_charge()
-        ):
-            etree.SubElement(invoice_elem, "ReverseChargeBaseTaxRateAmount").text = format_decimal(invoice.total or 0)
-            etree.SubElement(invoice_elem, "ReverseChargeBaseTaxRateTax").text = format_decimal(invoice.vat or 0)
+        if self.get_invoice_root_element() == "IncomingInvoices" and is_reverse_charge:
+            reverse_charge_tax = (invoice.subtotal * default_tax_rate) / 100
+            etree.SubElement(invoice_elem, "ReverseChargeBaseTaxRateAmount").text = format_decimal(invoice.subtotal)
+            etree.SubElement(invoice_elem, "ReverseChargeBaseTaxRateTax").text = format_decimal(reverse_charge_tax)
 
-        if hasattr(invoice, "orders") and invoice.orders.exists():
-            first_order = invoice.orders.first()
-            etree.SubElement(invoice_elem, "OrderNumber").text = sanitize_forbidden_chars(first_order.order_number, 20)
+        order_number = self.order_number(invoice)
+        if order_number:
+            etree.SubElement(invoice_elem, "OrderNumber").text = sanitize_forbidden_chars(order_number, 20)
 
         # ==== COMPANY ====
         company = etree.SubElement(invoice_elem, "Company")
@@ -352,12 +367,17 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
             item_elem = etree.SubElement(items_elem, "Item")
             etree.SubElement(item_elem, "Description").text = sanitize_forbidden_chars(first_line, 100)
             etree.SubElement(item_elem, "RowType").text = "1"
+
+            item_type = self.item_type(item)
+            if item_type:
+                etree.SubElement(item_elem, "ItemType").text = item_type
+
             etree.SubElement(item_elem, "Quantity").text = str(round(item.quantity, 6))
             etree.SubElement(item_elem, "UnitCode").text = ""
             etree.SubElement(item_elem, "UnitPrice").text = str(round(item.unit_price, 6))
-            etree.SubElement(item_elem, "TaxPercent").text = format_decimal(item.tax_rate if item.tax_rate else 0, 2)
-            etree.SubElement(item_elem, "TaxAmount").text = format_decimal(item.vat, 2)
-            etree.SubElement(item_elem, "DiscountPercent").text = format_decimal(item.discount, 2)
+            etree.SubElement(item_elem, "TaxPercent").text = format_decimal(default_tax_rate) if is_reverse_charge else format_decimal(item.tax_rate)
+            etree.SubElement(item_elem, "TaxAmount").text = format_decimal(item.vat)
+            etree.SubElement(item_elem, "DiscountPercent").text = format_decimal(item.discount)
             etree.SubElement(item_elem, "TotalWeight").text = str(item.weight if item.weight is not None else 0)
 
             for extra_line in extra_lines:
@@ -375,21 +395,22 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
             sv = etree.SubElement(sum_values, "SumValue")
             # Use the same vat_type logic as in header
             sum_vat_type = self.vat_type(invoice)
-            if sum_vat_type not in EMPTY_VALUES:
-                etree.SubElement(sv, "TaxCode").text = str(sum_vat_type)
-            else:
-                etree.SubElement(sv, "TaxCode").text = "0"
-            etree.SubElement(sv, "TaxType").text = "1"  # or as per code: 1=base, 2=reduced etc.
-            etree.SubElement(sv, "TaxPercent").text = format_decimal(vat_sum.get('rate') or 0, 2)
-            etree.SubElement(sv, "CurrencyCode").text = sanitize_uppercase_only(invoice.currency, 3)
-            etree.SubElement(sv, "Amount").text = format_decimal(vat_sum.get('base') or 0)
-            etree.SubElement(sv, "Tax").text = format_decimal(vat_sum.get('vat') or 0)
 
-            if invoice.is_reverse_charge():
+            etree.SubElement(sv, "TaxCode").text = str(sum_vat_type) if sum_vat_type not in EMPTY_VALUES else "0"
+            etree.SubElement(sv, "TaxType").text = "1"  # or as per code: 1=base, 2=reduced etc.
+            etree.SubElement(sv, "TaxPercent").text = format_decimal(default_tax_rate) if is_reverse_charge else format_decimal(vat_sum.get('rate'))
+
+            etree.SubElement(sv, "CurrencyCode").text = sanitize_uppercase_only(invoice.currency, 3)
+            etree.SubElement(sv, "Amount").text = format_decimal(vat_sum.get('base'))
+            etree.SubElement(sv, "Tax").text = format_decimal(vat_sum.get('vat'))
+
+            if is_reverse_charge:
                 # Reverse charge is represented on the summary level,
                 # as expected by the XSD (ReverseChargeAmount / ReverseChargeTax).
-                etree.SubElement(sv, "ReverseChargeAmount").text = format_decimal(vat_sum.get('base') or 0)
-                etree.SubElement(sv, "ReverseChargeTax").text = format_decimal(vat_sum.get('vat') or 0)
+                reverse_charge_tax = (vat_sum.get('base') * default_tax_rate) / 100
+                etree.SubElement(sv, "ReverseChargeAmount").text = format_decimal(vat_sum.get('base'))
+                etree.SubElement(sv, "ReverseChargeTax").text = format_decimal(reverse_charge_tax)
+                etree.SubElement(sv, "TaxApplied").text = format_decimal(reverse_charge_tax)
 
         # ==== PAYMENTS ====
         if invoice.date_paid and invoice.already_paid > 0:
@@ -427,7 +448,8 @@ class IssuedInvoiceMrpListExporter(InvoiceMrpListExporterMixin):
         etree.SubElement(parent_element, "ZipCode").text = sanitize_zipcode(invoice.customer_zip)
         etree.SubElement(parent_element, "City").text = sanitize_city(invoice.customer_city)
         etree.SubElement(parent_element, "CountryCode").text = sanitize_uppercase_only(getattr(invoice.customer_country, "code", ""), 10)
-        etree.SubElement(parent_element, "VatNumber").text = sanitize_forbidden_chars(invoice.customer_vat_id, 17)
+        etree.SubElement(parent_element, "VatNumber").text = sanitize_forbidden_chars(invoice.customer_tax_id, 17)
+        etree.SubElement(parent_element, "VatNumberSK").text = sanitize_forbidden_chars(invoice.customer_vat_id, 14)
         etree.SubElement(parent_element, "Phone").text = sanitize_forbidden_chars(invoice.customer_phone, 30)
         etree.SubElement(parent_element, "Email").text = sanitize_forbidden_chars(invoice.customer_email, 256)
 
@@ -452,6 +474,7 @@ class ReceivedInvoiceMrpListExporter(InvoiceMrpListExporterMixin):
         etree.SubElement(parent_element, "ZipCode").text = sanitize_zipcode(invoice.supplier_zip)
         etree.SubElement(parent_element, "City").text = sanitize_city(invoice.supplier_city)
         etree.SubElement(parent_element, "CountryCode").text = sanitize_uppercase_only(getattr(invoice.supplier_country, "code", ""), 10)
-        etree.SubElement(parent_element, "VatNumber").text = sanitize_forbidden_chars(invoice.supplier_vat_id, 17)
+        etree.SubElement(parent_element, "VatNumber").text = sanitize_forbidden_chars(invoice.supplier_tax_id, 17)
+        etree.SubElement(parent_element, "VatNumberSK").text = sanitize_forbidden_chars(invoice.supplier_vat_id, 14)
         etree.SubElement(parent_element, "Phone").text = sanitize_forbidden_chars(invoice.issuer_phone, 30)
         etree.SubElement(parent_element, "Email").text = sanitize_forbidden_chars(invoice.issuer_email, 256)

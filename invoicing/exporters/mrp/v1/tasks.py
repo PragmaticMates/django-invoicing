@@ -52,6 +52,7 @@ def mail_exported_invoices_mrp_v1(export_id, exporter_subclass_paths, filename=N
             ]
             zip_file = compress(export_files)
             zip_file.seek(0)
+            zip_bytes = zip_file.read()
 
             # update status of export
             export.status = Export.STATUS_FINISHED
@@ -61,7 +62,7 @@ def mail_exported_invoices_mrp_v1(export_id, exporter_subclass_paths, filename=N
                 f"Updated {updated_count} ExportItem records to SUCCESS for export_id={export.id}"
             )
 
-        mail_successful_export(export, filename, zip_file)
+        mail_successful_export(export, filename, zip_bytes)
     except Exception as e:
         with transaction.atomic():
             export.status = Export.STATUS_FAILED

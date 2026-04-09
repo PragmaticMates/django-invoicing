@@ -314,11 +314,11 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
         etree.SubElement(invoice_elem, "VariableSymbol").text = sanitize_forbidden_chars(invoice.variable_symbol, 10)
         etree.SubElement(invoice_elem, "ConstantSymbol").text = sanitize_forbidden_chars(invoice.constant_symbol, 8)
         etree.SubElement(invoice_elem, "SpecificSymbol").text = sanitize_forbidden_chars(invoice.specific_symbol, 10)
+        etree.SubElement(invoice_elem, "CreditNoteOriginalNumber").text = sanitize_forbidden_chars(invoice.related_document, 10)
 
         if self.get_invoice_root_element() == "IncomingInvoices":
             etree.SubElement(invoice_elem, "TaxPointDate2").text = invoice.date_tax_point.isoformat()
-
-        etree.SubElement(invoice_elem, "OriginalDocumentNumber").text = sanitize_forbidden_chars(invoice.reference, 32)
+            etree.SubElement(invoice_elem, "OriginalDocumentNumber").text = sanitize_forbidden_chars(invoice.reference, 32)
 
         cost_centre = self.center(invoice)
         if self.get_invoice_root_element() == "IssuedInvoices" and cost_centre:

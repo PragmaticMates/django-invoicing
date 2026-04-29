@@ -314,7 +314,7 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
         etree.SubElement(invoice_elem, "VariableSymbol").text = sanitize_forbidden_chars(invoice.variable_symbol, 10)
         etree.SubElement(invoice_elem, "ConstantSymbol").text = sanitize_forbidden_chars(invoice.constant_symbol, 8)
         etree.SubElement(invoice_elem, "SpecificSymbol").text = sanitize_forbidden_chars(invoice.specific_symbol, 10)
-        etree.SubElement(invoice_elem, "CreditNoteOriginalNumber").text = sanitize_forbidden_chars(invoice.related_document, 10)
+        etree.SubElement(invoice_elem, "CreditNoteOriginalNumber").text = sanitize_forbidden_chars(invoice.related_document, 50)
 
         if self.get_invoice_root_element() == "IncomingInvoices":
             etree.SubElement(invoice_elem, "TaxPointDate2").text = invoice.date_tax_point.isoformat()
@@ -375,7 +375,12 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
             etree.SubElement(item_elem, "Quantity").text = str(round(item.quantity, 6))
             etree.SubElement(item_elem, "UnitCode").text = ""
             etree.SubElement(item_elem, "UnitPrice").text = str(round(item.unit_price, 6))
-            etree.SubElement(item_elem, "TaxPercent").text = format_decimal(default_tax_rate) if is_reverse_charge else format_decimal(item.tax_rate)
+
+            if self.get_invoice_root_element() == "IncomingInvoices" and is_reverse_charge:
+                etree.SubElement(item_elem, "TaxPercent").text = format_decimal(default_tax_rate)
+            else:
+                etree.SubElement(item_elem, "TaxPercent").text = format_decimal(item.tax_rate)
+
             etree.SubElement(item_elem, "TaxAmount").text = format_decimal(item.vat)
             etree.SubElement(item_elem, "DiscountPercent").text = format_decimal(item.discount)
             etree.SubElement(item_elem, "TotalWeight").text = str(item.weight if item.weight is not None else 0)
@@ -398,19 +403,26 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
 
             etree.SubElement(sv, "TaxCode").text = str(sum_vat_type) if sum_vat_type not in EMPTY_VALUES else "0"
             etree.SubElement(sv, "TaxType").text = "1"  # or as per code: 1=base, 2=reduced etc.
-            etree.SubElement(sv, "TaxPercent").text = format_decimal(default_tax_rate) if is_reverse_charge else format_decimal(vat_sum.get('rate'))
+
+            if self.get_invoice_root_element() == "IncomingInvoices" and is_reverse_charge:
+                etree.SubElement(sv, "TaxPercent").text = format_decimal(default_tax_rate)
+            else:
+                etree.SubElement(sv, "TaxPercent").text = format_decimal(vat_sum.get('rate'))
 
             etree.SubElement(sv, "CurrencyCode").text = sanitize_uppercase_only(invoice.currency, 3)
             etree.SubElement(sv, "Amount").text = format_decimal(vat_sum.get('base'))
             etree.SubElement(sv, "Tax").text = format_decimal(vat_sum.get('vat'))
 
             if is_reverse_charge:
-                # Reverse charge is represented on the summary level,
-                # as expected by the XSD (ReverseChargeAmount / ReverseChargeTax).
-                reverse_charge_tax = (vat_sum.get('base') * default_tax_rate) / 100
                 etree.SubElement(sv, "ReverseChargeAmount").text = format_decimal(vat_sum.get('base'))
-                etree.SubElement(sv, "ReverseChargeTax").text = format_decimal(reverse_charge_tax)
-                etree.SubElement(sv, "TaxApplied").text = format_decimal(reverse_charge_tax)
+
+                if self.get_invoice_root_element() == "IncomingInvoices":
+                    reverse_charge_tax = (vat_sum.get('base') * default_tax_rate) / 100
+                    etree.SubElement(sv, "ReverseChargeTax").text = format_decimal(reverse_charge_tax)
+                    etree.SubElement(sv, "TaxApplied").text = format_decimal(reverse_charge_tax)
+                else:
+                    etree.SubElement(sv, "ReverseChargeTax").text = format_decimal(vat_sum.get('vat'))
+                    etree.SubElement(sv, "TaxApplied").text = format_decimal(vat_sum.get('vat'))
 
         # ==== PAYMENTS ====
         if invoice.date_paid and invoice.already_paid > 0:

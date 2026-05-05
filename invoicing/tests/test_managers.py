@@ -163,7 +163,7 @@ class TestPdfManager:
         from invoicing.exporters.xlsx.list import InvoiceXlsxListExporter
         assert manager.exporter_class is InvoiceXlsxListExporter
 
-    @patch('outputs.usecases.execute_export', create=True)
+    @patch('pragmatic.utils.dispatch_task')
     def test_export_detail_pdf(self, mock_execute_export, invoice_factory, item_factory):
         """Test PDF export."""
         manager = PdfManager()
@@ -179,7 +179,6 @@ class TestPdfManager:
         with patch.object(manager, '_is_export_qs_valid', return_value=True):
             manager.export_detail_pdf(request, queryset=queryset)
         
-        # Should call execute_export from outputs.usecases
         assert mock_execute_export.called
 
 
@@ -193,7 +192,7 @@ class TestXlsxManager:
         manager = XlsxManager()
         assert manager.exporter_class is not None
 
-    @patch('outputs.usecases.execute_export', create=True)
+    @patch('pragmatic.utils.dispatch_task')
     def test_export_list_xlsx(self, mock_execute_export, invoice_factory, item_factory):
         """Test XLSX export."""
         manager = XlsxManager()
@@ -222,7 +221,7 @@ class TestIsdocManager:
         manager = IsdocManager()
         assert manager.exporter_class is not None
 
-    @patch('outputs.usecases.execute_export', create=True)
+    @patch('pragmatic.utils.dispatch_task')
     def test_export_list_isdoc(self, mock_execute_export, invoice_factory, item_factory):
         """Test ISDOC export."""
         manager = IsdocManager()
@@ -482,7 +481,7 @@ class TestMrpManagers:
         with pytest.raises((builtins.EnvironmentError, ImproperlyConfigured, AttributeError)):
             manager.export_via_api(request, queryset)
 
-    @patch('outputs.usecases.execute_export', create=True)
+    @patch('pragmatic.utils.dispatch_task')
     def test_export_list_mrp_received(self, mock_execute_export, invoice_factory, item_factory, settings):
         """Test MRP v2 received export."""
         manager = MrpReceivedManager()
@@ -499,7 +498,7 @@ class TestMrpManagers:
 
         assert mock_execute_export.called
 
-    @patch('outputs.usecases.execute_export', create=True)
+    @patch('pragmatic.utils.dispatch_task')
     def test_export_list_mrp_issued(self, mock_execute_export, invoice_factory, item_factory, settings):
         """Test MRP v2 issued export."""
         manager = MrpIssuedManager()

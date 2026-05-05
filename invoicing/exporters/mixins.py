@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib import messages
+from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from django.utils.module_loading import import_string
 
@@ -103,7 +104,15 @@ class InvoiceManagerMixin(object):
             }
         )
 
-        from outputs.usecases import execute_export
-        from django.utils import translation
-        execute_export(exporter, language=translation.get_language())
+
+        from outputs.jobs import execute_export
+        from outputs.utils import serialize_exporter_params
+        from pragmatic.utils import dispatch_task
+
+        dispatch_task(
+            execute_export,
+            exporter_class,
+            serialize_exporter_params(exporter_params),
+            language=translation.get_language(),
+        )
         messages.info(request, _('Export of %d invoice(s) queued and will be sent to email') % qs_count)

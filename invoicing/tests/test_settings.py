@@ -94,3 +94,12 @@ INVOICING_SUPPLIER = {
     }
 }
 
+# pragmatic>=4.1 defaults to django.tasks.task (Django 5.2+). Tests use Django 4.x + RQ.
+PRAGMATIC_TASK_DECORATOR = 'django_rq.job'
+
+# django-rq requires RQ_QUEUES to be defined in settings
+RQ_QUEUES = {
+    'default': {},
+    'exports': {},
+}
+

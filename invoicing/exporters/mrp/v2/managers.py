@@ -52,7 +52,8 @@ class MrpApiManagerMixin(InvoiceManagerMixin):
         export = exporter.save_export()
 
         from invoicing.exporters.mrp.v2.tasks import send_invoices_to_mrp
-        send_invoices_to_mrp.delay(export.id, self)
+        from pragmatic.utils import dispatch_task
+        dispatch_task(send_invoices_to_mrp, export.id, self)
 
         messages.info(request, _('Export of %d invoice(s) queued for MRP API processing') % exporter.get_queryset().count())
 

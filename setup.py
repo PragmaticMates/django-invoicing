@@ -20,7 +20,7 @@ setup(
         'django-localflavor', 'django-internationalflavor', 'lxml'
     ),
     extras_require={
-        'exporters': ['django-outputs'],  # optional umbrella for all exporters
+        'exporters': ['django-outputs', 'django-pragmatic'],  # optional umbrella for all exporters
     },
     classifiers=[
         'Programming Language :: Python',

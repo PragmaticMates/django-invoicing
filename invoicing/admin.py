@@ -162,13 +162,6 @@ class InvoiceAdmin(admin.ModelAdmin):
         """
         actions = super().get_actions(request)
 
-        # Keep only actions explicitly listed on the ModelAdmin
-        explicit = set(self.actions or [])
-        actions = {
-            name: action for name, action in actions.items()
-            if name in explicit
-        }
-
         # Collect export actions from all configured managers
         for manager_class_path, manager_config in invoicing_settings.INVOICING_MANAGERS.items():
             try:

@@ -46,6 +46,7 @@ class MrpV1Manager(InvoiceManagerMixin):
                 f"{cls.__module__}.{cls.__qualname__}" for cls in self.exporter_subclasses
             ]
         from invoicing.exporters.mrp.v1.tasks import mail_exported_invoices_mrp_v1
-        mail_exported_invoices_mrp_v1.delay(export.id, exporter_subclass_paths=exporter_subclass_paths)
+        from pragmatic.utils import dispatch_task
+        dispatch_task(mail_exported_invoices_mrp_v1, export.id, exporter_subclass_paths=exporter_subclass_paths)
 
     export_list_mrp.short_description = _('Export to MRP v1 (XML)')

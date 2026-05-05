@@ -6,9 +6,10 @@ django_find_project = false. Run pytest from the project root.
 
 Mocking strategy
 ----------------
-outputs.models / outputs.mixins / outputs.usecases  → real package (3.0.0)
+outputs.models / outputs.mixins / outputs.jobs  → real package (3.0.0)
     Tests use the real ExporterMixin, Export and ExportItem models, and the
-    real execute_export → save_export pipeline.  The test database is
+    real execute_export job body (save_export pipeline) where tests run it
+    synchronously.  The test database is
     PostgreSQL, which is required by Export.fields/emails (ArrayField columns).
 
 outputs.signals  → mocked
@@ -63,7 +64,15 @@ def _get_task_decorator(_queue_name):
     return _decorator
 
 
+def _dispatch_task(task, *args, **kwargs):
+    """Mirror pragmatic task dispatch while keeping tests synchronous."""
+    if hasattr(task, "delay"):
+        return task.delay(*args, **kwargs)
+    return task(*args, **kwargs)
+
+
 _pragmatic_utils.get_task_decorator = _get_task_decorator
+_pragmatic_utils.dispatch_task = _dispatch_task
 _pragmatic_utils.compress = lambda content: content
 
 

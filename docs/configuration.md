@@ -36,9 +36,48 @@ When a new `Invoice` is saved, `Invoice.set_supplier_data()` copies these values
 | `INVOICING_COUNTER_PERIOD` | `'YEARLY'` | Reset the sequence counter every `DAILY`, `MONTHLY`, `YEARLY`, or never (`INFINITE`) |
 | `INVOICING_NUMBER_START_FROM` | `1` | First sequence number issued within a counter period |
 | `INVOICING_COUNTER_PER_TYPE` | `False` | If `True`, each invoice type (`INVOICE`, `ADVANCE`, …) has its own independent counter |
+| `INVOICING_FILL_SEQUENCE_GAPS` | `False` | If `True`, reuse numbers freed up by deleted invoices instead of continuing after the highest one |
 | `INVOICING_NUMBER_FORMAT` | `"{{ invoice.date_issue\|date:'Y' }}/{{ invoice.sequence }}"` | Django template string used to render the human-readable invoice number |
 | `INVOICING_SEQUENCE_GENERATOR` | `'invoicing.helpers.sequence_generator'` | Dotted path to a callable that returns the next integer sequence |
 | `INVOICING_NUMBER_FORMATTER` | `'invoicing.helpers.number_formatter'` | Dotted path to a callable that returns the formatted invoice number string |
+
+### Filling gaps in the numbering
+
+By default the next sequence is `MAX(sequence) + 1` within the counter period, so a
+deleted invoice leaves a permanent hole: if `1, 2, 3, 7` exist, the next invoice is `8`
+and `4`, `5`, `6` are never issued.
+
+```python
+INVOICING_FILL_SEQUENCE_GAPS = True
+```
+
+With the setting enabled the **lowest unused** sequence within the counter period is
+returned instead - `1, 2, 3, 7` yields `4`, then `5`, `6`, and only then `8`. When there
+are no gaps the result is identical to the default behaviour, and an empty counter period
+still starts at `INVOICING_NUMBER_START_FROM`. The lookup respects the same scoping as the
+default generator: counter period, `INVOICING_COUNTER_PER_TYPE`, the `number_prefix`
+argument and any `related_invoices` queryset passed in.
+
+A single invoice can opt in or out regardless of the setting:
+
+```python
+invoice = Invoice(...)
+invoice.fill_sequence_gaps = True
+invoice.save()
+```
+
+Use `Invoice.objects.sequence_gaps()` to inspect the current holes - scope the queryset the
+same way the generator is scoped, otherwise the result is meaningless:
+
+```python
+Invoice.objects.filter(date_issue__year=2026).sequence_gaps()
+```
+
+!!! warning
+    Only enable this if a deleted invoice never reached the customer. Reusing the number of
+    an invoice that was already sent out produces two different documents carrying the same
+    number. Cancelling an invoice (`STATUS.CANCELED`) keeps its row and therefore its number,
+    so cancelled invoices never create a gap.
 
 ### Custom number format
 
@@ -56,7 +95,7 @@ Supply a dotted path to any callable with the following signature:
 ```python
 def my_sequence_generator(type, important_date, number_prefix=None,
                            counter_period=None, related_invoices=None,
-                           start_from=None):
+                           start_from=None, fill_gaps=None):
     ...
     return next_integer
 ```

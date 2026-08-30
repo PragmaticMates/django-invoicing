@@ -54,6 +54,32 @@ class InvoiceQuerySet(QuerySet):
                     .filter(count__gt=1)
                     .values_list('number', flat=True))
 
+    def sequence_gaps(self, start_from=1, limit=1000):
+        """Return the sequences missing from this queryset, below its highest one.
+
+        Scope the queryset the same way the sequence generator is scoped (counter
+        period, supplier, type, ...) or the result is meaningless.
+
+        At most ``limit`` gaps are returned: a single stray sequence far above the
+        rest (a number pasted into the field by hand, for example) would otherwise
+        produce a list with millions of entries.
+        """
+        used = sorted(set(self.filter(sequence__gte=start_from).values_list('sequence', flat=True)))
+        gaps = []
+        expected = start_from
+
+        for sequence in used:
+            while expected < sequence:
+                if len(gaps) >= limit:
+                    return gaps
+
+                gaps.append(expected)
+                expected += 1
+
+            expected = sequence + 1
+
+        return gaps
+
     def received(self):
         return self.filter(origin=self.model.ORIGIN.RECEIVED)
 

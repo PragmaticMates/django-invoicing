@@ -175,6 +175,171 @@ class TestSequenceGenerator:
 
 @pytest.mark.django_db
 @pytest.mark.unit
+class TestSequenceGeneratorFillGaps:
+    """Tests for INVOICING_FILL_SEQUENCE_GAPS (reusing numbers of deleted invoices)."""
+
+    def _with_gap(self, invoice_factory, **kwargs):
+        """Create the sequence 1, 2, 3, 7 - a gap at 4, 5, 6."""
+        for sequence in (1, 2, 3, 7):
+            invoice_factory(sequence=sequence, **kwargs)
+
+    def test_gaps_are_not_filled_by_default(self, invoice_factory, settings_yearly_counter):
+        """Without the setting the generator continues after the highest sequence."""
+        self._with_gap(invoice_factory)
+
+        seq = sequence_generator(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            related_invoices=Invoice.objects.all()
+        )
+
+        assert seq == 8
+
+    @override_settings(INVOICING_FILL_SEQUENCE_GAPS=True)
+    def test_lowest_free_sequence_is_returned(self, invoice_factory, settings_yearly_counter):
+        """With the setting enabled the lowest unused sequence is reused."""
+        self._with_gap(invoice_factory)
+
+        seq = sequence_generator(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            related_invoices=Invoice.objects.all()
+        )
+
+        assert seq == 4
+
+    @override_settings(INVOICING_FILL_SEQUENCE_GAPS=True)
+    def test_continuous_sequence_behaves_as_before(self, invoice_factory, settings_yearly_counter):
+        """Without a gap the result is identical to MAX + 1."""
+        for sequence in (1, 2, 3):
+            invoice_factory(sequence=sequence)
+
+        seq = sequence_generator(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            related_invoices=Invoice.objects.all()
+        )
+
+        assert seq == 4
+
+    @override_settings(INVOICING_FILL_SEQUENCE_GAPS=True)
+    def test_empty_counter_period_starts_from_beginning(self, settings_yearly_counter):
+        """An empty period yields INVOICING_NUMBER_START_FROM, same as before."""
+        seq = sequence_generator(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            related_invoices=Invoice.objects.none()
+        )
+
+        assert seq == 1
+
+    @override_settings(INVOICING_FILL_SEQUENCE_GAPS=True)
+    def test_gap_does_not_leak_across_counter_periods(self, invoice_factory, settings_yearly_counter):
+        """A gap in one year must not be filled from another year."""
+        self._with_gap(invoice_factory, date_issue=date(2025, 6, 1))
+        invoice_factory(sequence=1, date_issue=date(2026, 6, 1))
+
+        seq_2025 = sequence_generator(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date(2025, 6, 1),
+            related_invoices=Invoice.objects.all()
+        )
+        seq_2026 = sequence_generator(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date(2026, 6, 1),
+            related_invoices=Invoice.objects.all()
+        )
+
+        assert seq_2025 == 4
+        assert seq_2026 == 2
+
+    @override_settings(INVOICING_FILL_SEQUENCE_GAPS=True)
+    def test_respects_start_from(self, invoice_factory, settings_yearly_counter):
+        """Sequences below start_from are ignored when looking for a gap."""
+        invoice_factory(sequence=5)
+        invoice_factory(sequence=100)
+        invoice_factory(sequence=102)
+
+        seq = sequence_generator(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            start_from=100,
+            related_invoices=Invoice.objects.all()
+        )
+
+        assert seq == 101
+
+    @override_settings(INVOICING_FILL_SEQUENCE_GAPS=True)
+    def test_respects_number_prefix(self, invoice_factory, settings_yearly_counter):
+        """The gap is looked up within the prefixed sequence only."""
+        invoice_factory(sequence=1, number='PREFIX-001')
+        invoice_factory(sequence=2, number='PREFIX-002')
+        invoice_factory(sequence=4, number='PREFIX-004')
+        invoice_factory(sequence=3, number='OTHER-003')
+
+        seq = sequence_generator(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            number_prefix='PREFIX',
+            related_invoices=Invoice.objects.all()
+        )
+
+        assert seq == 3
+
+    def test_fill_gaps_argument_overrides_setting(self, invoice_factory, settings_yearly_counter):
+        """The explicit argument wins over the (disabled) setting."""
+        self._with_gap(invoice_factory)
+
+        seq = sequence_generator(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            related_invoices=Invoice.objects.all(),
+            fill_gaps=True
+        )
+
+        assert seq == 4
+
+    def test_get_next_sequence_forwards_fill_gaps(self, invoice_factory, settings_yearly_counter):
+        """Invoice.get_next_sequence passes the flag down to the generator."""
+        self._with_gap(invoice_factory)
+
+        assert Invoice.get_next_sequence(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            related_invoices=Invoice.objects.all(),
+            fill_gaps=True) == 4
+
+        assert Invoice.get_next_sequence(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            related_invoices=Invoice.objects.all()) == 8
+
+    def test_get_next_sequence_keeps_legacy_generators_working(self, settings_yearly_counter):
+        """A custom generator without a fill_gaps argument must not break."""
+        def legacy_generator(type, important_date, number_prefix=None, counter_period=None,
+                             related_invoices=None, start_from=None):
+            return 42
+
+        assert Invoice.get_next_sequence(
+            type=Invoice.TYPE.INVOICE,
+            important_date=date.today(),
+            generator=legacy_generator) == 42
+
+    def test_save_honours_instance_attribute(self, invoice_factory, settings_yearly_counter):
+        """Invoice.fill_sequence_gaps overrides the setting for a single instance."""
+        self._with_gap(invoice_factory)
+        invoice = invoice_factory(sequence=99)
+
+        invoice.sequence = None
+        invoice.number = ''
+        invoice.fill_sequence_gaps = True
+        invoice.save()
+
+        assert invoice.sequence == 4
+
+
+@pytest.mark.django_db
+@pytest.mark.unit
 class TestNumberFormatter:
     """Tests for number_formatter function."""
 

@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from invoicing.models import Invoice
 
 
-def sequence_generator(type, important_date, number_prefix=None, counter_period=None, related_invoices=None, start_from=None):
+def sequence_generator(type, important_date, number_prefix=None, counter_period=None, related_invoices=None, start_from=None, fill_gaps=None):
     """
     Returns next invoice sequence based on ``settings.INVOICING_COUNTER_PERIOD``.
 
@@ -22,7 +22,14 @@ def sequence_generator(type, important_date, number_prefix=None, counter_period=
 
         To get invoice number use ``number`` field.
 
-    :return: string (generated next sequence)
+    .. note::
+
+        When ``settings.INVOICING_FILL_SEQUENCE_GAPS`` (or the ``fill_gaps`` argument)
+        is enabled, the lowest unused sequence within the counter period is returned
+        instead of continuing after the highest one. This reuses numbers freed up by
+        deleted invoices. Disabled by default.
+
+    :return: int (generated next sequence)
     """
     with transaction.atomic():
         Invoice.objects.lock()
@@ -60,7 +67,28 @@ def sequence_generator(type, important_date, number_prefix=None, counter_period=
             related_invoices = related_invoices.filter(number__startswith=number_prefix)
 
         start_from = start_from if start_from is not None else getattr(settings, 'INVOICING_NUMBER_START_FROM', 1)
-        last_sequence = related_invoices.aggregate(Max('sequence'))['sequence__max'] or start_from - 1
+
+        if fill_gaps is None:
+            fill_gaps = getattr(settings, 'INVOICING_FILL_SEQUENCE_GAPS', False)
+
+        if fill_gaps:
+            # Reuse sequences freed up by deleted invoices: return the lowest unused
+            # number within the counter period instead of continuing after the highest.
+            used = set(related_invoices
+                       .filter(sequence__gte=start_from)
+                       .values_list('sequence', flat=True))
+
+            sequence = start_from
+
+            while sequence in used:
+                sequence += 1
+
+            return sequence
+
+        last_sequence = related_invoices.aggregate(Max('sequence'))['sequence__max']
+
+        if last_sequence is None:
+            last_sequence = start_from - 1
 
         return last_sequence + 1
 

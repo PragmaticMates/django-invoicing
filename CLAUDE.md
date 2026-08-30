@@ -42,6 +42,8 @@ This is a reusable Django app (`invoicing`) for invoice management with pluggabl
 
 On `Invoice.save()`, if `sequence` is blank it's auto-generated via `INVOICING_SEQUENCE_GENERATOR` (default: `invoicing.helpers.sequence_generator`), then `number` is generated via `INVOICING_NUMBER_FORMATTER` (default: `invoicing.helpers.number_formatter`). The number format is a Django template string set in `INVOICING_NUMBER_FORMAT` (default: `"{{ invoice.date_issue|date:'Y' }}/{{ invoice.sequence }}"`).
 
+The default generator returns `MAX(sequence) + 1` within the counter period, so deleted invoices leave permanent gaps. Setting `INVOICING_FILL_SEQUENCE_GAPS = True` (or `invoice.fill_sequence_gaps = True` per instance) returns the lowest unused sequence instead. `InvoiceQuerySet.sequence_gaps()` reports existing holes.
+
 ### Taxation (`invoicing/taxation/`)
 
 `TaxationPolicy` provides base logic. `EUTaxationPolicy` handles EU VAT rules including reverse charge. The active policy is resolved per-invoice: if `INVOICING_TAXATION_POLICY` is set in settings it's used; otherwise EU policy is used for EU suppliers; otherwise default tax from `INVOICING_TAX_RATE`.
@@ -79,6 +81,7 @@ Exports are asynchronous: `InvoiceManagerMixin._execute_export()` calls `outputs
 | `INVOICING_NUMBER_FORMAT` | `Y/sequence` | Django template for invoice number |
 | `INVOICING_NUMBER_START_FROM` | `1` | First sequence number |
 | `INVOICING_COUNTER_PER_TYPE` | `False` | Separate sequences per invoice type |
+| `INVOICING_FILL_SEQUENCE_GAPS` | `False` | Reuse sequences freed up by deleted invoices instead of `MAX + 1` |
 | `INVOICING_TAXATION_POLICY` | EU auto-detect | Dotted path to taxation policy class |
 | `INVOICING_TAX_RATE` | — | Default tax rate (Decimal) |
 | `INVOICING_SEQUENCE_GENERATOR` | `invoicing.helpers.sequence_generator` | Dotted path to sequence generator |

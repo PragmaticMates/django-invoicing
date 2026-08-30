@@ -239,7 +239,8 @@ class Invoice(models.Model):
                 type=self.type,
                 important_date=self.date_issue,
                 number_prefix=getattr(self, 'number_prefix', None),
-                generator=getattr(self, 'sequence_generator', None))
+                generator=getattr(self, 'sequence_generator', None),
+                fill_gaps=getattr(self, 'fill_sequence_gaps', None))
         if self.number in EMPTY_VALUES:
             self.number = self._get_number()
 
@@ -251,22 +252,30 @@ class Invoice(models.Model):
         )(self)
 
     @staticmethod
-    def get_next_sequence(type, important_date, number_prefix=None, related_invoices=None, generator=None):
+    def get_next_sequence(type, important_date, number_prefix=None, related_invoices=None, generator=None, fill_gaps=None):
         """
         Returns next invoice sequence based on ``settings.INVOICING_SEQUENCE_GENERATOR``.
+
+        ``fill_gaps`` is forwarded to the generator only when explicitly given, so that
+        custom generators without that argument keep working.
         """
 
         if not generator:
             generator = getattr(settings, 'INVOICING_SEQUENCE_GENERATOR', 'invoicing.helpers.sequence_generator')
             generator = import_string(generator)
 
-        return generator(
-            type=type,
-            important_date=important_date,
-            number_prefix=number_prefix,
-            counter_period=None,
-            related_invoices=related_invoices
-        )
+        kwargs = {
+            'type': type,
+            'important_date': important_date,
+            'number_prefix': number_prefix,
+            'counter_period': None,
+            'related_invoices': related_invoices
+        }
+
+        if fill_gaps is not None:
+            kwargs['fill_gaps'] = fill_gaps
+
+        return generator(**kwargs)
 
     def _get_number(self):
         """

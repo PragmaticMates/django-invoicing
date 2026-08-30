@@ -289,6 +289,38 @@ class TestInvoiceQuerySet:
         assert 'INV-001' in duplicates
         assert 'INV-002' not in duplicates
 
+    def test_sequence_gaps(self, invoice_factory):
+        """Test detection of sequences missing from the numbering."""
+        for sequence in (1, 2, 3, 7):
+            invoice_factory(sequence=sequence)
+
+        assert Invoice.objects.sequence_gaps() == [4, 5, 6]
+
+    def test_sequence_gaps_without_gaps(self, invoice_factory):
+        """A continuous numbering has no gaps."""
+        for sequence in (1, 2, 3):
+            invoice_factory(sequence=sequence)
+
+        assert Invoice.objects.sequence_gaps() == []
+
+    def test_sequence_gaps_on_empty_queryset(self):
+        """An empty queryset has no gaps."""
+        assert Invoice.objects.none().sequence_gaps() == []
+
+    def test_sequence_gaps_respects_start_from(self, invoice_factory):
+        """Sequences below start_from are not reported as gaps."""
+        for sequence in (1, 100, 102):
+            invoice_factory(sequence=sequence)
+
+        assert Invoice.objects.sequence_gaps(start_from=100) == [101]
+
+    def test_sequence_gaps_is_capped(self, invoice_factory):
+        """A stray sequence far above the rest must not produce a huge list."""
+        invoice_factory(sequence=1)
+        invoice_factory(sequence=1301000021)
+
+        assert Invoice.objects.sequence_gaps(limit=5) == [2, 3, 4, 5, 6]
+
     def test_queryset_chaining(self, invoice_factory, item_factory):
         """Test method chaining."""
         paid = invoice_factory(status=Invoice.STATUS.PAID, type=Invoice.TYPE.INVOICE)

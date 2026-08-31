@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.validators import EMPTY_VALUES
@@ -7,6 +9,8 @@ from django.template import Template, Context
 from django.utils.translation import gettext_lazy as _
 
 from invoicing.models import Invoice
+
+logger = logging.getLogger(__name__)
 
 
 def sequence_generator(type, important_date, number_prefix=None, counter_period=None, related_invoices=None, start_from=None, fill_gaps=None):
@@ -60,8 +64,9 @@ def sequence_generator(type, important_date, number_prefix=None, counter_period=
 
             related_invoices = related_invoices.filter(type=type)
         elif type not in EMPTY_VALUES:
-            # TODO: log instead
-            print(_('Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled'))
+            # Debug, not info: this fires on every single invoice save, and the caller
+            # passing a type it does not need is a configuration hint, not an event.
+            logger.debug('Invoice type specified but INVOICING_COUNTER_PER_TYPE is disabled')
 
         if number_prefix is not None:
             related_invoices = related_invoices.filter(number__startswith=number_prefix)

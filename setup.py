@@ -21,6 +21,7 @@ setup(
     ),
     extras_require={
         'exporters': ['django-outputs', 'django-pragmatic'],  # optional umbrella for all exporters
+        'einvoicing': ['saxonche>=12.5'],  # Peppol Schematron validation (XSLT 2.0)
     },
     classifiers=[
         'Programming Language :: Python',

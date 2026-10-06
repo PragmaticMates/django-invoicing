@@ -56,6 +56,7 @@ nav:
     - Profit365: exporters/profit365.md
     - Custom Exporters: exporters/custom.md
   - Taxation: taxation.md
+  - E-invoicing (Peppol): einvoicing.md
   - Admin: admin.md
   - Signals & Views: signals_views.md
   - Changelog: changelog.md

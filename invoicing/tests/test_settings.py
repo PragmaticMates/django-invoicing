@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'model_utils',
     'outputs',
     'invoicing',
+    'invoicing.einvoicing',
 ]
 
 MIDDLEWARE = [

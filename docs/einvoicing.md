@@ -4,12 +4,15 @@
 a UBL 2.1 document compliant with [Peppol BIS Billing 3.0](https://docs.peppol.eu/poacc/billing/3.0/)
 (EN 16931), as required for Slovak eFaktúra from 2027.
 
-It is split into independent layers. None of them knows about any network or
-Access Point provider:
+It is split into layers. Only the last one talks to the network, through a
+replaceable provider:
 
 ```
-Invoice ─▶ calculations ─▶ ubl (builder) ─▶ validation
+Invoice ─▶ calculations ─▶ ubl (builder) ─▶ validation ─▶ services ─▶ EInvoiceProvider ─▶ Peppol
 ```
+
+The first three work without installing anything; sending needs
+`'invoicing.einvoicing'` in `INSTALLED_APPS` (it adds two tables).
 
 ## Installation
 
@@ -83,6 +86,70 @@ issue date). The namespace comes from the Solution Architecture v1.2, whose
 example it reproduces. The FS transposition table v1.11 quotes a different
 namespace whose own example does not verify.
 
+## Sending
+
+```python
+from invoicing.einvoicing import services
+
+transmission = services.prepare(invoice, attachments=[...])  # build + validate + store; raises EInvoiceValidationError
+services.submit(transmission)                                 # safe to retry
+services.refresh_status(transmission)                         # if the provider can report status
+```
+
+`EInvoiceTransmission` keeps, per attempt, the exact XML sent (and its
+SHA-256), the validation report, the provider document ID, the status, the
+timestamps, the last error, and an append-only log of events.
+
+Sending is idempotent:
+
+- The XML is built once and stored before any network call. Every
+  resubmission sends exactly those bytes with the same `Idempotency-Key`, so a
+  timeout or crash followed by a retry cannot create a second document.
+- An invoice has at most one live or successful transmission, enforced by a
+  conditional unique constraint; `prepare()` returns it instead of creating
+  another. A new attempt is possible only after one ended `REFUSED`,
+  `REJECTED`, `UNDELIVERABLE`, `FAILED` or `CANCELLED`.
+- A transmitted invoice cannot be deleted (`on_delete=PROTECT`), so its
+  number, which identifies the document in Peppol, is never reused.
+
+| Status | Meaning |
+|---|---|
+| `PREPARED` | Stored, not yet sent |
+| `SUBMITTING` | Being sent; resubmittable after `SUBMITTING_TIMEOUT_SECONDS` |
+| `SUBMIT_UNKNOWN` | Timeout or retryable error: resubmit (same key, same bytes) |
+| `CONFLICT` | HTTP 409: the provider may already hold the document; needs a human |
+| `REFUSED` | The provider did not take it (invalid, no credit, ...) |
+| `SUBMITTED` | The provider has it |
+| `DELIVERED`, `DELIVERED_NON_PEPPOL`, `ACCEPTED`, `UNCONFIRMED` | Reached the recipient (or the tax authority) |
+| `REJECTED`, `UNDELIVERABLE`, `FAILED`, `CANCELLED` | Ended without reaching the recipient |
+
+`signals.transmission_status_changed` is sent on every change. Poll with
+`services.transmissions_to_poll()`, retry with `services.transmissions_to_resubmit()`.
+
+### Providers
+
+```python
+from invoicing.einvoicing.providers import EInvoiceProvider
+
+class MyProvider(EInvoiceProvider):
+    name = 'my-provider'
+    supports_status = True
+
+    def submit(self, document): ...                 # -> SubmitResult, or raise ProviderError
+    def get_status(self, provider_document_id): ... # -> StatusResult
+```
+
+`INVOICING_EINVOICING['PROVIDER_RESOLVER']` names a callable returning the
+provider for an invoice, e.g. with that supplier's credentials.
+
+`providers.sapi_sk.SapiSkProvider(base_url, client_id, client_secret)`
+implements [SAPI-SK 1.0](https://www.sapi-sk.sk/openapi.json), the standard
+interface of Slovak Digital Postmen: OAuth2 client credentials (tokens cached
+in the Django cache, refresh tokens rotated), `POST /document/send` with
+`Idempotency-Key`, and errors retried only when the provider marks them
+`retryable`. SAPI-SK 1.0 has no outbound status or validation call; a provider
+offering those outside SAPI can subclass it.
+
 ## Settings
 
 ```python
@@ -94,6 +161,10 @@ INVOICING_EINVOICING = {
     'SCHEMATRON': True,
     'ALLOWED_CURRENCIES': ('EUR',),      # None: any
     'ALLOWED_CUSTOMER_COUNTRIES': None,  # e.g. ('SK',)
+    'PROVIDER_RESOLVER': None,           # 'myapp.einvoicing.get_provider'
+    'PREVALIDATE_WITH_PROVIDER': True,
+    'STATUS_POLL_DAYS': 30,
+    'SUBMITTING_TIMEOUT_SECONDS': 300,
 }
 ```
 

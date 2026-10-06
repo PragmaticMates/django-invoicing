@@ -31,6 +31,18 @@ DEFAULTS = {
     # not state a separate VAT currency (BT-6), hence EUR only by default.
     'ALLOWED_CURRENCIES': ('EUR',),
     'ALLOWED_CUSTOMER_COUNTRIES': None,
+
+    # Dotted path to a callable(invoice) returning the EInvoiceProvider to send it with
+    'PROVIDER_RESOLVER': None,
+
+    # Also run the provider's own validation (if it has one) before storing a transmission
+    'PREVALIDATE_WITH_PROVIDER': True,
+
+    # Stop polling the status of a transmission this many days after submitting it
+    'STATUS_POLL_DAYS': 30,
+
+    # A transmission stuck in SUBMITTING this long (a worker died mid-request) may be resubmitted
+    'SUBMITTING_TIMEOUT_SECONDS': 300,
 }
 
 

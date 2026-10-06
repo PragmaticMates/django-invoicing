@@ -175,3 +175,13 @@ class TestInvoiceAdapter:
         with pytest.raises(ReconciliationError) as error:
             reconcile(totals, invoice)
         assert error.value.differences[0][0] == 'total'
+
+    def test_explicit_item_category(self, invoice_factory, item_factory):
+        invoice = invoice_factory(vat_exemption_reason_code='VATEX-EU-AE')
+        item_factory(invoice, quantity=D('1'), unit_price=D('100.00'), tax_rate=None, vat_category='AE')
+        invoice.refresh_from_db()
+
+        totals = compute_for_invoice(invoice)
+
+        assert totals.categories == {'AE'}
+        assert totals.vat_breakdown[0].rate == D('0')

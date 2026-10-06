@@ -25,6 +25,7 @@ from invoicing.querysets import InvoiceQuerySet, ItemQuerySet
 from invoicing.taxation import TaxationPolicy
 from invoicing.taxation.eu import EUTaxationPolicy
 from invoicing.utils import deprecated
+from invoicing.einvoicing.vat import VatCategory
 
 
 def default_supplier(attribute_lookup):
@@ -154,6 +155,8 @@ class Invoice(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(9999999999)],
         blank=True, null=True, default=None)
     reference = models.CharField(_(u'reference'), max_length=140, blank=True)
+    buyer_reference = models.CharField(_(u'buyer reference'), max_length=255, blank=True,
+        help_text=_(u'identifier assigned by the customer, e.g. a purchase order or contact (EN 16931 BT-10)'))
 
     bank_name = models.CharField(_(u'bank name'), max_length=255, blank=True)
     bank_street = models.CharField(_(u'bank street and number'), max_length=255, blank=True)
@@ -174,6 +177,9 @@ class Invoice(models.Model):
     supplier_vat_id = VATNumberField(verbose_name=_(u'supplier VAT No.'), blank=True)
     supplier_additional_info = JSONField(_(u'supplier additional information'),
         blank=True, null=True, default=None)  # for example www or legal matters
+    supplier_endpoint_scheme = models.CharField(_(u'supplier electronic address scheme'), max_length=4, blank=True,
+        help_text=_(u'e.g. 0245 for a Slovak DIČ'))
+    supplier_endpoint_id = models.CharField(_(u'supplier electronic address'), max_length=64, blank=True)
 
     # Contact details
     issuer_name = models.CharField(_(u'issuer name'), max_length=255, blank=True)
@@ -191,6 +197,9 @@ class Invoice(models.Model):
     customer_vat_id = VATNumberField(verbose_name=_(u'customer VAT No.'), blank=True)
     customer_additional_info = JSONField(_(u'customer additional information'),
         blank=True, null=True, default=None)
+    customer_endpoint_scheme = models.CharField(_(u'customer electronic address scheme'), max_length=4, blank=True,
+        help_text=_(u'e.g. 0245 for a Slovak DIČ'))
+    customer_endpoint_id = models.CharField(_(u'customer electronic address'), max_length=64, blank=True)
     customer_email = models.EmailField(_(u'customer email'), blank=True)
     customer_phone = models.CharField(_(u'customer phone'), max_length=255, blank=True)
 
@@ -210,6 +219,11 @@ class Invoice(models.Model):
         blank=True, default=0)
     vat = models.DecimalField(_(u'VAT'), max_digits=10, decimal_places=2,
         blank=True, null=True, default=0)
+
+    # VAT exemption (EN 16931 BT-120/121), for items not taxed at a standard or zero rate
+    vat_exemption_reason = models.CharField(_(u'VAT exemption reason'), max_length=255, blank=True)
+    vat_exemption_reason_code = models.CharField(_(u'VAT exemption reason code'), max_length=30, blank=True,
+        help_text=_(u'VATEX code, e.g. VATEX-EU-AE'))
 
     # Other
     export_items = GenericRelation('outputs.ExportItem', related_query_name='invoice')
@@ -357,6 +371,8 @@ class Invoice(models.Model):
         self.supplier_tax_id = supplier.get('tax_id', '')
         self.supplier_vat_id = supplier.get('vat_id', '')
         self.supplier_additional_info = supplier.get('additional_info', None)
+        self.supplier_endpoint_scheme = supplier.get('endpoint_scheme', '')
+        self.supplier_endpoint_id = supplier.get('endpoint_id', '')
 
         bank = supplier.get('bank')
         self.bank_name = bank.get('name')
@@ -377,6 +393,8 @@ class Invoice(models.Model):
         self.customer_tax_id = customer.get('tax_id', '')
         self.customer_vat_id = customer.get('vat_id', '')
         self.customer_additional_info = customer.get('additional_info', None)
+        self.customer_endpoint_scheme = customer.get('endpoint_scheme', '')
+        self.customer_endpoint_id = customer.get('endpoint_id', '')
 
     def set_shipping_data(self, shipping):
         self.shipping_name = shipping.get('name', '')
@@ -573,6 +591,8 @@ class Item(models.Model):
     tax_rate = models.DecimalField(_(u'tax rate (%)'), max_digits=3, decimal_places=1,
         help_text=_(u'Enter amount or keep blank for no tax or reverse charge (if applicable)'),
         blank=True, null=True, default=None)
+    vat_category = models.CharField(_(u'VAT category'), max_length=2, choices=VatCategory.CHOICES, blank=True,
+        help_text=_(u'keep blank to derive it from the tax rate'))
     tag = models.CharField(_(u'tag'), max_length=128,
         blank=True, null=True, default=None)
     weight = models.IntegerField(_(u'weight'), choices=WEIGHT, help_text=_(u'ordering'),

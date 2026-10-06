@@ -9,6 +9,8 @@ case needs an explicit category.
 """
 from decimal import Decimal
 
+from django.utils.translation import gettext_lazy as _
+
 
 class VatCategoryError(ValueError):
     pass
@@ -24,13 +26,13 @@ class VatCategory:
     NOT_SUBJECT = 'O'
 
     CHOICES = (
-        (STANDARD, 'Standard rate'),
-        (ZERO_RATED, 'Zero rated goods'),
-        (EXEMPT, 'Exempt from VAT'),
-        (REVERSE_CHARGE, 'VAT reverse charge'),
-        (INTRA_COMMUNITY, 'Intra-community supply'),
-        (EXPORT, 'Export outside the EU'),
-        (NOT_SUBJECT, 'Not subject to VAT'),
+        (STANDARD, _('Standard rate')),
+        (ZERO_RATED, _('Zero rated goods')),
+        (EXEMPT, _('Exempt from VAT')),
+        (REVERSE_CHARGE, _('VAT reverse charge')),
+        (INTRA_COMMUNITY, _('Intra-community supply')),
+        (EXPORT, _('Export outside the EU')),
+        (NOT_SUBJECT, _('Not subject to VAT')),
     )
 
     ALL = frozenset(code for code, label in CHOICES)

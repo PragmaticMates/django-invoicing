@@ -51,8 +51,37 @@ class TransmissionError(EInvoicingError):
     pass
 
 
+class ResubmissionNotAllowed(EInvoicingError):
+    pass
+
+
 def live_transmission(invoice):
     return invoice.einvoice_transmissions.exclude(status__in=NOT_DELIVERED).first()
+
+
+def resubmission_blocked_reason(invoice, provider):
+    """Why ``provider`` would refuse the invoice again (see EInvoiceProvider), or None."""
+    previous = invoice.einvoice_transmissions.filter(provider=provider.name) \
+        .exclude(provider_document_id='').order_by('-created').first()
+
+    if previous is None or previous.is_live:
+        return None
+
+    return provider.resubmission_blocked_reason(previous)
+
+
+def resolve_conflict(transmission, note):
+    """
+    Ends a CONFLICT transmission as REFUSED, once a human established that the
+    provider did not take this submission (e.g. it only pointed at an earlier
+    one). The invoice can then be prepared again.
+    """
+    with transaction.atomic():
+        transmission = EInvoiceTransmission.objects.select_for_update().get(pk=transmission.pk)
+        if transmission.status != TransmissionStatus.CONFLICT:
+            raise TransmissionError(f'Transmission {transmission.pk} is {transmission.status}, not in conflict')
+        _set_status(transmission, TransmissionStatus.REFUSED, message=note)
+    return transmission
 
 
 def build_and_validate(invoice, *, provider=None, attachments=()):
@@ -86,6 +115,10 @@ def prepare(invoice, *, provider=None, attachments=()):
         return existing
 
     provider = provider or get_provider(invoice)
+
+    reason = resubmission_blocked_reason(invoice, provider)
+    if reason:
+        raise ResubmissionNotAllowed(reason)
 
     # Built outside the transaction: provider validation goes over the network
     xml, report = build_and_validate(invoice, provider=provider, attachments=attachments)

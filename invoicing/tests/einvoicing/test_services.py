@@ -225,6 +225,45 @@ class TestSubmit:
         assert transmission.status == Status.PREPARED
 
 
+class TestResubmission:
+    def test_provider_may_refuse_a_new_submission(self, invoice, provider):
+        provider.resubmission_blocked_reason = lambda previous: (
+            'retry it yourself' if previous.status == Status.FAILED else None)
+        provider.statuses = [StatusResult(Status.FAILED, 'FAILED')]
+        transmission = services.refresh_status(services.submit(services.prepare(invoice)))
+        assert transmission.status == Status.FAILED
+
+        with pytest.raises(services.ResubmissionNotAllowed, match='retry it yourself'):
+            services.prepare(invoice)
+        assert EInvoiceTransmission.objects.count() == 1
+
+    def test_refused_submissions_do_not_count(self, invoice, provider):
+        # a submission the provider never took (no provider document) says nothing about resubmitting
+        provider.resubmission_blocked_reason = lambda previous: 'never'
+        provider.outcomes = [ProviderError('invalid', code='SAPI-VAL-003', http_status=400)]
+        services.submit(services.prepare(invoice))
+
+        assert services.prepare(invoice).status == Status.PREPARED
+
+    def test_resolve_conflict(self, invoice, provider):
+        provider.outcomes = [ProviderError('duplicate', code='SAPI-PERM-002', http_status=409)]
+        transmission = services.submit(services.prepare(invoice))
+        assert services.prepare(invoice) == transmission  # blocked while in conflict
+
+        services.resolve_conflict(transmission, note='checked in the portal')
+
+        transmission.refresh_from_db()
+        assert transmission.status == Status.REFUSED
+        assert transmission.events.last().message == 'checked in the portal'
+        assert services.prepare(invoice) != transmission
+
+    def test_only_conflicts_can_be_resolved(self, invoice, provider):
+        transmission = services.prepare(invoice)
+
+        with pytest.raises(services.TransmissionError):
+            services.resolve_conflict(transmission, note='x')
+
+
 class TestRefreshStatus:
     def test_status_change(self, invoice, provider):
         changes = []

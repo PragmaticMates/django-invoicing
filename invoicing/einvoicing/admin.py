@@ -5,6 +5,7 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
+from invoicing.einvoicing import services
 from invoicing.einvoicing.models import EInvoiceTransmission, EInvoiceTransmissionEvent
 
 
@@ -34,6 +35,16 @@ class EInvoiceTransmissionAdmin(ReadOnlyMixin, admin.ModelAdmin):
     readonly_fields = [field.name for field in EInvoiceTransmission._meta.fields] + ['xml_download']
     exclude = ('xml',)
     inlines = [EventInline]
+    actions = ['resolve_conflict_as_refused']
+
+    @admin.action(description=_('Resolve conflict: the provider did not take this submission'))
+    def resolve_conflict_as_refused(self, request, queryset):
+        resolved = 0
+        for transmission in queryset.filter(status=EInvoiceTransmission.Status.CONFLICT):
+            services.resolve_conflict(transmission, note=f'Resolved by {request.user}: the provider did not take this submission')
+            resolved += 1
+        self.message_user(request, _('%(resolved)d of %(selected)d transmissions resolved; only those in conflict can be.')
+                          % {'resolved': resolved, 'selected': queryset.count()})
 
     def get_urls(self):
         return [

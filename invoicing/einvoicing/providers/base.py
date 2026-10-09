@@ -100,6 +100,16 @@ class EInvoiceProvider(ABC):
         """Returns a validation.ValidationReport of the provider's own checks."""
         raise CapabilityNotSupported(f'{self.name} cannot validate documents')
 
+    def resubmission_blocked_reason(self, previous):
+        """
+        Why the invoice cannot be submitted to this provider again, after
+        ``previous`` (its latest transmission the provider took) ended without
+        reaching the recipient; None when it can. Providers differ: some refuse
+        a new submission under the same number after certain failures and
+        retry those themselves.
+        """
+        return None
+
     def check_reachability(self, participant_id, document_type_id):
         """Returns a Reachability."""
         raise CapabilityNotSupported(f'{self.name} cannot look up participants')

@@ -37,3 +37,20 @@ def test_changelist(admin_client, transmission):
 def test_transmissions_are_read_only(admin_client, transmission):
     url = reverse('admin:invoicing_einvoicing_einvoicetransmission_delete', args=[transmission.pk])
     assert admin_client.post(url, {'post': 'yes'}).status_code == 403
+
+
+def test_resolve_conflict_action(admin_client, einvoice_factory, settings):
+    from invoicing.einvoicing.models import EInvoiceTransmission
+    from invoicing.einvoicing.providers import ProviderError
+    settings.INVOICING_EINVOICING = {'PROVIDER_RESOLVER': 'invoicing.tests.einvoicing.test_services.resolve'}
+    resolve.provider = FakeProvider(outcomes=[ProviderError('duplicate', code='SAPI-PERM-002', http_status=409)])
+    conflict = services.submit(services.prepare(einvoice_factory([dict(unit_price=Decimal('10'))])))
+    other = services.prepare(einvoice_factory([dict(unit_price=Decimal('10'))], number='2026-002'))
+
+    response = admin_client.post(reverse('admin:invoicing_einvoicing_einvoicetransmission_changelist'), {
+        'action': 'resolve_conflict_as_refused', '_selected_action': [conflict.pk, other.pk],
+    }, follow=True)
+
+    assert response.status_code == 200
+    conflict.refresh_from_db(); other.refresh_from_db()
+    assert (conflict.status, other.status) == ('REFUSED', 'PREPARED')

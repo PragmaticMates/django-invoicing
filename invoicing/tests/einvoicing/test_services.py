@@ -262,6 +262,17 @@ class TestRefreshStatus:
         assert transmission.last_status_check_at
         assert transmission.events.count() == events
 
+    def test_late_confirmation_after_unconfirmed(self, invoice, provider):
+        provider.statuses = [StatusResult(Status.UNCONFIRMED, 'UNCONFIRMED'), StatusResult(Status.ACCEPTED, 'ACCEPTED')]
+        transmission = services.submit(services.prepare(invoice))
+
+        services.refresh_status(transmission)
+        assert transmission.status == Status.UNCONFIRMED
+        assert transmission in services.transmissions_to_poll()
+
+        services.refresh_status(transmission)
+        assert transmission.status == Status.ACCEPTED
+
     def test_not_polled_before_submission(self, invoice, provider):
         transmission = services.prepare(invoice)
 

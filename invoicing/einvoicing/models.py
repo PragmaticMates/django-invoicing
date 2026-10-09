@@ -29,8 +29,10 @@ NOT_DELIVERED = frozenset({
     TransmissionStatus.FAILED, TransmissionStatus.CANCELLED,
 })
 
-# The provider has the document and may still report progress
-POLLABLE = frozenset({TransmissionStatus.SUBMITTED, TransmissionStatus.DELIVERED})
+# The provider has the document and may still report progress. UNCONFIRMED (no
+# confirmation from the recipient in time) can still turn ACCEPTED or REJECTED when
+# the confirmation arrives late.
+POLLABLE = frozenset({TransmissionStatus.SUBMITTED, TransmissionStatus.DELIVERED, TransmissionStatus.UNCONFIRMED})
 
 # Reached the recipient (or, for DELIVERED_NON_PEPPOL, the tax authority instead)
 REACHED = frozenset({

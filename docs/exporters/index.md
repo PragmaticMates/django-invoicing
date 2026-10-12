@@ -34,6 +34,7 @@ Replace or extend this dict to change the active set of exporters. Each value is
 | `PdfManager` | PDF | None |
 | `XlsxManager` | Excel (XLSX) | None |
 | `IsdocManager` | ISDOC XML | None |
+| `PeppolManager` | Peppol BIS Billing 3.0 UBL XML (e-invoices, not sent) | `einvoicing` extra |
 | `MrpV1Manager` | MRP XML v1 | None |
 | `MrpIssuedManager` | MRP XML / API v2 (issued) | `API_URL` |
 | `MrpReceivedManager` | MRP XML / API v2 (received) | `API_URL` |

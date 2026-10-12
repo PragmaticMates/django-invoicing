@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 13:29+0200\n"
+"POT-Creation-Date: 2026-10-12 10:30+0200\n"
 "PO-Revision-Date: 2023-12-15 15:53+0020\n"
 "Last-Translator: b'Erik Telepovsky <erik@pragmaticmates.com>'\n"
 "Language-Team: Slovak <https://weblate.swida.sk/projects/django-invoicing/app/sk/>\n"
@@ -19,67 +19,71 @@ msgstr ""
 "X-Generator: Weblate 4.9.1\n"
 "X-Translated-Using: django-rosetta 0.9.0\n"
 
-#: admin.py:50
+#: admin.py:52
 msgid "not yet exported with exporter"
 msgstr ""
 
-#: admin.py:81
+#: admin.py:101
 msgid "overdue"
 msgstr "oneskorená"
 
-#: admin.py:86
+#: admin.py:106
 msgid "no"
 msgstr "nie"
 
-#: admin.py:87
+#: admin.py:107
 msgid "yes"
 msgstr "áno"
 
-#: admin.py:115
+#: admin.py:135
 msgid "General information"
 msgstr "Všeobecné informácie"
 
-#: admin.py:122
+#: admin.py:142
 msgid "Contact details"
 msgstr "Kontaktné informácie"
 
-#: admin.py:127
+#: admin.py:147
 msgid "Payment details"
 msgstr "Platobné informácie"
 
-#: admin.py:135
+#: admin.py:155
 msgid "Supplier details"
 msgstr "Dodávateľ"
 
-#: admin.py:143
+#: admin.py:163
 msgid "Customer details"
 msgstr "Odberateľ"
 
-#: admin.py:149
+#: admin.py:170 einvoicing/apps.py:8
+msgid "E-invoicing"
+msgstr "E-fakturácia"
+
+#: admin.py:179
 msgid "Shipping details"
 msgstr "Doručovacie informácie"
 
-#: admin.py:215
+#: admin.py:268
 msgid "subtotal"
 msgstr "medzisúčet"
 
-#: admin.py:219
+#: admin.py:272
 msgid "supplier"
 msgstr "dodávateľ"
 
-#: admin.py:223
+#: admin.py:276
 msgid "customer"
 msgstr "odberateľ"
 
-#: admin.py:227
+#: admin.py:280
 msgid "payment term"
 msgstr "lehota splatnosti"
 
-#: admin.py:232
+#: admin.py:285
 msgid "is overdue"
 msgstr "je po splatnosti"
 
-#: admin.py:237
+#: admin.py:290
 msgid "is paid"
 msgstr "je uhradená"
 
@@ -89,11 +93,19 @@ msgstr "je uhradená"
 msgid "Invoicing"
 msgstr "Faktúra"
 
-#: einvoicing/admin.py:40
+#: einvoicing/admin.py:37 einvoicing/models.py:89
+msgid "e-invoice transmissions"
+msgstr "prenosy e-faktúr"
+
+#: einvoicing/admin.py:39 einvoicing/models.py:125
+msgid "transmission"
+msgstr "prenos"
+
+#: einvoicing/admin.py:55
 msgid "Resolve conflict: the provider did not take this submission"
 msgstr "Vyriešiť konflikt: poskytovateľ toto podanie neprevzal"
 
-#: einvoicing/admin.py:46
+#: einvoicing/admin.py:61
 #, python-format
 msgid ""
 "%(resolved)d of %(selected)d transmissions resolved; only those in conflict "
@@ -102,17 +114,13 @@ msgstr ""
 "Vyriešené prenosy: %(resolved)d z %(selected)d; vyriešiť možno len prenosy v "
 "konflikte."
 
-#: einvoicing/admin.py:63 einvoicing/models.py:69
+#: einvoicing/admin.py:78 einvoicing/models.py:69
 msgid "XML"
 msgstr "XML"
 
-#: einvoicing/admin.py:66
+#: einvoicing/admin.py:81
 msgid "Download transmitted XML"
 msgstr "Stiahnuť odoslané XML"
-
-#: einvoicing/apps.py:8
-msgid "E-invoicing"
-msgstr "E-fakturácia"
 
 #: einvoicing/models.py:9
 msgid "Prepared"
@@ -270,10 +278,6 @@ msgstr "stav naposledy overený"
 msgid "e-invoice transmission"
 msgstr "prenos e-faktúry"
 
-#: einvoicing/models.py:89
-msgid "e-invoice transmissions"
-msgstr "prenosy e-faktúr"
-
 #: einvoicing/models.py:120
 msgid "submission"
 msgstr "odovzdanie"
@@ -285,10 +289,6 @@ msgstr "zmena stavu"
 #: einvoicing/models.py:122
 msgid "error"
 msgstr "chyba"
-
-#: einvoicing/models.py:125
-msgid "transmission"
-msgstr "prenos"
 
 #: einvoicing/models.py:128
 msgid "kind"
@@ -475,6 +475,11 @@ msgstr "faktury.zip"
 #: exporters/pdf/managers.py:13
 msgid "Export to PDF"
 msgstr "Exportovať do PDF"
+
+#: exporters/peppol/managers.py:15
+#| msgid "Export to PDF"
+msgid "Export to Peppol UBL (XML)"
+msgstr "Export do Peppol UBL (XML)"
 
 #: exporters/profit365/managers.py:22
 #, fuzzy

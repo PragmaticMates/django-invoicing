@@ -1,5 +1,7 @@
 import inspect
+from django.apps import apps
 from django.contrib import admin
+from django.contrib.admin.utils import flatten_fieldsets
 from django.db.models import F, DecimalField
 from django.db.models.functions import Coalesce
 from django.utils.module_loading import import_string
@@ -64,17 +66,35 @@ class NotExportedWithExporterListFilter(admin.SimpleListFilter):
         )
 
 
+def is_einvoice_locked(invoice):
+    """Sent (or being sent) as an e-invoice: its content must not change any more."""
+    if invoice is None or invoice.pk is None or not apps.is_installed('invoicing.einvoicing'):
+        return False
+
+    from invoicing.einvoicing.services import live_transmission
+    return live_transmission(invoice) is not None
+
+
 class ItemInline(admin.TabularInline):
     fieldsets = (
         (
             None,
             {
-                'fields': ('title', 'quantity', 'unit', 'unit_price', 'discount', 'tax_rate', 'weight')
+                'fields': ('title', 'quantity', 'unit', 'unit_price', 'discount', 'tax_rate', 'vat_category', 'weight')
             }
         ),
     )
     model = Item
     extra = 0
+
+    def has_add_permission(self, request, obj=None):
+        return not is_einvoice_locked(obj) and super().has_add_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return not is_einvoice_locked(obj) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return not is_einvoice_locked(obj) and super().has_delete_permission(request, obj)
 
 
 class OverdueFilter(admin.SimpleListFilter):
@@ -144,6 +164,16 @@ class InvoiceAdmin(admin.ModelAdmin):
             'fields': (
                 'customer_name', 'customer_street', 'customer_zip', 'customer_city', 'customer_country',
                 'customer_registration_id', 'customer_tax_id', 'customer_vat_id', 'customer_additional_info',
+                'customer_email', 'customer_phone',
+            )
+        }),
+        (_(u'E-invoicing'), {
+            'classes': ('collapse',),
+            'fields': (
+                'buyer_reference',
+                ('supplier_endpoint_scheme', 'supplier_endpoint_id'),
+                ('customer_endpoint_scheme', 'customer_endpoint_id'),
+                ('vat_exemption_reason', 'vat_exemption_reason_code'),
             )
         }),
         (_(u'Shipping details'), {
@@ -152,6 +182,29 @@ class InvoiceAdmin(admin.ModelAdmin):
             )
         })
     )
+
+    # What may still change on an invoice sent as an e-invoice: its life after issuing
+    EINVOICE_LOCKED_EDITABLE = ('status', 'date_paid', 'already_paid')
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+
+        if is_einvoice_locked(obj):
+            # the e-invoice is in Peppol: change it with a credit note, not here
+            for name in flatten_fieldsets(self.get_fieldsets(request, obj)):
+                if name not in self.EINVOICE_LOCKED_EDITABLE and name not in readonly:
+                    readonly.append(name)
+
+        return readonly
+
+    def get_inline_instances(self, request, obj=None):
+        inlines = super().get_inline_instances(request, obj)
+
+        if obj is not None and apps.is_installed('invoicing.einvoicing'):
+            from invoicing.einvoicing.admin import TransmissionInline
+            inlines.append(TransmissionInline(self.model, self.admin_site))
+
+        return inlines
 
     def get_actions(self, request):
         """

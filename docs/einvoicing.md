@@ -207,9 +207,21 @@ polling as well, since not every status change necessarily has an event.
 
 ## Admin
 
-With `invoicing.einvoicing` installed, *E-invoice transmissions* lists every
-attempt, read-only, with its event log, a download of the exact XML sent (and
-its SHA-256), and the *Resolve conflict* action.
+- **Invoice**: a collapsed *E-invoicing* section with the electronic
+  addresses, buyer reference and VAT exemption reason; items have their VAT
+  category.
+- With `invoicing.einvoicing` installed:
+    - an invoice with a live or delivered transmission is **read-only** in the
+      admin, as in an application's own views; only `status`, `date_paid` and
+      `already_paid` stay editable, and items can no longer be added, changed
+      or deleted. Correct it with a credit note.
+    - the invoice page lists its **transmissions**, each linking to its detail.
+    - *E-invoice transmissions* lists every attempt, read-only, with its event
+      log, a download of the exact XML sent (and its SHA-256), and the
+      *Resolve conflict* action.
+- The [Peppol UBL exporter](exporters/peppol.md) adds an *Export to Peppol UBL
+  (XML)* action to the invoice list: the e-invoices as they would be sent, in a
+  zip, sent nowhere.
 
 ## Providers
 

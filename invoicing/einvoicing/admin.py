@@ -27,6 +27,21 @@ class EventInline(ReadOnlyMixin, admin.TabularInline):
     readonly_fields = fields
 
 
+class TransmissionInline(ReadOnlyMixin, admin.TabularInline):
+    """The invoice's e-invoice transmissions, on the invoice admin page."""
+    model = EInvoiceTransmission
+    extra = 0
+    fields = ('link', 'created', 'status', 'provider_status', 'receiver_id', 'provider_document_id', 'environment')
+    readonly_fields = fields
+    ordering = ('-created',)
+    verbose_name_plural = _('e-invoice transmissions')
+
+    @admin.display(description=_('transmission'))
+    def link(self, obj):
+        url = reverse('admin:invoicing_einvoicing_einvoicetransmission_change', args=[obj.pk])
+        return format_html('<a href="{}">#{}</a>', url, obj.pk)
+
+
 @admin.register(EInvoiceTransmission)
 class EInvoiceTransmissionAdmin(ReadOnlyMixin, admin.ModelAdmin):
     list_display = ('invoice', 'receiver_id', 'status', 'provider', 'environment', 'created', 'submitted_at', 'delivered_at')

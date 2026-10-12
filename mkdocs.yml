@@ -51,6 +51,7 @@ nav:
     - XLSX: exporters/xlsx.md
     - ISDOC: exporters/isdoc.md
     - Peppol UBL: exporters/peppol.md
+    - Send as e-invoice: exporters/einvoicing.md
     - MRP v1: exporters/mrp_v1.md
     - MRP v2: exporters/mrp_v2.md
     - IKROS: exporters/ikros.md

@@ -43,6 +43,31 @@ DEFAULTS = {
 
     # A transmission stuck in SUBMITTING this long (a worker died mid-request) may be resubmitted
     'SUBMITTING_TIMEOUT_SECONDS': 300,
+
+    # Dotted path to a callable(invoice) returning the documents (ubl.Attachment) to embed
+    # into each e-invoice, e.g. its PDF; used when sending, checking and exporting
+    'ATTACHMENTS': None,
+
+    # Invoice statuses that may be sent as e-invoices, e.g. ('NEW',); None means any
+    'SENDABLE_STATUSES': None,
+
+    # Background jobs (django-pragmatic task decorator, e.g. django-rq): the queue sending
+    # and refreshing run on, and the periodic maintenance (resubmit unsent, poll statuses),
+    # registered by django-pragmatic's rqscheduler; a cron of None disables it
+    'QUEUE': 'default',
+    'MAINTENANCE_CRON': '*/15 * * * *',
+    'MAINTENANCE_QUEUE': 'cron',
+    'MAX_SUBMIT_ATTEMPTS': 10,
+
+    # Providers whose webhooks invoicing.einvoicing.urls receives, by name
+    'WEBHOOK_PROVIDERS': {
+        'slovakodata': 'invoicing.einvoicing.providers.slovakodata.SlovakodataProvider',
+    },
+
+    # Credentials for providers.slovakodata.from_settings, the resolver for a project with a
+    # single SLOVAKODATA account: ENVIRONMENT ('test' or 'production'), CLIENT_ID,
+    # CLIENT_SECRET, API_KEY, WEBHOOK_SECRET
+    'SLOVAKODATA': None,
 }
 
 

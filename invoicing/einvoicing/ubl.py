@@ -44,6 +44,12 @@ class Attachment:
     description: str = ''
 
 
+def get_attachments(invoice):
+    """The documents to embed into the invoice's e-invoice, from INVOICING_EINVOICING['ATTACHMENTS']."""
+    path = conf.get('ATTACHMENTS')
+    return list(import_string(path)(invoice)) if path else []
+
+
 def get_builder(invoice, attachments=()):
     builder_class = import_string(conf.get('BUILDER_CLASS'))
     return builder_class(invoice, attachments=attachments)

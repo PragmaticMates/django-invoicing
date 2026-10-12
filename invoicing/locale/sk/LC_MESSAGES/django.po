@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 10:30+0200\n"
+"POT-Creation-Date: 2026-10-12 11:24+0200\n"
 "PO-Revision-Date: 2023-12-15 15:53+0020\n"
 "Last-Translator: b'Erik Telepovsky <erik@pragmaticmates.com>'\n"
 "Language-Team: Slovak <https://weblate.swida.sk/projects/django-invoicing/app/sk/>\n"
@@ -63,27 +63,32 @@ msgstr "E-fakturácia"
 msgid "Shipping details"
 msgstr "Doručovacie informácie"
 
-#: admin.py:268
+#: admin.py:283
+#| msgid "invoice"
+msgid "e-invoice"
+msgstr "e-faktúra"
+
+#: admin.py:311
 msgid "subtotal"
 msgstr "medzisúčet"
 
-#: admin.py:272
+#: admin.py:315
 msgid "supplier"
 msgstr "dodávateľ"
 
-#: admin.py:276
+#: admin.py:319
 msgid "customer"
 msgstr "odberateľ"
 
-#: admin.py:280
+#: admin.py:323
 msgid "payment term"
 msgstr "lehota splatnosti"
 
-#: admin.py:285
+#: admin.py:328
 msgid "is overdue"
 msgstr "je po splatnosti"
 
-#: admin.py:290
+#: admin.py:333
 msgid "is paid"
 msgstr "je uhradená"
 
@@ -322,6 +327,40 @@ msgstr "udalosť prenosu e-faktúry"
 msgid "e-invoice transmission events"
 msgstr "udalosti prenosov e-faktúr"
 
+#: einvoicing/providers/slovakodata.py:176
+#, python-format
+msgid ""
+"SLOVAKODATA started sending this invoice and the transfer failed (document "
+"%(document)s). It refuses another submission under the same number: ask its "
+"support (podpora@postman.slovakodata.com) to repeat the transfer, or issue "
+"the invoice under a new number."
+msgstr ""
+"SLOVAKODATA začala túto faktúru odosielať a prenos zlyhal (doklad "
+"%(document)s). Ďalšie podanie pod rovnakým číslom odmietne: požiadajte jej "
+"podporu (podpora@postman.slovakodata.com) o zopakovanie prenosu, alebo "
+"vystavte faktúru pod novým číslom."
+
+#: einvoicing/services.py:94
+#, python-format
+msgid "Only a new invoice can be sent as an e-invoice; this one is %(status)s."
+msgstr ""
+"Ako e-faktúru možno odoslať len novú faktúru; táto je v stave %(status)s."
+
+#: einvoicing/services.py:95
+#, python-format
+msgid "An invoice that is %(status)s cannot be sent as an e-invoice."
+msgstr "Faktúru v stave %(status)s nemožno odoslať ako e-faktúru."
+
+#: einvoicing/services.py:98
+msgid ""
+"The customer has no electronic address (Peppol ID). Fill in the client's "
+"Peppol ID or tax ID and create the invoice again, or set the customer "
+"electronic address on the invoice (Update, E-invoice section)."
+msgstr ""
+"Odberateľ nemá elektronickú adresu (Peppol ID). Doplňte odberateľovi Peppol "
+"ID alebo DIČ a vystavte faktúru znova, alebo vyplňte elektronickú adresu "
+"odberateľa priamo na faktúre (Aktualizovať, sekcia E-faktúra)."
+
 #: einvoicing/vat.py:29
 msgid "Standard rate"
 msgstr "Základná sadzba"
@@ -349,6 +388,33 @@ msgstr "Vývoz mimo EÚ"
 #: einvoicing/vat.py:35
 msgid "Not subject to VAT"
 msgstr "Nepodlieha DPH"
+
+#: exporters/einvoicing/managers.py:28
+msgid "Send as e-invoice (API)"
+msgstr "Odoslať ako e-faktúru (API)"
+
+#: exporters/einvoicing/managers.py:37
+msgid "Only issued invoices can be sent."
+msgstr "Odoslať možno len vystavené faktúry."
+
+#: exporters/einvoicing/managers.py:41
+#, python-format
+msgid "Already sent as an e-invoice (%(status)s)."
+msgstr "Už odoslaná ako e-faktúra (%(status)s)."
+
+#: exporters/einvoicing/managers.py:48
+msgid "No e-invoicing provider is configured for this invoice."
+msgstr "Pre túto faktúru nie je nastavený poskytovateľ e-fakturácie."
+
+#: exporters/einvoicing/managers.py:68
+#| msgid "related invoices"
+msgid "Send as e-invoice"
+msgstr "Odoslať ako e-faktúru"
+
+#: exporters/einvoicing/managers.py:100
+#, python-format
+msgid "%(count)d invoice(s) queued for sending as e-invoices."
+msgstr "Faktúry zaradené na odoslanie ako e-faktúry: %(count)d."
 
 #: exporters/ikros/managers.py:19 exporters/mrp/v2/managers.py:25
 #: exporters/profit365/managers.py:19
@@ -477,7 +543,6 @@ msgid "Export to PDF"
 msgstr "Exportovať do PDF"
 
 #: exporters/peppol/managers.py:15
-#| msgid "Export to PDF"
 msgid "Export to Peppol UBL (XML)"
 msgstr "Export do Peppol UBL (XML)"
 
@@ -599,7 +664,9 @@ msgstr "Po splatnosti (dni)"
 msgid "Payment"
 msgstr "Platba"
 
-#: exporters/xlsx/list.py:44 templates/invoicing/formatters/html.html:271
+#: exporters/xlsx/list.py:44
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:22
+#: templates/invoicing/formatters/html.html:271
 msgid "Total"
 msgstr "Celkom"
 
@@ -700,7 +767,9 @@ msgstr "Email kontaktnej osoby"
 msgid "Issuer phone"
 msgstr "Telefón kontaktnej osoby"
 
-#: exporters/xlsx/list.py:76 templates/invoicing/formatters/html.html:59
+#: exporters/xlsx/list.py:76
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:21
+#: templates/invoicing/formatters/html.html:59
 msgid "Customer"
 msgstr "Odberateľ"
 
@@ -776,7 +845,7 @@ msgstr "ročne"
 msgid "infinite"
 msgstr ""
 
-#: models.py:57
+#: models.py:57 templates/admin/invoicing/einvoicing/send_confirmation.html:20
 msgid "Invoice"
 msgstr "Faktúra"
 
@@ -1346,6 +1415,50 @@ msgstr "položka"
 #: models.py:607
 msgid "items"
 msgstr "položky"
+
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:6
+msgid "Home"
+msgstr ""
+
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:14
+#, python-format
+msgid "%(counter)s invoice will be sent as an e-invoice."
+msgid_plural "%(counter)s invoices will be sent as e-invoices."
+msgstr[0] "%(counter)s faktúra bude odoslaná ako e-faktúra."
+msgstr[1] "%(counter)s faktúry budú odoslané ako e-faktúry."
+msgstr[2] "%(counter)s faktúr bude odoslaných ako e-faktúry."
+
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:15
+msgid ""
+"A sent e-invoice cannot be taken back; it can only be corrected by a credit "
+"note."
+msgstr ""
+"Odoslanú e-faktúru nemožno vziať späť; opraviť ju možno len dobropisom."
+
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:23
+#| msgid "provider"
+msgid "Provider"
+msgstr "Poskytovateľ"
+
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:24
+msgid "Result"
+msgstr "Výsledok"
+
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:34
+msgid "will not be sent"
+msgstr "nebude odoslaná"
+
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:34
+msgid "will be sent"
+msgstr "bude odoslaná"
+
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:45
+msgid "Yes, send"
+msgstr "Áno, odoslať"
+
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:46
+msgid "No, take me back"
+msgstr "Nie, späť"
 
 #: templates/invoicing/formatters/html.html:13
 msgid "Supplier"

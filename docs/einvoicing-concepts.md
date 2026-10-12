@@ -76,8 +76,9 @@ SLOVAKODATA (ePostman) is one of them.
 
 *The post office you chose; you could pick another.*
 
-**In this library:** an `EInvoiceProvider`. The library does not know any
-particular provider.
+**In this library:** an `EInvoiceProvider`. The core does not depend on any
+particular provider; `providers.slovakodata` is an optional integration, like
+the MRP or iKROS ones among the exporters.
 
 ### SAPI-SK: the counter
 
@@ -125,5 +126,6 @@ All of that together is **e-invoicing**.
 | Submitting documents | SAPI-SK | no |
 | Status, validation, lookups, webhooks | provider's own API | **yes** |
 
-Keep the provider-specific part in one provider class, as Invoicer does with
-its `SlovakodataProvider`; everything else stays the same when you switch.
+The provider-specific part lives in one provider class; everything else stays
+the same when you switch. The library ships one for SLOVAKODATA
+(`providers.slovakodata`), see [E-invoicing](einvoicing.md#slovakodata).

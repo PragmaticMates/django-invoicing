@@ -33,6 +33,13 @@ INSTALLED_APPS = [
 python manage.py migrate
 ```
 
+To receive provider webhooks, include the URLs **outside** `i18n_patterns`
+(providers do not follow the language redirect):
+
+```python
+urlpatterns += [path('einvoicing/', include('invoicing.einvoicing.urls'))]
+```
+
 ## Building and validating
 
 ```python
@@ -111,10 +118,33 @@ namespace whose own example does not verify.
 ```python
 from invoicing.einvoicing import services
 
-transmission = services.prepare(invoice, attachments=[...])  # build + validate + store
-services.submit(transmission)                                 # hand over; safe to retry
-services.refresh_status(transmission)                         # ask the provider, if it can tell
+services.send_blocked_reason(invoice)  # why it must not be sent now, or None
+xml, report = services.check(invoice)  # what would be sent, all checks; stores and sends nothing
+transmission = services.send(invoice)  # prepare (build, validate, store) and submit in the background
+services.refresh_status(transmission)  # ask the provider now (webhooks and polling do it otherwise)
 ```
+
+`send()` returns the invoice's live transmission if it has one; otherwise it
+checks `send_blocked_reason()`, prepares a transmission with the configured
+attachments and queues its submission once the transaction commits. It raises
+`SendNotAllowed`, `EInvoiceValidationError` or `ResubmissionNotAllowed` when
+the invoice cannot be sent.
+
+`send_blocked_reason()` blocks an invoice whose status is not in
+`SENDABLE_STATUSES` (e.g. only `NEW`: a sent, paid or canceled invoice is past
+being issued), one without the customer's electronic address, and one the
+provider would refuse (see *Sending again*).
+
+`ATTACHMENTS` names a callable returning the documents to embed into each
+e-invoice, typically its PDF; sending, checking and the Peppol export use it:
+
+```python
+def get_attachments(invoice):
+    return [Attachment(f'{invoice.number}.pdf', render_pdf(invoice))]
+```
+
+The lower-level steps remain available: `prepare()` (build, validate, store),
+`submit()` (hand over; safe to retry) and `refresh_status()`.
 
 `EInvoiceTransmission` is one attempt to send an invoice. It keeps the exact
 XML sent (and its SHA-256), the validation report, the provider document ID,
@@ -138,35 +168,33 @@ error, and an append-only log of events (`transmission.events`).
 
 | Status | Meaning | Next |
 |---|---|---|
-| `PREPARED` | Stored, not yet sent | `submit()` |
+| `PREPARED` | Stored, not yet sent | submitted |
 | `SUBMITTING` | Being sent | resubmittable after `SUBMITTING_TIMEOUT_SECONDS` (a worker died) |
-| `SUBMIT_UNKNOWN` | Timeout or retryable error | resubmit: same key, same bytes |
+| `SUBMIT_UNKNOWN` | Timeout or retryable error | resubmitted: same key, same bytes |
 | `CONFLICT` | HTTP 409: the provider may already hold the document | a human decides, see below |
-| `REFUSED` | The provider did not take it (invalid, no credit, ...) | may be prepared again |
+| `REFUSED` | The provider did not take it (invalid, no credit, ...) | may be sent again |
 | `SUBMITTED` | The provider has it | polled |
 | `DELIVERED` | Reached the recipient's Access Point | polled, for the recipient's confirmation |
 | `UNCONFIRMED` | Delivered, no confirmation in time | polled: a late one still turns it `ACCEPTED` or `REJECTED` |
 | `ACCEPTED`, `DELIVERED_NON_PEPPOL` | Delivered (to the tax authority instead, for a buyer outside Peppol) | final |
-| `REJECTED`, `UNDELIVERABLE`, `FAILED`, `CANCELLED` | Ended without reaching the recipient | may be prepared again, unless the provider refuses |
+| `REJECTED`, `UNDELIVERABLE`, `FAILED`, `CANCELLED` | Ended without reaching the recipient | may be sent again, unless the provider refuses |
 
 `submit()` maps a `ProviderError`: retryable or unknown outcome → `SUBMIT_UNKNOWN`
-and re-raised (so a job queue retries it); HTTP 409 → `CONFLICT`; anything else
-→ `REFUSED`.
+and re-raised; HTTP 409 → `CONFLICT`; anything else → `REFUSED`.
 
 `signals.transmission_status_changed(transmission, previous_status)` is sent on
 every change, e.g. to mark the invoice itself sent.
 
 ### Sending again
 
-After a transmission ended without reaching the recipient, `prepare()` creates
-a new one, with freshly built XML and a new idempotency key. Providers differ
-on whether they take it: SLOVAKODATA ePostman, for one, refuses another
-submission under the same number once a transfer started and failed, and
-repeats it itself on request. A provider says so through
+After a transmission ended without reaching the recipient, a new one can be
+prepared, with freshly built XML and a new idempotency key. Providers differ
+on whether they take it: SLOVAKODATA, for one, refuses another submission
+under the same number once a transfer started and failed, and repeats it
+itself on request. A provider says so through
 `resubmission_blocked_reason()`; `prepare()` then raises
-`ResubmissionNotAllowed` with that reason, before building anything.
-`services.resubmission_blocked_reason(invoice, provider)` asks the same
-question without preparing, e.g. to hide a send button.
+`ResubmissionNotAllowed` with that reason, and `send_blocked_reason()` returns
+it.
 
 ### Conflicts
 
@@ -178,50 +206,147 @@ portal) that the provider did not take this submission,
 `services.resolve_conflict(transmission, note)` ends it `REFUSED`, with the
 note in the event log. The admin offers the same as an action.
 
-## Keeping statuses up to date
+## Background jobs and status updates
 
-Run both of these periodically, e.g. every 15 minutes from a scheduler:
+`invoicing.einvoicing.tasks` runs through django-pragmatic's task decorator
+(`PRAGMATIC_TASK_DECORATOR`, e.g. `'django_rq.job'`) on the `QUEUE` queue, like
+the exporters; without django-pragmatic the jobs run synchronously.
+
+- `submit_einvoice`: hands a prepared transmission over (`send()` queues it).
+- `refresh_einvoice`: asks the provider for news (webhooks queue it).
+- `einvoicing_maintenance`: resubmits unsent transmissions (prepared, of
+  unknown outcome or stuck submitting; at most `MAX_SUBMIT_ATTEMPTS`) and polls
+  those submitted, delivered or unconfirmed in the last `STATUS_POLL_DAYS`.
+
+The maintenance is scheduled on `MAINTENANCE_CRON` (every 15 minutes by
+default, on the `MAINTENANCE_QUEUE` queue) by django-pragmatic's
+`rqscheduler`, which calls `EInvoicingConfig.schedule_jobs()` after wiping the
+`cron` scheduler, so redeploys never duplicate it. Set `MAINTENANCE_CRON` to
+`None` to schedule it yourself.
+
+**Webhooks** arrive at `/einvoicing/webhook/<provider>/`
+(`invoicing.einvoicing.urls`, providers in `WEBHOOK_PROVIDERS`):
+
+1. the notification names a provider document, which finds the transmission
+   and so the invoice -- nothing is trusted yet, this only picks the account;
+2. the resolver gives that invoice's provider, with its webhook secret, which
+   verifies the notification (otherwise 401);
+3. the status is then asked from the provider in the background, never taken
+   from the notification, so a forged, replayed or out-of-order one changes
+   nothing.
+
+Notifications about documents that are not ours (incoming invoices, documents
+sent from the provider's portal) are acknowledged and ignored. Polling keeps
+running anyway: not every status change necessarily has an event.
+
+## SLOVAKODATA
+
+`providers.slovakodata.SlovakodataProvider` sends through SAPI-SK and uses
+ePostman's Enterprise API (`X-Api-Key`) for status, validation, participant
+lookups and webhooks:
 
 ```python
-from invoicing.einvoicing import services
-from invoicing.einvoicing.providers import ProviderError
-
-for transmission in services.transmissions_to_resubmit():  # PREPARED, SUBMIT_UNKNOWN, stale SUBMITTING
-    try:
-        services.submit(transmission)
-    except ProviderError:
-        pass  # still unsent; next run
-
-for transmission in services.transmissions_to_poll():      # SUBMITTED, DELIVERED, UNCONFIRMED, last STATUS_POLL_DAYS
-    services.refresh_status(transmission)
+SlovakodataProvider(environment, client_id, client_secret, api_key='', webhook_secret='')
 ```
 
-Cap the resubmission attempts (`transmission.attempt_count`) as you see fit.
+- `environment`: `'test'` (`testpostman.slovakodata.com`, documents stay in the
+  Peppol test network) or `'production'` (`postman.slovakodata.com`);
+- `client_id`, `client_secret`: a SAPI client created in the ePostman portal;
+- `api_key`: an Enterprise API key (portal: *Nastavenia → API kľúče*); without
+  it the provider can only send;
+- `webhook_secret`: the secret of the webhook pointing at this project.
 
-**Webhooks** are provider-specific and not part of the library. A safe pattern
-(the one Invoicer uses): verify the provider's signature and timestamp, find
-the transmission by `provider_document_id`, and call `refresh_status()` in the
-background. Do not take the status from the notification itself; asking the
-provider makes a forged, replayed or out-of-order notification harmless. Keep
-polling as well, since not every status change necessarily has an event.
+It stores no credentials: the project decides where they live, through the
+resolver.
+
+### One account for the project
+
+```python
+INVOICING_EINVOICING = {
+    'PROVIDER_RESOLVER': 'invoicing.einvoicing.providers.slovakodata.from_settings',
+    'SLOVAKODATA': {
+        'ENVIRONMENT': 'production',
+        'CLIENT_ID': env('SLOVAKODATA_CLIENT_ID'),
+        'CLIENT_SECRET': env('SLOVAKODATA_CLIENT_SECRET'),
+        'API_KEY': env('SLOVAKODATA_API_KEY'),
+        'WEBHOOK_SECRET': env('SLOVAKODATA_WEBHOOK_SECRET'),
+    },
+}
+```
+
+### An account per supplier (or anything else)
+
+Keep the credentials wherever the project keeps such things (a model,
+encrypted at rest) and resolve the provider per invoice:
+
+```python
+# myapp/einvoicing.py
+from invoicing.einvoicing.providers.slovakodata import SlovakodataProvider
+
+def get_provider(invoice):
+    account = Account.objects.filter(peppol_id=f'{invoice.supplier_endpoint_scheme}:{invoice.supplier_endpoint_id}',
+                                     enabled=True).first()
+    if account is None:
+        return None
+    return SlovakodataProvider(account.environment, account.client_id, account.client_secret,
+                               api_key=account.api_key, webhook_secret=account.webhook_secret)
+```
+
+```python
+INVOICING_EINVOICING = {'PROVIDER_RESOLVER': 'myapp.einvoicing.get_provider'}
+```
+
+The webhook view finds each notification's account through the same resolver,
+so one URL serves every account.
+
+### The webhook
+
+ePostman shows a webhook's secret only once, in the API's answer when the
+webhook is created -- not in its portal. Create it through the API and store
+the secret where the resolver reads it:
+
+```python
+provider = get_provider(invoice)   # or from_settings()
+webhook = provider.create_webhook('https://example.com/einvoicing/webhook/slovakodata/')
+webhook['secret']                  # store it as the account's webhook secret, now
+provider.test_webhook(webhook['id'])
+```
+
+`create_webhook()` subscribes to every outcome (`WEBHOOK_EVENTS`, more than the
+portal offers). `list_webhooks()` and `delete_webhook(id)` manage them; a
+webhook cannot be edited.
+
+### SLOVAKODATA specifics
+
+- **Sending again**: after a transfer started and failed (`FAILED`), ePostman
+  refuses any new submission under the same number; the provider blocks it
+  and points to ePostman's support.
+- **Status mapping**: `PENDING`, `VALIDATING`, `VALIDATED`, `READY`, `SENDING` →
+  `SUBMITTED`; `VALIDATION_FAILED` → `REJECTED`; the others one to one; an
+  unknown status keeps the transmission polled.
+- **Test receivers**: a document cannot be addressed to its own sender; a
+  receiver that accepts documents in the test network has to come from
+  SLOVAKODATA.
 
 ## Admin
 
-- **Invoice**: a collapsed *E-invoicing* section with the electronic
-  addresses, buyer reference and VAT exemption reason; items have their VAT
-  category.
-- With `invoicing.einvoicing` installed:
-    - an invoice with a live or delivered transmission is **read-only** in the
-      admin, as in an application's own views; only `status`, `date_paid` and
-      `already_paid` stay editable, and items can no longer be added, changed
-      or deleted. Correct it with a credit note.
-    - the invoice page lists its **transmissions**, each linking to its detail.
-    - *E-invoice transmissions* lists every attempt, read-only, with its event
-      log, a download of the exact XML sent (and its SHA-256), and the
-      *Resolve conflict* action.
-- The [Peppol UBL exporter](exporters/peppol.md) adds an *Export to Peppol UBL
-  (XML)* action to the invoice list: the e-invoices as they would be sent, sent
-  nowhere; one invoice comes as its XML, more in a zip.
+- **Invoices**:
+    - a collapsed *E-invoicing* section (electronic addresses, buyer
+      reference, VAT exemption reason); items have their VAT category;
+    - with `invoicing.einvoicing` installed: an **e-invoice** column in the
+      list (the newest transmission's status, colour-coded, linking to it); an
+      invoice with a live or delivered transmission is **read-only**, except
+      `status`, `date_paid` and `already_paid`; the invoice page lists its
+      transmissions.
+- **Send as e-invoice (API)**, an action enabled by the
+  [`EInvoicingManager`](exporters/einvoicing.md): a confirmation page lists
+  the selected invoices, which will be sent and which will not (and why),
+  before anything is sent.
+- **Export to Peppol UBL (XML)**, by the [`PeppolManager`](exporters/peppol.md):
+  the e-invoices as they would be sent, sent nowhere.
+- **E-invoice transmissions**: every attempt, read-only, with its event log,
+  a download of the exact XML sent (and its SHA-256), and the *Resolve
+  conflict* action.
 
 ## Providers
 
@@ -238,6 +363,10 @@ class MyProvider(EInvoiceProvider):
     def validate(self, xml, receiver_id=None): ...        # -> ValidationReport (supports_validation)
     def check_reachability(self, participant_id, document_type_id): ...  # -> Reachability (supports_reachability)
     def resubmission_blocked_reason(self, previous): ...  # -> str or None (default None)
+
+    @classmethod
+    def webhook_document_id(cls, payload): ...            # the document a notification is about
+    def verify_webhook(self, raw_body, headers): ...      # True for a genuine notification
 ```
 
 `ProviderError(message, code=, retryable=, outcome_unknown=, http_status=,
@@ -246,8 +375,8 @@ request may simply be sent again; `outcome_unknown` that it may have been
 processed even so.
 
 `INVOICING_EINVOICING['PROVIDER_RESOLVER']` names a callable returning the
-provider for an invoice, e.g. built from that supplier's credentials; `None`
-means not configured.
+provider for an invoice; `None` means not configured. To receive a new
+provider's webhooks, add it to `WEBHOOK_PROVIDERS`.
 
 ### SAPI-SK
 
@@ -267,13 +396,14 @@ Slovak Digital Postmen; `base_url` is the provider's SAPI base, e.g.
 - `health()` checks `GET /health`.
 
 SAPI-SK 1.0 has no call for the status of a sent document, nor for validation;
-a provider offering those outside SAPI subclasses it (Invoicer's
-`SlovakodataProvider` does, with ePostman's Enterprise API).
+a provider offering those outside SAPI subclasses it, as `SlovakodataProvider`
+does.
 
 ## Settings
 
 ```python
 INVOICING_EINVOICING = {
+    # building and checking
     'BUILDER_CLASS': 'invoicing.einvoicing.ubl.PeppolBIS3Builder',
     'UNIT_CODES': {'EMPTY': 'C62', 'PIECES': 'H87', 'HOURS': 'HUR'},  # UN/ECE Rec 20
     'DEFAULT_UNIT_CODE': 'C62',
@@ -281,10 +411,24 @@ INVOICING_EINVOICING = {
     'SCHEMATRON': True,
     'ALLOWED_CURRENCIES': ('EUR',),      # None: any
     'ALLOWED_CUSTOMER_COUNTRIES': None,  # e.g. ('SK',)
-    'PROVIDER_RESOLVER': None,           # 'myapp.einvoicing.get_provider'
+    'ATTACHMENTS': None,                 # 'myapp.einvoicing.get_attachments'
+
+    # sending
+    'PROVIDER_RESOLVER': None,           # 'invoicing.einvoicing.providers.slovakodata.from_settings'
+    'SENDABLE_STATUSES': None,           # e.g. ('NEW',)
     'PREVALIDATE_WITH_PROVIDER': True,
-    'STATUS_POLL_DAYS': 30,
     'SUBMITTING_TIMEOUT_SECONDS': 300,
+
+    # background jobs
+    'QUEUE': 'default',
+    'MAINTENANCE_CRON': '*/15 * * * *',  # None: schedule it yourself
+    'MAINTENANCE_QUEUE': 'cron',
+    'MAX_SUBMIT_ATTEMPTS': 10,
+    'STATUS_POLL_DAYS': 30,
+
+    # providers
+    'WEBHOOK_PROVIDERS': {'slovakodata': 'invoicing.einvoicing.providers.slovakodata.SlovakodataProvider'},
+    'SLOVAKODATA': None,                 # credentials for from_settings, see above
 }
 ```
 
@@ -296,7 +440,8 @@ Customise the XML by subclassing `PeppolBIS3Builder` and overriding its
 
 | Exception | Raised by | When |
 |---|---|---|
-| `services.EInvoiceValidationError` | `prepare()`, `build_and_validate()` | any fatal finding; `.report` has them |
+| `services.SendNotAllowed` | `send()` | `send_blocked_reason()` gives a reason |
+| `services.EInvoiceValidationError` | `send()`, `prepare()`, `build_and_validate()` | any fatal finding; `.report` has them |
 | `services.ResubmissionNotAllowed` | `prepare()` | the provider would refuse a new submission |
 | `services.TransmissionError` | `submit()`, `resolve_conflict()` | wrong provider, or not in conflict |
 | `providers.ProviderError` | providers, `submit()` | the provider failed or refused |
@@ -305,5 +450,5 @@ Customise the XML by subclassing `PeppolBIS3Builder` and overriding its
 
 ## Translations
 
-Statuses, field names, VAT categories and admin texts are translatable; Slovak
-is included.
+Statuses, field names, VAT categories, messages and admin texts are
+translatable; Slovak is included.

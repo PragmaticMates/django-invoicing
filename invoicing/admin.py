@@ -261,7 +261,50 @@ class InvoiceAdmin(admin.ModelAdmin):
         return actions
 
     def get_queryset(self, request):
-        return self.model.objects.annotate(annotated_subtotal=F('total')-Coalesce(F('vat'), 0, output_field=DecimalField()))
+        queryset = self.model.objects.annotate(annotated_subtotal=F('total')-Coalesce(F('vat'), 0, output_field=DecimalField()))
+
+        if apps.is_installed('invoicing.einvoicing'):
+            from invoicing.einvoicing.services import with_transmissions
+            queryset = with_transmissions(queryset)
+
+        return queryset
+
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+
+        if apps.is_installed('invoicing.einvoicing') and 'einvoice_status' not in list_display:
+            list_display.insert(list_display.index('status') + 1, 'einvoice_status')
+
+        return list_display
+
+    # label colours of the newest transmission's status
+    EINVOICE_STATUS_COLOURS = {'reached': '#2e7d32', 'attention': '#ef6c00', 'not_delivered': '#c62828', 'under_way': '#1565c0'}
+
+    @admin.display(description=_(u'e-invoice'))
+    def einvoice_status(self, invoice):
+        transmissions = getattr(invoice, 'einvoice_transmission_list', None)
+        if not transmissions:
+            return mark_safe('<span style="color: var(--body-quiet-color)">—</span>')
+
+        from django.urls import reverse
+        from django.utils.html import format_html
+        from invoicing.einvoicing.models import TransmissionStatus
+
+        transmission = transmissions[0]
+        if transmission.has_reached_recipient:
+            colour = self.EINVOICE_STATUS_COLOURS['reached']
+        elif not transmission.is_live:
+            colour = self.EINVOICE_STATUS_COLOURS['not_delivered']
+        elif transmission.status in (TransmissionStatus.CONFLICT, TransmissionStatus.SUBMIT_UNKNOWN):
+            colour = self.EINVOICE_STATUS_COLOURS['attention']
+        else:
+            colour = self.EINVOICE_STATUS_COLOURS['under_way']
+
+        return format_html(
+            '<a href="{}" style="color: {}; font-weight: bold" title="{}">{}</a>',
+            reverse('admin:invoicing_einvoicing_einvoicetransmission_change', args=[transmission.pk]),
+            colour, transmission.provider_status or '', transmission.get_status_display(),
+        )
 
     def annotated_subtotal(self, invoice):
         return invoice.annotated_subtotal

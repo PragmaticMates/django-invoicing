@@ -22,7 +22,9 @@ import logging
 from datetime import timedelta
 
 from django.db import IntegrityError, transaction
+from django.db.models import Prefetch
 from django.utils.timezone import now
+from django.utils.translation import gettext
 
 from invoicing.einvoicing import conf
 from invoicing.einvoicing.identifiers import (
@@ -31,7 +33,7 @@ from invoicing.einvoicing.identifiers import (
 from invoicing.einvoicing.models import NOT_DELIVERED, POLLABLE, REACHED, EInvoiceTransmission, TransmissionStatus
 from invoicing.einvoicing.providers import OutgoingDocument, ProviderError, get_provider
 from invoicing.einvoicing.signals import transmission_status_changed
-from invoicing.einvoicing.ubl import get_builder
+from invoicing.einvoicing.ubl import get_attachments, get_builder
 from invoicing.einvoicing.validation import preflight, validate
 
 logger = logging.getLogger(__name__)
@@ -55,8 +57,86 @@ class ResubmissionNotAllowed(EInvoicingError):
     pass
 
 
+class SendNotAllowed(EInvoicingError):
+    pass
+
+
+SUBMITTABLE = (TransmissionStatus.PREPARED, TransmissionStatus.SUBMIT_UNKNOWN)
+
+
 def live_transmission(invoice):
     return invoice.einvoice_transmissions.exclude(status__in=NOT_DELIVERED).first()
+
+
+def with_transmissions(invoices):
+    """Invoices with their transmissions, newest first, as ``einvoice_transmission_list`` (one query)."""
+    return invoices.prefetch_related(Prefetch(
+        'einvoice_transmissions', queryset=EInvoiceTransmission.objects.order_by('-created'),
+        to_attr='einvoice_transmission_list',
+    ))
+
+
+def send_blocked_reason(invoice, provider=None):
+    """
+    Why the invoice must not be sent as an e-invoice now, or None:
+
+    * its status is not one of INVOICING_EINVOICING['SENDABLE_STATUSES'] (e.g.
+      only NEW: a sent, paid or canceled invoice is past being issued);
+    * it has no customer electronic address, so no one to send it to;
+    * the provider would refuse it (EInvoiceProvider.resubmission_blocked_reason).
+
+    An invoice with a live transmission is not blocked: send() returns that one.
+    """
+    sendable = conf.get('SENDABLE_STATUSES')
+    if sendable is not None and invoice.status not in sendable:
+        status = {'status': invoice.get_status_display()}
+        if tuple(sendable) == (invoice.STATUS.NEW,):
+            return gettext('Only a new invoice can be sent as an e-invoice; this one is %(status)s.') % status
+        return gettext('An invoice that is %(status)s cannot be sent as an e-invoice.') % status
+
+    if not (invoice.customer_endpoint_scheme and invoice.customer_endpoint_id):
+        return gettext("The customer has no electronic address (Peppol ID). Fill in the client's Peppol ID or tax ID "
+                       "and create the invoice again, or set the customer electronic address on the invoice "
+                       "(Update, E-invoice section).")
+
+    provider = provider or get_provider(invoice)
+    return resubmission_blocked_reason(invoice, provider)
+
+
+def check(invoice, *, provider=None):
+    """(xml, ValidationReport) of what would be sent; stores and sends nothing. xml is None if invalid."""
+    provider = provider or get_provider(invoice)
+
+    try:
+        return build_and_validate(invoice, provider=provider, attachments=get_attachments(invoice))
+    except EInvoiceValidationError as error:
+        return None, error.report
+
+
+def send(invoice, *, provider=None):
+    """
+    The invoice's live transmission, or a new one prepared (built, validated,
+    stored, with the configured attachments) and queued for submission in the
+    background. Raises SendNotAllowed, EInvoiceValidationError or
+    ResubmissionNotAllowed when it cannot be sent.
+    """
+    existing = live_transmission(invoice)
+    if existing:
+        return existing
+
+    provider = provider or get_provider(invoice)
+
+    reason = send_blocked_reason(invoice, provider)
+    if reason:
+        raise SendNotAllowed(reason)
+
+    transmission = prepare(invoice, provider=provider, attachments=get_attachments(invoice))
+
+    if transmission.status in SUBMITTABLE:
+        from invoicing.einvoicing.tasks import queue_submission
+        queue_submission(transmission)
+
+    return transmission
 
 
 def resubmission_blocked_reason(invoice, provider):

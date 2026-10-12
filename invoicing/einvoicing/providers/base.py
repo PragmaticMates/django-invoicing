@@ -87,6 +87,7 @@ class EInvoiceProvider(ABC):
     supports_status = False
     supports_validation = False
     supports_reachability = False
+    supports_webhooks = False
 
     @abstractmethod
     def submit(self, document):
@@ -113,3 +114,16 @@ class EInvoiceProvider(ABC):
     def check_reachability(self, participant_id, document_type_id):
         """Returns a Reachability."""
         raise CapabilityNotSupported(f'{self.name} cannot look up participants')
+
+    # Webhooks: invoicing.einvoicing.views.WebhookView finds the transmission a
+    # notification is about with the class method, gets that invoice's provider from
+    # the resolver, and accepts the notification only if that provider verifies it.
+
+    @classmethod
+    def webhook_document_id(cls, payload):
+        """The provider document ID a (parsed JSON) notification is about, or None."""
+        return None
+
+    def verify_webhook(self, raw_body, headers):
+        """True for a genuine notification (signature, freshness), with this account's secret."""
+        raise CapabilityNotSupported(f'{self.name} does not send webhooks')

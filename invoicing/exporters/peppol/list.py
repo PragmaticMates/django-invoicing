@@ -1,4 +1,4 @@
-from invoicing.einvoicing.ubl import get_builder
+from invoicing.einvoicing.ubl import get_attachments, get_builder
 from invoicing.einvoicing.validation import preflight, validate
 from invoicing.models import Invoice
 
@@ -28,8 +28,8 @@ class InvoicePeppolXmlListExporter(ExporterMixin):
         self.write_data(self.output)
 
     def get_attachments(self, invoice):
-        """Documents to embed into the invoice's XML, e.g. its PDF rendering (see ubl.Attachment)."""
-        return ()
+        """Documents to embed into the invoice's XML; INVOICING_EINVOICING['ATTACHMENTS'] by default."""
+        return get_attachments(invoice)
 
     def get_filename_for(self, invoice):
         return f'{invoice.number}.xml'

@@ -12,6 +12,9 @@ Invoice ─▶ calculations ─▶ ubl (builder) ─▶ validation ─▶ servic
 Only the last layer talks to the network. Calculations, the builder and
 validation work without installing anything; sending needs the Django app.
 
+New to UBL, Peppol, Access Points or SAPI-SK? Start with
+[E-invoicing concepts](einvoicing-concepts.md).
+
 ## Installation
 
 ```bash

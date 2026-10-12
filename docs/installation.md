@@ -20,6 +20,14 @@ pip install "django-invoicing[exporters]"
 
 This installs `django-outputs`, which provides the asynchronous export queue and email delivery that all exporters depend on.
 
+For structured e-invoices (Peppol BIS Billing 3.0, Slovak eFaktúra):
+
+```
+pip install "django-invoicing[einvoicing]"
+```
+
+This adds `saxonche`, which runs the Peppol Schematron rules, and `requests`, for the SAPI-SK provider. See [E-invoicing](einvoicing.md).
+
 ## Add to INSTALLED_APPS
 
 ```python
@@ -31,6 +39,8 @@ INSTALLED_APPS = [
     'invoicing',
     # Required if you use any exporter:
     'outputs',
+    # Required to send e-invoices (the transmission log):
+    'invoicing.einvoicing',
 ]
 ```
 

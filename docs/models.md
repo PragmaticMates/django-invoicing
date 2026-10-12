@@ -55,6 +55,10 @@
 | `already_paid` | Amount already received; use `invoice.to_pay` for the remaining balance |
 | `attachments` | JSONField for arbitrary attachment metadata |
 | `related_invoices` | ManyToMany self-reference; populated automatically by `create_copy()` |
+| `supplier_endpoint_scheme` / `supplier_endpoint_id` | Seller's Peppol electronic address (EN 16931 BT-34), e.g. `0245` + DIČ; blank by default |
+| `customer_endpoint_scheme` / `customer_endpoint_id` | Buyer's Peppol electronic address (BT-49); blank by default |
+| `buyer_reference` | Reference assigned by the buyer (BT-10); blank by default |
+| `vat_exemption_reason` / `vat_exemption_reason_code` | VAT exemption text and VATEX code (BT-120/121), for items not taxed at a standard or zero rate |
 
 ### Computed properties
 
@@ -101,7 +105,7 @@ Any `kwargs` are applied to the new instance before saving, allowing you to over
 
 #### `Invoice.set_supplier_data(supplier_dict)` / `set_customer_data()` / `set_shipping_data()`
 
-Convenience methods that copy a settings-style dict into the corresponding denormalized fields.
+Convenience methods that copy a settings-style dict into the corresponding denormalized fields. The supplier and customer dicts also accept `endpoint_scheme` and `endpoint_id` (the Peppol electronic address).
 
 #### `Invoice.recalculate_tax()`
 
@@ -124,6 +128,7 @@ Iterates over all items, calls `item.calculate_tax()`, and saves each item. This
 | `unit_price` | Price per unit, before discount and VAT |
 | `discount` | Discount percentage (0–100) |
 | `tax_rate` | VAT rate percentage; `None` means no tax or reverse charge |
+| `vat_category` | EN 16931 VAT category (`S`, `Z`, `E`, `AE`, `K`, `G`, `O`) for e-invoices; blank derives it from `tax_rate`, see [E-invoicing](einvoicing.md) |
 | `tag` | Optional string for grouping/filtering items |
 | `weight` | Integer ordering field |
 

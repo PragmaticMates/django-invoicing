@@ -141,6 +141,10 @@ See [Taxation](taxation.md) for details.
 |---|---|---|
 | `INVOICING_IS_SUPPLIER_VAT_ID_VISIBLE` | Built-in logic | Callable `(invoice) -> bool` that controls whether the supplier VAT ID is shown on the invoice |
 
+## E-invoicing
+
+`INVOICING_EINVOICING` (a dict, every key optional) configures structured e-invoices: the UBL builder, unit and payment means codes, which invoices may be sent, and the provider resolver. See [E-invoicing](einvoicing.md#settings) for the keys and their defaults.
+
 ## Export managers
 
 ```python

@@ -6,6 +6,10 @@
     - UBL 2.1 Invoice and CreditNote builder, with EN 16931 totals computed independently and reconciled against the stored ones.
     - Validation: preflight checks, UBL 2.1 XSD, Peppol BIS 3.0.21 Schematron (needs the new `einvoicing` extra, `saxonche`), unofficial Slovak rules.
     - Add `'invoicing.einvoicing'` to `INSTALLED_APPS` for idempotent sending: `EInvoiceTransmission` stores the exact XML sent, provider document ID, status, timestamps and errors; a provider interface with a generic SAPI-SK implementation.
+    - Providers can refuse a resubmission after a given failure (`EInvoiceProvider.resubmission_blocked_reason()`; `prepare()` raises `ResubmissionNotAllowed`).
+    - `services.resolve_conflict()` and the admin action *Resolve conflict* close a `CONFLICT` transmission the provider did not take.
+    - `UNCONFIRMED` transmissions keep being polled, as a late confirmation still turns them `ACCEPTED` or `REJECTED`.
+    - Slovak translations.
 - New `Invoice` fields `supplier_endpoint_scheme`, `supplier_endpoint_id`, `customer_endpoint_scheme`, `customer_endpoint_id`, `buyer_reference`, `vat_exemption_reason`, `vat_exemption_reason_code`, and `Item.vat_category`, all blank by default. `set_supplier_data()` / `set_customer_data()` accept `endpoint_scheme` and `endpoint_id`.
 
 ## 13.1.0

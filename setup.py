@@ -20,7 +20,9 @@ setup(
         'django-localflavor', 'django-internationalflavor', 'lxml'
     ),
     extras_require={
-        'exporters': ['django-outputs', 'django-pragmatic'],  # optional umbrella for all exporters
+        # optional umbrella for all exporters; exports run as outputs.jobs.execute_export via
+        # pragmatic.utils.dispatch_task, which need these versions at least
+        'exporters': ['django-outputs>=4.0.0', 'django-pragmatic>=7.2.0'],
         'einvoicing': ['saxonche>=12.5', 'requests'],  # Peppol Schematron validation (XSLT 2.0), SAPI-SK
     },
     classifiers=[

@@ -10,7 +10,8 @@
     - `services.resolve_conflict()` and the admin action *Resolve conflict* close a `CONFLICT` transmission the provider did not take.
     - `UNCONFIRMED` transmissions keep being polled, as a late confirmation still turns them `ACCEPTED` or `REJECTED`.
     - Slovak translations.
-- New `PeppolManager` exporter: *Export to Peppol UBL (XML)* in the admin, the selected invoices as e-invoices in a zip, with the findings of those that fail in `_errors.txt`.
+- New `PeppolManager` exporter: *Export to Peppol UBL (XML)* in the admin, the selected invoices as e-invoices (one invoice as its XML, more in a zip), with the findings of those that fail in `_errors.txt`.
+- The `exporters` extra now requires `django-outputs>=4.0.0` and `django-pragmatic>=7.2.0`, which exports have needed since 13.0.0 (`outputs.jobs.execute_export`, `pragmatic.utils.dispatch_task`).
 - Invoice admin: an *E-invoicing* section with the new fields, `vat_category` on items, customer e-mail and phone. With `invoicing.einvoicing` installed, invoices sent as e-invoices are read-only except `status`, `date_paid` and `already_paid`, and the invoice page lists its transmissions.
 - New `Invoice` fields `supplier_endpoint_scheme`, `supplier_endpoint_id`, `customer_endpoint_scheme`, `customer_endpoint_id`, `buyer_reference`, `vat_exemption_reason`, `vat_exemption_reason_code`, and `Item.vat_category`, all blank by default. `set_supplier_data()` / `set_customer_data()` accept `endpoint_scheme` and `endpoint_id`.
 

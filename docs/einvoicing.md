@@ -220,8 +220,8 @@ polling as well, since not every status change necessarily has an event.
       log, a download of the exact XML sent (and its SHA-256), and the
       *Resolve conflict* action.
 - The [Peppol UBL exporter](exporters/peppol.md) adds an *Export to Peppol UBL
-  (XML)* action to the invoice list: the e-invoices as they would be sent, in a
-  zip, sent nowhere.
+  (XML)* action to the invoice list: the e-invoices as they would be sent, sent
+  nowhere; one invoice comes as its XML, more in a zip.
 
 ## Providers
 

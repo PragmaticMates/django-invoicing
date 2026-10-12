@@ -11,7 +11,7 @@ django-invoicing ships with a pluggable export system built on top of `django-ou
 2. `InvoiceAdmin.get_actions()` finds all `export_*` methods on every configured manager and registers them as actions.
 3. The action calls the manager method (e.g. `PdfManager.export_detail_pdf()`).
 4. The manager validates the queryset: it must be non-empty, and when a manager sets `required_origin` all exported invoices must share that origin. Managers without `required_origin` may export mixed-origin querysets.
-5. For file-based exports the manager calls `outputs.usecases.execute_export()`, which queues an async task and emails the result to the requesting user.
+5. For file-based exports the manager dispatches `outputs.jobs.execute_export` as a background job (via `pragmatic.utils.dispatch_task`), which builds the export and emails the result to the requesting user.
 6. For API-based exports (MRP v2, IKROS, Profit365) the manager posts directly to the external service.
 
 ## Configuring managers

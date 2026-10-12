@@ -15,7 +15,7 @@
 - Webhook view (`invoicing.einvoicing.urls`): finds the account through the resolver, verifies, then refreshes the status from the provider.
 - Background jobs (`invoicing.einvoicing.tasks`) via django-pragmatic, and the 15-minute maintenance scheduled by `rqscheduler` (`MAINTENANCE_CRON`).
 - `services.send()`, `check()` and `send_blocked_reason()`; settings `ATTACHMENTS` and `SENDABLE_STATUSES`.
-- `EInvoicingManager`: *Send as e-invoice (API)* in the admin, after a confirmation page; an *e-invoice* status column in the invoice list.
+- `EInvoicingManager`: *Check e-invoice* (every check, the provider's included, findings per invoice) and *Send as e-invoice (API)* (after a confirmation page) in the admin; an *e-invoice* status column in the invoice list.
 - The `exporters` extra now requires `django-outputs>=4.0.0` and `django-pragmatic>=7.2.0`, which exports have needed since 13.0.0 (`outputs.jobs.execute_export`, `pragmatic.utils.dispatch_task`).
 - Invoice admin: an *E-invoicing* section with the new fields, `vat_category` on items, customer e-mail and phone. With `invoicing.einvoicing` installed, invoices sent as e-invoices are read-only except `status`, `date_paid` and `already_paid`, and the invoice page lists its transmissions.
 - New `Invoice` fields `supplier_endpoint_scheme`, `supplier_endpoint_id`, `customer_endpoint_scheme`, `customer_endpoint_id`, `buyer_reference`, `vat_exemption_reason`, `vat_exemption_reason_code`, and `Item.vat_category`, all blank by default. `set_supplier_data()` / `set_customer_data()` accept `endpoint_scheme` and `endpoint_id`.

@@ -10,15 +10,53 @@ from invoicing.models import Invoice
 
 class EInvoicingManager(InvoiceManagerMixin):
     """
-    "Send as e-invoice (API)" in the invoice admin: sends the selected invoices
-    through their provider (INVOICING_EINVOICING['PROVIDER_RESOLVER']), as
-    services.send() does, after a confirmation page listing what will be sent
-    and what will not, and why -- a sent e-invoice cannot be taken back.
+    E-invoicing actions in the invoice admin, through each invoice's provider
+    (INVOICING_EINVOICING['PROVIDER_RESOLVER']):
+
+    * "Check e-invoice": every check, as services.check() does -- the local
+      ones and the provider's own (with whether the customer can receive it);
+      a page with the findings per invoice. Stores and sends nothing.
+    * "Send as e-invoice (API)": as services.send() does, after a confirmation
+      page listing what will be sent and what will not, and why -- a sent
+      e-invoice cannot be taken back.
 
     Needs 'invoicing.einvoicing' in INSTALLED_APPS.
     """
     required_origin = Invoice.ORIGIN.ISSUED
     confirmation_template = 'admin/invoicing/einvoicing/send_confirmation.html'
+    check_template = 'admin/invoicing/einvoicing/check_results.html'
+
+    def export_check(self, request, queryset=None, exporter_params=None):
+        from invoicing.einvoicing import services
+        from invoicing.einvoicing.providers import ProviderError, get_provider
+
+        rows = []
+        for invoice in queryset.order_by('date_issue', 'number'):
+            row = {'invoice': invoice, 'provider': '', 'valid': False, 'errors': [], 'warnings': [], 'problem': None}
+            try:
+                provider = get_provider(invoice)
+            except ImproperlyConfigured:
+                provider = None
+
+            try:
+                xml, report = services.check(invoice, provider=provider) if provider else services.check_locally(invoice)
+            except ProviderError as error:
+                row['problem'] = gettext('The provider could not check it: %(error)s') % {'error': error.message}
+            else:
+                row.update(provider=provider.name if provider else '', valid=xml is not None,
+                           errors=report.errors, warnings=report.warnings)
+                if provider is None:
+                    row['problem'] = gettext('No e-invoicing provider is configured: checked locally only.')
+            rows.append(row)
+
+        return TemplateResponse(request, self.check_template, {
+            'title': gettext('E-invoice check'),
+            'opts': Invoice._meta,
+            'rows': rows,
+            'valid_count': sum(1 for row in rows if row['valid']),
+        })
+
+    export_check.short_description = _('Check e-invoice')
 
     def export_via_api(self, request, queryset=None, exporter_params=None):
         if request.POST.get('confirm') == 'yes':

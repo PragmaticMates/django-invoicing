@@ -241,3 +241,53 @@ class TestAdmin:
         assert 'column-einvoice_status' in content
         assert 'Submitted' in content
         assert reverse('admin:invoicing_einvoicing_einvoicetransmission_change', args=[sent.einvoice_transmissions.get().pk]) in content
+
+
+class TestCheckAction:
+    CHANGELIST = 'admin:invoicing_invoice_changelist'
+
+    def run(self, admin_client, settings, invoices):
+        settings.INVOICING_MANAGERS = {'invoicing.exporters.einvoicing.managers.EInvoicingManager': {}}
+        with patch('invoicing.admin.invoicing_settings.INVOICING_MANAGERS', settings.INVOICING_MANAGERS):
+            return admin_client.post(reverse(self.CHANGELIST), {
+                'action': 'einvoicingmanager_export_check', '_selected_action': [i.pk for i in invoices]})
+
+    def test_findings_per_invoice(self, admin_client, einvoice_factory, fake, settings):
+        from invoicing.einvoicing.validation import ValidationReport
+        fake.validation = ValidationReport()
+        fake.validation.add('RECEIVER', 'cannot receive this document in Peppol', 'fake')
+        good = einvoice_factory([dict(unit_price=D('10'))])
+        no_address = einvoice_factory([dict(unit_price=D('10'))], number='2026-002', customer_endpoint_id='')
+
+        page = self.run(admin_client, settings, [good, no_address])
+
+        assert page.status_code == 200
+        assert page.templates[0].name == 'admin/invoicing/einvoicing/check_results.html'
+        rows = {row['invoice'].number: row for row in page.context['rows']}
+        assert [f.rule_id for f in rows['2026-001']['errors']] == ['RECEIVER']           # the provider's own check
+        assert 'PREFLIGHT-CUSTOMER-ENDPOINT' in {f.rule_id for f in rows['2026-002']['errors']}
+        assert not EInvoiceTransmission.objects.exists()
+
+    def test_valid_invoice(self, admin_client, einvoice_factory, fake, settings):
+        page = self.run(admin_client, settings, [einvoice_factory([dict(unit_price=D('10'))])])
+
+        assert page.context['valid_count'] == 1
+
+    def test_provider_failure_is_reported_per_invoice(self, admin_client, einvoice_factory, fake, settings):
+        from invoicing.einvoicing.providers import ProviderError
+
+        def overloaded(xml, receiver_id=None):
+            raise ProviderError('rate limited', code='SAPI-TEMP-002', retryable=True, http_status=429)
+        fake.validate = overloaded
+
+        page = self.run(admin_client, settings, [einvoice_factory([dict(unit_price=D('10'))])])
+
+        assert 'rate limited' in page.context['rows'][0]['problem']
+
+    def test_without_provider_checks_locally(self, admin_client, einvoice_factory, settings):
+        settings.INVOICING_EINVOICING = {}
+
+        page = self.run(admin_client, settings, [einvoice_factory([dict(unit_price=D('10'))])])
+
+        row = page.context['rows'][0]
+        assert row['valid'] and 'checked locally only' in row['problem']

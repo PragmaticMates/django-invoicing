@@ -338,10 +338,11 @@ webhook cannot be edited.
       invoice with a live or delivered transmission is **read-only**, except
       `status`, `date_paid` and `already_paid`; the invoice page lists its
       transmissions.
-- **Send as e-invoice (API)**, an action enabled by the
-  [`EInvoicingManager`](exporters/einvoicing.md): a confirmation page lists
-  the selected invoices, which will be sent and which will not (and why),
-  before anything is sent.
+- **Check e-invoice** and **Send as e-invoice (API)**, actions enabled by the
+  [`EInvoicingManager`](exporters/einvoicing.md): the first runs every check
+  (the provider's included) and lists the findings per invoice, sending
+  nothing; the second shows a confirmation page listing which selected
+  invoices will be sent and which will not (and why) before anything is sent.
 - **Export to Peppol UBL (XML)**, by the [`PeppolManager`](exporters/peppol.md):
   the e-invoices as they would be sent, sent nowhere.
 - **E-invoice transmissions**: every attempt, read-only, with its event log,

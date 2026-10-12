@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 11:24+0200\n"
+"POT-Creation-Date: 2026-10-12 13:11+0200\n"
 "PO-Revision-Date: 2023-12-15 15:53+0020\n"
 "Last-Translator: b'Erik Telepovsky <erik@pragmaticmates.com>'\n"
 "Language-Team: Slovak <https://weblate.swida.sk/projects/django-invoicing/app/sk/>\n"
@@ -64,7 +64,6 @@ msgid "Shipping details"
 msgstr "Doručovacie informácie"
 
 #: admin.py:283
-#| msgid "invoice"
 msgid "e-invoice"
 msgstr "e-faktúra"
 
@@ -389,29 +388,48 @@ msgstr "Vývoz mimo EÚ"
 msgid "Not subject to VAT"
 msgstr "Nepodlieha DPH"
 
-#: exporters/einvoicing/managers.py:28
+#: exporters/einvoicing/managers.py:44
+#, python-format
+msgid "The provider could not check it: %(error)s"
+msgstr "Poskytovateľ ju nedokázal skontrolovať: %(error)s"
+
+#: exporters/einvoicing/managers.py:49
+#| msgid "No e-invoicing provider is configured for this invoice."
+msgid "No e-invoicing provider is configured: checked locally only."
+msgstr "Poskytovateľ e-fakturácie nie je nastavený: skontrolované len lokálne."
+
+#: exporters/einvoicing/managers.py:53
+#| msgid "e-invoice"
+msgid "E-invoice check"
+msgstr "Kontrola e-faktúry"
+
+#: exporters/einvoicing/managers.py:59
+#| msgid "e-invoice"
+msgid "Check e-invoice"
+msgstr "Skontrolovať e-faktúru"
+
+#: exporters/einvoicing/managers.py:66
 msgid "Send as e-invoice (API)"
 msgstr "Odoslať ako e-faktúru (API)"
 
-#: exporters/einvoicing/managers.py:37
+#: exporters/einvoicing/managers.py:75
 msgid "Only issued invoices can be sent."
 msgstr "Odoslať možno len vystavené faktúry."
 
-#: exporters/einvoicing/managers.py:41
+#: exporters/einvoicing/managers.py:79
 #, python-format
 msgid "Already sent as an e-invoice (%(status)s)."
 msgstr "Už odoslaná ako e-faktúra (%(status)s)."
 
-#: exporters/einvoicing/managers.py:48
+#: exporters/einvoicing/managers.py:86
 msgid "No e-invoicing provider is configured for this invoice."
 msgstr "Pre túto faktúru nie je nastavený poskytovateľ e-fakturácie."
 
-#: exporters/einvoicing/managers.py:68
-#| msgid "related invoices"
+#: exporters/einvoicing/managers.py:106
 msgid "Send as e-invoice"
 msgstr "Odoslať ako e-faktúru"
 
-#: exporters/einvoicing/managers.py:100
+#: exporters/einvoicing/managers.py:138
 #, python-format
 msgid "%(count)d invoice(s) queued for sending as e-invoices."
 msgstr "Faktúry zaradené na odoslanie ako e-faktúry: %(count)d."
@@ -768,6 +786,7 @@ msgid "Issuer phone"
 msgstr "Telefón kontaktnej osoby"
 
 #: exporters/xlsx/list.py:76
+#: templates/admin/invoicing/einvoicing/check_results.html:21
 #: templates/admin/invoicing/einvoicing/send_confirmation.html:21
 #: templates/invoicing/formatters/html.html:59
 msgid "Customer"
@@ -845,7 +864,8 @@ msgstr "ročne"
 msgid "infinite"
 msgstr ""
 
-#: models.py:57 templates/admin/invoicing/einvoicing/send_confirmation.html:20
+#: models.py:57 templates/admin/invoicing/einvoicing/check_results.html:20
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:20
 msgid "Invoice"
 msgstr "Faktúra"
 
@@ -1416,9 +1436,55 @@ msgstr "položka"
 msgid "items"
 msgstr "položky"
 
+#: templates/admin/invoicing/einvoicing/check_results.html:6
 #: templates/admin/invoicing/einvoicing/send_confirmation.html:6
 msgid "Home"
 msgstr ""
+
+#: templates/admin/invoicing/einvoicing/check_results.html:14
+#, python-format
+#| msgid "%(counter)s invoice will be sent as an e-invoice."
+#| msgid_plural "%(counter)s invoices will be sent as e-invoices."
+msgid "%(valid)s of %(counter)s invoice is a valid e-invoice."
+msgid_plural "%(valid)s of %(counter)s invoices are valid e-invoices."
+msgstr[0] "Platné e-faktúry: %(valid)s z %(counter)s."
+msgstr[1] "Platné e-faktúry: %(valid)s z %(counter)s."
+msgstr[2] "Platné e-faktúry: %(valid)s z %(counter)s."
+
+#: templates/admin/invoicing/einvoicing/check_results.html:15
+msgid "Nothing was stored or sent."
+msgstr "Nič sa neuložilo ani neodoslalo."
+
+#: templates/admin/invoicing/einvoicing/check_results.html:22
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:23
+msgid "Provider"
+msgstr "Poskytovateľ"
+
+#: templates/admin/invoicing/einvoicing/check_results.html:23
+#: templates/admin/invoicing/einvoicing/send_confirmation.html:24
+msgid "Result"
+msgstr "Výsledok"
+
+#: templates/admin/invoicing/einvoicing/check_results.html:24
+msgid "Findings"
+msgstr "Zistenia"
+
+#: templates/admin/invoicing/einvoicing/check_results.html:33
+msgid "valid"
+msgstr "platná"
+
+#: templates/admin/invoicing/einvoicing/check_results.html:33
+msgid "not valid"
+msgstr "neplatná"
+
+#: templates/admin/invoicing/einvoicing/check_results.html:39
+msgid "warning"
+msgstr "upozornenie"
+
+#: templates/admin/invoicing/einvoicing/check_results.html:48
+#| msgid "related invoices"
+msgid "Back to invoices"
+msgstr "Späť na faktúry"
 
 #: templates/admin/invoicing/einvoicing/send_confirmation.html:14
 #, python-format
@@ -1434,15 +1500,6 @@ msgid ""
 "note."
 msgstr ""
 "Odoslanú e-faktúru nemožno vziať späť; opraviť ju možno len dobropisom."
-
-#: templates/admin/invoicing/einvoicing/send_confirmation.html:23
-#| msgid "provider"
-msgid "Provider"
-msgstr "Poskytovateľ"
-
-#: templates/admin/invoicing/einvoicing/send_confirmation.html:24
-msgid "Result"
-msgstr "Výsledok"
 
 #: templates/admin/invoicing/einvoicing/send_confirmation.html:34
 msgid "will not be sent"

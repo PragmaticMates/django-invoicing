@@ -1,10 +1,10 @@
-# Send as e-invoice (API)
+# E-invoicing actions: check, send
 
-An admin action that sends the selected invoices as e-invoices through their
-provider (`INVOICING_EINVOICING['PROVIDER_RESOLVER']`), e.g. SLOVAKODATA. It is
-to e-invoicing what *Export to MRP (API)* is to MRP; the
-[Peppol UBL exporter](peppol.md) is the matching file export. See
-[E-invoicing](../einvoicing.md) for the setup.
+Two admin actions that work through each invoice's provider
+(`INVOICING_EINVOICING['PROVIDER_RESOLVER']`), e.g. SLOVAKODATA: *Check
+e-invoice* and *Send as e-invoice (API)*. Sending is to e-invoicing what
+*Export to MRP (API)* is to MRP; the [Peppol UBL exporter](peppol.md) is the
+matching file export. See [E-invoicing](../einvoicing.md) for the setup.
 
 Requires `'invoicing.einvoicing'` in `INSTALLED_APPS` and a configured provider.
 
@@ -20,9 +20,24 @@ INVOICING_MANAGERS = {
 
 | Action name | Label |
 |---|---|
+| `einvoicingmanager_export_check` | Check e-invoice |
 | `einvoicingmanager_export_via_api` | Send as e-invoice (API) |
 
-## Behaviour
+## Check e-invoice
+
+Runs every check on the selected invoices, as `services.check()` does: the
+library's own (preflight, UBL schema, Peppol Schematron, Slovak rules) and the
+provider's (SLOVAKODATA: its five validation levels, and whether the customer
+can receive the document in Peppol). A page lists, per invoice, whether it is
+valid and every finding (errors and warnings, with rule and source). Nothing is
+stored or sent.
+
+- Without a configured provider, an invoice is checked locally only, and the
+  page says so.
+- A provider failure (e.g. SLOVAKODATA's rate limit: 10 checks a minute on its
+  MINI plan) is reported for that invoice; the others are still checked.
+
+## Send as e-invoice
 
 A sent e-invoice cannot be taken back, so nothing is sent straight away:
 

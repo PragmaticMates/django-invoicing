@@ -103,6 +103,14 @@ def send_blocked_reason(invoice, provider=None):
     return resubmission_blocked_reason(invoice, provider)
 
 
+def check_locally(invoice):
+    """check() without a provider: the library's own checks only."""
+    try:
+        return build_and_validate(invoice, provider=None, attachments=get_attachments(invoice))
+    except EInvoiceValidationError as error:
+        return None, error.report
+
+
 def check(invoice, *, provider=None):
     """(xml, ValidationReport) of what would be sent; stores and sends nothing. xml is None if invalid."""
     provider = provider or get_provider(invoice)

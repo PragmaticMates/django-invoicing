@@ -33,11 +33,15 @@ def exporter_for(user, invoices, exporter_class=InvoicePeppolXmlListExporter):
     return exporter_class(user=user, recipients=[user], queryset=Invoice.objects.filter(pk__in=[i.pk for i in invoices]))
 
 
-def run(exporter):
+def write(exporter):
     output = io.BytesIO()
     with patch.object(peppol_list, 'compress', real_compress):
         exporter.write_data(output)
-    return zipfile.ZipFile(io.BytesIO(output.getvalue()))
+    return output.getvalue()
+
+
+def run(exporter):
+    return zipfile.ZipFile(io.BytesIO(write(exporter)))
 
 
 def test_exports_valid_invoices_and_explains_the_rest(einvoice_factory, admin_user):
@@ -57,11 +61,32 @@ def test_exports_valid_invoices_and_explains_the_rest(einvoice_factory, admin_us
 
 
 def test_no_errors_file_when_everything_is_valid(einvoice_factory, admin_user):
+    first = einvoice_factory([dict(unit_price=D('100.00'))])
+    second = einvoice_factory([dict(unit_price=D('50.00'))], number='2026-002')
+
+    archive = run(exporter_for(admin_user, [first, second]))
+
+    assert sorted(archive.namelist()) == ['2026-001.xml', '2026-002.xml']
+
+
+def test_single_invoice_is_not_zipped(einvoice_factory, admin_user):
     invoice = einvoice_factory([dict(unit_price=D('100.00'))])
+    exporter = exporter_for(admin_user, [invoice])
 
-    archive = run(exporter_for(admin_user, [invoice]))
+    content = write(exporter)
 
-    assert archive.namelist() == ['2026-001.xml']
+    assert exporter.get_filename() == '2026-001.xml'
+    assert validate(content).is_valid
+
+
+def test_single_invalid_invoice_gives_its_errors(einvoice_factory, admin_user):
+    invoice = einvoice_factory([dict(unit_price=D('100.00'))], customer_endpoint_id='')
+    exporter = exporter_for(admin_user, [invoice])
+
+    content = write(exporter)
+
+    assert exporter.get_filename() == '_errors.txt'
+    assert 'PREFLIGHT-CUSTOMER-ENDPOINT' in content.decode()
 
 
 def test_attachments_hook(einvoice_factory, admin_user):
@@ -71,9 +96,7 @@ def test_attachments_hook(einvoice_factory, admin_user):
 
     invoice = einvoice_factory([dict(unit_price=D('100.00'))])
 
-    archive = run(exporter_for(admin_user, [invoice], WithPdf))
-
-    assert b'EmbeddedDocumentBinaryObject' in archive.read('2026-001.xml')
+    assert b'EmbeddedDocumentBinaryObject' in write(exporter_for(admin_user, [invoice], WithPdf))
 
 
 def test_manager_action(einvoice_factory, admin_user):

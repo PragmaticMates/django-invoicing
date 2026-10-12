@@ -9,12 +9,13 @@ from pragmatic.utils import compress
 
 class InvoicePeppolXmlListExporter(ExporterMixin):
     """
-    The selected invoices as Peppol BIS Billing 3.0 UBL documents, one XML per
-    invoice in a zip: exactly what would be sent as e-invoices, but sent nowhere.
+    The selected invoices as Peppol BIS Billing 3.0 UBL documents: exactly what
+    would be sent as e-invoices, but sent nowhere. One XML per invoice, in a
+    zip -- or, when the export comes down to a single file, that file alone.
 
     An invoice that fails the checks (preflight, UBL schema, Peppol rules) is
-    left out, and why goes into ``_errors.txt`` in the same zip; warnings do not
-    keep an invoice out.
+    left out, and why goes into ``_errors.txt``; warnings do not keep an
+    invoice out.
     """
     export_format = Export.FORMAT_XML
     export_context = Export.CONTEXT_LIST
@@ -59,4 +60,9 @@ class InvoicePeppolXmlListExporter(ExporterMixin):
         if errors:
             export_files.append({'name': self.errors_filename, 'content': '\n\n'.join(errors).encode('utf-8')})
 
-        output.write(compress(export_files).read())
+        if len(export_files) == 1:
+            # a single invoice: its XML (or why it failed) as is, not zipped
+            self.filename = export_files[0]['name']
+            output.write(export_files[0]['content'])
+        else:
+            output.write(compress(export_files).read())

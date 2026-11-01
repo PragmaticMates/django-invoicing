@@ -1,4 +1,5 @@
 import inspect
+from django.apps import apps
 from django.contrib import admin
 from django.db.models import F, DecimalField
 from django.db.models.functions import Coalesce
@@ -106,7 +107,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_editable = ['status']
     list_filter = [
         'origin', 'type', 'status', 'payment_method', 'delivery_method',
-        OverdueFilter, NotExportedWithExporterListFilter, 'language', 'currency',
+        OverdueFilter, *([NotExportedWithExporterListFilter] if apps.is_installed('outputs') else []), 'language', 'currency',
     ]
     search_fields = ['number', 'subtitle', 'note', 'supplier_name', 'customer_name', 'shipping_name']
     inlines = (ItemInline, )

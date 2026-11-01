@@ -158,6 +158,8 @@ INVOICING_MANAGERS = {
 
 By default only `PdfManager` and `XlsxManager` are enabled. Add any combination of the available managers. See [Exporters](exporters/index.md) for per-manager configuration options.
 
+Exporters need `django-outputs`. A project that uses none of them leaves `outputs` out of `INSTALLED_APPS` and sets `INVOICING_MANAGERS = {}`.
+
 ### Overriding exporter classes
 
 Each manager accepts two optional keys that replace the built-in exporter classes:

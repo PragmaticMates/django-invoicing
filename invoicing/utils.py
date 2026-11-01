@@ -6,7 +6,6 @@ import binascii
 
 from django.conf import settings
 from django.utils.module_loading import import_string
-from requests_futures import sessions
 
 
 def get_invoices_in_pdf(invoices):
@@ -40,6 +39,8 @@ def get_invoices_in_pdf(invoices):
                 requests.append({'invoice': str(invoice), 'html_content': invoice_content})
 
     if len(requests) > 0:
+        from requests_futures import sessions  # only the remote HTML-to-PDF service needs it
+
         session = sessions.FuturesSession(max_workers=3)
 
         kwargs = {}

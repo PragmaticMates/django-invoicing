@@ -2,6 +2,7 @@ from __future__ import division  # TODO: refactor
 
 from decimal import Decimal
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.validators import EMPTY_VALUES, MaxValueValidator, MinValueValidator
@@ -226,7 +227,8 @@ class Invoice(models.Model):
         help_text=_(u'VATEX code, e.g. VATEX-EU-AE'))
 
     # Other
-    export_items = GenericRelation('outputs.ExportItem', related_query_name='invoice')
+    if apps.is_installed('outputs'):  # exporters only; outputs is an optional dependency
+        export_items = GenericRelation('outputs.ExportItem', related_query_name='invoice')
     attachments = JSONField(_(u'attachments'),
         blank=True, null=True, default=None)
     created = models.DateTimeField(_(u'created'), auto_now_add=True)

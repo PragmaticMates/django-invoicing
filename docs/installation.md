@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'djmoney',
     'model_utils',
     'invoicing',
-    # Required if you use any exporter:
+    # Required if you use any exporter (without it, set INVOICING_MANAGERS = {}):
     'outputs',
     # Required to send e-invoices (the transmission log):
     'invoicing.einvoicing',

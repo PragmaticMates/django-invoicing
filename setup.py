@@ -17,10 +17,10 @@ setup(
     include_package_data=True,
     install_requires=(
         'django>=4.2', 'django-countries', 'django-model-utils', 'django-money',
-        'django-localflavor', 'django-internationalflavor', 'lxml'
+        'django-localflavor', 'django-internationalflavor', 'lxml', 'python-dateutil'
     ),
     extras_require={
-        'exporters': ['django-outputs', 'django-pragmatic'],  # optional umbrella for all exporters
+        'exporters': ['django-outputs', 'django-pragmatic', 'requests-futures'],  # optional umbrella for all exporters
         'einvoicing': ['saxonche>=12.5', 'requests'],  # Peppol Schematron validation (XSLT 2.0), SAPI-SK
     },
     classifiers=[

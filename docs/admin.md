@@ -39,7 +39,7 @@ Only managers listed in `INVOICING_MANAGERS` contribute actions. To remove an ac
 
 ## NotExportedWithExporterListFilter
 
-This list filter lets you find invoices that have never been successfully exported by a given exporter. It reads the `ExportItem` records created by `django-outputs` and excludes invoices that have at least one successful export for the chosen exporter path.
+This list filter lets you find invoices that have never been successfully exported by a given exporter. It reads the `ExportItem` records created by `django-outputs` and excludes invoices that have at least one successful export for the chosen exporter path. Without `outputs` in `INSTALLED_APPS` the filter is not shown.
 
 The filter choices are built dynamically from all `exporter_class` attributes of the configured managers.
 

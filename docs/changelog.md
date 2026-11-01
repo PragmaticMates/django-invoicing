@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `django-outputs` is optional. `Invoice.export_items` and the admin's *not yet exported with exporter* filter exist only when `outputs` is in `INSTALLED_APPS`; a project without exporters sets `INVOICING_MANAGERS = {}`.
+- `python-dateutil` is declared as a dependency. `requests-futures` moved to the `exporters` extra and is imported only when an invoice is rendered to PDF by the remote HTML-to-PDF service.
+- CI covers Python 3.13 and Django 5.2, installs the Django version of each matrix entry (it was ignored before), and runs the e-invoicing tests without `outputs`.
 - New optional `invoicing.einvoicing` package for structured e-invoices (Peppol BIS Billing 3.0 / EN 16931, Slovak eFaktúra). See [E-invoicing](einvoicing.md).
     - UBL 2.1 Invoice and CreditNote builder, with EN 16931 totals computed independently and reconciled against the stored ones.
     - Validation: preflight checks, UBL 2.1 XSD, Peppol BIS 3.0.21 Schematron (needs the new `einvoicing` extra, `saxonche`), unofficial Slovak rules.

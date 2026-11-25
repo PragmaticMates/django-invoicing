@@ -306,10 +306,11 @@ class InvoiceMrpListExporterMixin(ExporterMixin):
         if advance_notice not in EMPTY_VALUES:
             etree.SubElement(invoice_elem, "DoubleEntryBookkeepingCode").text = advance_notice
 
-        # Note should be HeadNote according to XSD
-        head_note = (invoice.note or "").strip()
-        if head_note:
-            etree.SubElement(invoice_elem, "HeadNote").text = sanitize_forbidden_chars(head_note, 30)
+        # MRP-K/S reads the invoice note from <Note> (max 32768 chars).
+        # <HeadNote> (max 30 chars) is only for Vizuální účetní systém and must not be used for MRP-K/S.
+        note = (invoice.note or "").strip()
+        if note:
+            etree.SubElement(invoice_elem, "Note").text = sanitize_forbidden_chars(note, 32768)
 
         etree.SubElement(invoice_elem, "VariableSymbol").text = sanitize_forbidden_chars(invoice.variable_symbol, 10)
         etree.SubElement(invoice_elem, "ConstantSymbol").text = sanitize_forbidden_chars(invoice.constant_symbol, 8)

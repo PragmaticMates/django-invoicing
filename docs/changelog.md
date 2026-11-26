@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 14.0.1
+
+- The MRP v2 XSDs (`exporters/mrp/v2/xsd`) are in the package again; `MANIFEST.in` named a path that no longer existed, so the MRP v2 export skipped its XML validation.
+
+## 14.0.0
 
 - New optional `invoicing.einvoicing` package for structured e-invoices (Peppol BIS Billing 3.0 / EN 16931, Slovak eFaktúra). See [E-invoicing](einvoicing.md).
     - UBL 2.1 Invoice and CreditNote builder, with EN 16931 totals computed independently and reconciled against the stored ones.
@@ -19,6 +23,10 @@
 - The `exporters` extra now requires `django-outputs>=4.0.0` and `django-pragmatic>=7.2.0`, which exports have needed since 13.0.0 (`outputs.jobs.execute_export`, `pragmatic.utils.dispatch_task`).
 - Invoice admin: an *E-invoicing* section with the new fields, `vat_category` on items, customer e-mail and phone. With `invoicing.einvoicing` installed, invoices sent as e-invoices are read-only except `status`, `date_paid` and `already_paid`, and the invoice page lists its transmissions.
 - New `Invoice` fields `supplier_endpoint_scheme`, `supplier_endpoint_id`, `customer_endpoint_scheme`, `customer_endpoint_id`, `buyer_reference`, `vat_exemption_reason`, `vat_exemption_reason_code`, and `Item.vat_category`, all blank by default. `set_supplier_data()` / `set_customer_data()` accept `endpoint_scheme` and `endpoint_id`.
+
+## 13.1.1
+
+- MRP v2: the invoice note is exported as `Note` instead of `HeadNote`.
 
 ## 13.1.0
 

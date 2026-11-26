@@ -75,10 +75,10 @@ Features
 - Invoice management — issued/received invoices, credit notes, proforma and advance invoices
 - Automatic sequence generation and configurable number formatting
 - EU taxation policy with per-country VAT rates and VIES reverse-charge validation
-- Pluggable exporters: PDF, XLSX, ISDOC XML, MRP v1/v2 XML, IKROS API, Profit365 API
+- Pluggable exporters: PDF, XLSX, ISDOC XML, Peppol UBL XML, MRP v1/v2 XML, IKROS API, Profit365 API
 - Asynchronous file exports delivered by email (via ``django-outputs``)
 - Django Admin integration — export actions registered automatically for every configured manager
-- E-invoicing (``invoicing.einvoicing``): Peppol BIS Billing 3.0 UBL invoices and credit notes (Slovak eFaktúra), validated against the official Peppol rules, sent idempotently through a replaceable provider (generic SAPI-SK implementation included); install with ``pip install "django-invoicing[einvoicing]"``
+- E-invoicing (``invoicing.einvoicing``): Peppol BIS Billing 3.0 UBL invoices and credit notes (Slovak eFaktúra), validated against the official Peppol rules, sent idempotently through a replaceable provider (generic SAPI-SK; SLOVAKODATA ePostman with status, validation and webhooks), checked and sent from the admin; install with ``pip install "django-invoicing[einvoicing]"``
 
 Requirements
 ------------

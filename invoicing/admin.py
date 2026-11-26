@@ -1,5 +1,7 @@
 import inspect
+from django.apps import apps
 from django.contrib import admin
+from django.contrib.admin.utils import flatten_fieldsets
 from django.db.models import F, DecimalField
 from django.db.models.functions import Coalesce
 from django.utils.module_loading import import_string
@@ -64,17 +66,35 @@ class NotExportedWithExporterListFilter(admin.SimpleListFilter):
         )
 
 
+def is_einvoice_locked(invoice):
+    """Sent (or being sent) as an e-invoice: its content must not change any more."""
+    if invoice is None or invoice.pk is None or not apps.is_installed('invoicing.einvoicing'):
+        return False
+
+    from invoicing.einvoicing.services import live_transmission
+    return live_transmission(invoice) is not None
+
+
 class ItemInline(admin.TabularInline):
     fieldsets = (
         (
             None,
             {
-                'fields': ('title', 'quantity', 'unit', 'unit_price', 'discount', 'tax_rate', 'weight')
+                'fields': ('title', 'quantity', 'unit', 'unit_price', 'discount', 'tax_rate', 'vat_category', 'weight')
             }
         ),
     )
     model = Item
     extra = 0
+
+    def has_add_permission(self, request, obj=None):
+        return not is_einvoice_locked(obj) and super().has_add_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return not is_einvoice_locked(obj) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return not is_einvoice_locked(obj) and super().has_delete_permission(request, obj)
 
 
 class OverdueFilter(admin.SimpleListFilter):
@@ -144,6 +164,16 @@ class InvoiceAdmin(admin.ModelAdmin):
             'fields': (
                 'customer_name', 'customer_street', 'customer_zip', 'customer_city', 'customer_country',
                 'customer_registration_id', 'customer_tax_id', 'customer_vat_id', 'customer_additional_info',
+                'customer_email', 'customer_phone',
+            )
+        }),
+        (_(u'E-invoicing'), {
+            'classes': ('collapse',),
+            'fields': (
+                'buyer_reference',
+                ('supplier_endpoint_scheme', 'supplier_endpoint_id'),
+                ('customer_endpoint_scheme', 'customer_endpoint_id'),
+                ('vat_exemption_reason', 'vat_exemption_reason_code'),
             )
         }),
         (_(u'Shipping details'), {
@@ -152,6 +182,29 @@ class InvoiceAdmin(admin.ModelAdmin):
             )
         })
     )
+
+    # What may still change on an invoice sent as an e-invoice: its life after issuing
+    EINVOICE_LOCKED_EDITABLE = ('status', 'date_paid', 'already_paid')
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+
+        if is_einvoice_locked(obj):
+            # the e-invoice is in Peppol: change it with a credit note, not here
+            for name in flatten_fieldsets(self.get_fieldsets(request, obj)):
+                if name not in self.EINVOICE_LOCKED_EDITABLE and name not in readonly:
+                    readonly.append(name)
+
+        return readonly
+
+    def get_inline_instances(self, request, obj=None):
+        inlines = super().get_inline_instances(request, obj)
+
+        if obj is not None and apps.is_installed('invoicing.einvoicing'):
+            from invoicing.einvoicing.admin import TransmissionInline
+            inlines.append(TransmissionInline(self.model, self.admin_site))
+
+        return inlines
 
     def get_actions(self, request):
         """
@@ -208,7 +261,50 @@ class InvoiceAdmin(admin.ModelAdmin):
         return actions
 
     def get_queryset(self, request):
-        return self.model.objects.annotate(annotated_subtotal=F('total')-Coalesce(F('vat'), 0, output_field=DecimalField()))
+        queryset = self.model.objects.annotate(annotated_subtotal=F('total')-Coalesce(F('vat'), 0, output_field=DecimalField()))
+
+        if apps.is_installed('invoicing.einvoicing'):
+            from invoicing.einvoicing.services import with_transmissions
+            queryset = with_transmissions(queryset)
+
+        return queryset
+
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+
+        if apps.is_installed('invoicing.einvoicing') and 'einvoice_status' not in list_display:
+            list_display.insert(list_display.index('status') + 1, 'einvoice_status')
+
+        return list_display
+
+    # label colours of the newest transmission's status
+    EINVOICE_STATUS_COLOURS = {'reached': '#2e7d32', 'attention': '#ef6c00', 'not_delivered': '#c62828', 'under_way': '#1565c0'}
+
+    @admin.display(description=_(u'e-invoice'))
+    def einvoice_status(self, invoice):
+        transmissions = getattr(invoice, 'einvoice_transmission_list', None)
+        if not transmissions:
+            return mark_safe('<span style="color: var(--body-quiet-color)">—</span>')
+
+        from django.urls import reverse
+        from django.utils.html import format_html
+        from invoicing.einvoicing.models import TransmissionStatus
+
+        transmission = transmissions[0]
+        if transmission.has_reached_recipient:
+            colour = self.EINVOICE_STATUS_COLOURS['reached']
+        elif not transmission.is_live:
+            colour = self.EINVOICE_STATUS_COLOURS['not_delivered']
+        elif transmission.status in (TransmissionStatus.CONFLICT, TransmissionStatus.SUBMIT_UNKNOWN):
+            colour = self.EINVOICE_STATUS_COLOURS['attention']
+        else:
+            colour = self.EINVOICE_STATUS_COLOURS['under_way']
+
+        return format_html(
+            '<a href="{}" style="color: {}; font-weight: bold" title="{}">{}</a>',
+            reverse('admin:invoicing_einvoicing_einvoicetransmission_change', args=[transmission.pk]),
+            colour, transmission.provider_status or '', transmission.get_status_display(),
+        )
 
     def annotated_subtotal(self, invoice):
         return invoice.annotated_subtotal

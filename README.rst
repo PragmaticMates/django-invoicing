@@ -78,6 +78,7 @@ Features
 - Pluggable exporters: PDF, XLSX, ISDOC XML, MRP v1/v2 XML, IKROS API, Profit365 API
 - Asynchronous file exports delivered by email (via ``django-outputs``)
 - Django Admin integration — export actions registered automatically for every configured manager
+- E-invoicing (``invoicing.einvoicing``): Peppol BIS Billing 3.0 UBL invoices and credit notes (Slovak eFaktúra), validated against the official Peppol rules, sent idempotently through a replaceable provider (generic SAPI-SK implementation included); install with ``pip install "django-invoicing[einvoicing]"``
 
 Requirements
 ------------

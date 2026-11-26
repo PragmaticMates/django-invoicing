@@ -10,6 +10,7 @@
 - **Pluggable exporters** — PDF, XLSX, ISDOC XML, MRP XML (v1 & v2), IKROS API, Profit365 API
 - **Asynchronous exports** — exports are queued and delivered by email via `django-outputs`
 - **Django Admin integration** — export actions added automatically for every configured manager
+- **E-invoicing** — Peppol BIS Billing 3.0 UBL invoices and credit notes (Slovak eFaktúra), validated against the official Peppol rules and sent idempotently through a replaceable provider, with a generic SAPI-SK implementation
 
 ## Quick start
 

@@ -11,7 +11,7 @@ django-invoicing ships with a pluggable export system built on top of `django-ou
 2. `InvoiceAdmin.get_actions()` finds all `export_*` methods on every configured manager and registers them as actions.
 3. The action calls the manager method (e.g. `PdfManager.export_detail_pdf()`).
 4. The manager validates the queryset: it must be non-empty, and when a manager sets `required_origin` all exported invoices must share that origin. Managers without `required_origin` may export mixed-origin querysets.
-5. For file-based exports the manager calls `outputs.usecases.execute_export()`, which queues an async task and emails the result to the requesting user.
+5. For file-based exports the manager dispatches `outputs.jobs.execute_export` as a background job (via `pragmatic.utils.dispatch_task`), which builds the export and emails the result to the requesting user.
 6. For API-based exports (MRP v2, IKROS, Profit365) the manager posts directly to the external service.
 
 ## Configuring managers
@@ -34,6 +34,8 @@ Replace or extend this dict to change the active set of exporters. Each value is
 | `PdfManager` | PDF | None |
 | `XlsxManager` | Excel (XLSX) | None |
 | `IsdocManager` | ISDOC XML | None |
+| `PeppolManager` | Peppol BIS Billing 3.0 UBL XML (e-invoices, not sent) | `einvoicing` extra |
+| `EInvoicingManager` | Check e-invoice; Send as e-invoice (API), after a confirmation page | `invoicing.einvoicing` app, a provider |
 | `MrpV1Manager` | MRP XML v1 | None |
 | `MrpIssuedManager` | MRP XML / API v2 (issued) | `API_URL` |
 | `MrpReceivedManager` | MRP XML / API v2 (received) | `API_URL` |

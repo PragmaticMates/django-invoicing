@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+- New optional `invoicing.einvoicing` package for structured e-invoices (Peppol BIS Billing 3.0 / EN 16931, Slovak eFaktúra). See [E-invoicing](einvoicing.md).
+    - UBL 2.1 Invoice and CreditNote builder, with EN 16931 totals computed independently and reconciled against the stored ones.
+    - Validation: preflight checks, UBL 2.1 XSD, Peppol BIS 3.0.21 Schematron (needs the new `einvoicing` extra, `saxonche`), unofficial Slovak rules.
+    - Add `'invoicing.einvoicing'` to `INSTALLED_APPS` for idempotent sending: `EInvoiceTransmission` stores the exact XML sent, provider document ID, status, timestamps and errors; a provider interface with a generic SAPI-SK implementation.
+    - Providers can refuse a resubmission after a given failure (`EInvoiceProvider.resubmission_blocked_reason()`; `prepare()` raises `ResubmissionNotAllowed`).
+    - `services.resolve_conflict()` and the admin action *Resolve conflict* close a `CONFLICT` transmission the provider did not take.
+    - `UNCONFIRMED` transmissions keep being polled, as a late confirmation still turns them `ACCEPTED` or `REJECTED`.
+    - Slovak translations.
+- New `PeppolManager` exporter: *Export to Peppol UBL (XML)* in the admin, the selected invoices as e-invoices (one invoice as its XML, more in a zip), with the findings of those that fail in `_errors.txt`.
+- SLOVAKODATA ePostman integration: `providers.slovakodata.SlovakodataProvider` (SAPI-SK for sending, Enterprise API for status, validation, lookups and webhooks, webhook management), with `from_settings` for a single account (`INVOICING_EINVOICING['SLOVAKODATA']`) or a project resolver for several.
+- Webhook view (`invoicing.einvoicing.urls`): finds the account through the resolver, verifies, then refreshes the status from the provider.
+- Background jobs (`invoicing.einvoicing.tasks`) via django-pragmatic, and the 15-minute maintenance scheduled by `rqscheduler` (`MAINTENANCE_CRON`).
+- `services.send()`, `check()` and `send_blocked_reason()`; settings `ATTACHMENTS` and `SENDABLE_STATUSES`.
+- `EInvoicingManager`: *Check e-invoice* (every check, the provider's included, findings per invoice) and *Send as e-invoice (API)* (after a confirmation page) in the admin; an *e-invoice* status column in the invoice list.
+- The `exporters` extra now requires `django-outputs>=4.0.0` and `django-pragmatic>=7.2.0`, which exports have needed since 13.0.0 (`outputs.jobs.execute_export`, `pragmatic.utils.dispatch_task`).
+- Invoice admin: an *E-invoicing* section with the new fields, `vat_category` on items, customer e-mail and phone. With `invoicing.einvoicing` installed, invoices sent as e-invoices are read-only except `status`, `date_paid` and `already_paid`, and the invoice page lists its transmissions.
+- New `Invoice` fields `supplier_endpoint_scheme`, `supplier_endpoint_id`, `customer_endpoint_scheme`, `customer_endpoint_id`, `buyer_reference`, `vat_exemption_reason`, `vat_exemption_reason_code`, and `Item.vat_category`, all blank by default. `set_supplier_data()` / `set_customer_data()` accept `endpoint_scheme` and `endpoint_id`.
+
 ## 13.1.0
 
 - New `INVOICING_FILL_SEQUENCE_GAPS` setting (default `False`). When enabled, the sequence generator returns the lowest unused sequence within the counter period instead of continuing after the highest one, so numbers freed up by deleted invoices get reused. A single invoice can override the setting via the `fill_sequence_gaps` instance attribute.

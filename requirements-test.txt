@@ -12,6 +12,7 @@ factory-boy>=3.3.0   # Test data factories
 faker>=19.0.0        # Fake data generation
 freezegun>=1.2.2     # Time mocking
 responses>=0.23.0    # HTTP request mocking
+saxonche>=12.5       # Peppol Schematron validation (einvoicing)
 requests-futures>=1.0.0
 
 # Code quality

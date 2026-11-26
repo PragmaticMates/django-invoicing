@@ -18,7 +18,15 @@ To include all exporter backends (PDF, XLSX, ISDOC, MRP, …) install the option
 pip install "django-invoicing[exporters]"
 ```
 
-This installs `django-outputs`, which provides the asynchronous export queue and email delivery that all exporters depend on.
+This installs `django-outputs` (4.0 or newer), which provides the asynchronous export queue and email delivery that all exporters depend on, and `django-pragmatic` (7.2 or newer), which dispatches the export jobs. With older versions every export action fails with `cannot import name 'execute_export' from 'outputs.jobs'`.
+
+For structured e-invoices (Peppol BIS Billing 3.0, Slovak eFaktúra):
+
+```
+pip install "django-invoicing[einvoicing]"
+```
+
+This adds `saxonche`, which runs the Peppol Schematron rules, and `requests`, for the SAPI-SK provider. See [E-invoicing](einvoicing.md).
 
 ## Add to INSTALLED_APPS
 
@@ -31,6 +39,8 @@ INSTALLED_APPS = [
     'invoicing',
     # Required if you use any exporter:
     'outputs',
+    # Required to send e-invoices (the transmission log):
+    'invoicing.einvoicing',
 ]
 ```
 
